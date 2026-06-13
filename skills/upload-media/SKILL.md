@@ -1,0 +1,71 @@
+---
+name: upload-media
+description: >
+  Use when the user provides a local image or video file and wants to post it to
+  Instagram, TikTok, Facebook, or Threads. Those platforms require a public URL —
+  local files won't work directly. This skill uploads the file to a CDN first, then
+  hands the URL to the posting tool. Trigger phrases: "upload this image", "post this
+  local file to Instagram", "upload and post", "my file is at C:\...", or any time
+  the user gives a local path for a platform that needs a public URL.
+metadata:
+  version: "0.1.0"
+  mcp_server: spmc
+---
+
+## Uploading local media
+
+Use `media_upload` from the `spmc` MCP server to get a public URL, then pass it to the posting tool.
+
+### Step 1: upload
+
+```
+media_upload(file_path: "C:\\path\\to\\image.jpg")
+```
+
+Returns a `Public URL` — use that in the next step. Provider is auto-selected:
+- **Cloudinary** (if `CLOUDINARY_*` vars are set) — images and videos
+- **imgbb** (if `IMGBB_API_KEY` is set) — images only
+
+Explicitly pick a provider with `provider: "cloudinary"` or `provider: "imgbb"`.
+
+### Step 2: post with the URL
+
+Instagram:
+```
+instagram_post(image_url: "<URL from upload>", caption: "<caption>")
+```
+
+TikTok (Cloudinary only — imgbb doesn't support video):
+```
+tiktok_post_video(video_url: "<URL from upload>", caption: "<caption>")
+```
+
+Facebook (optional image):
+```
+facebook_post(message: "<text>", image_url: "<URL from upload>")
+```
+
+Threads (optional image):
+```
+threads_post(text: "<text>", image_url: "<URL from upload>")
+```
+
+### Multi-account
+
+```
+media_upload(file_path: "...", account: "brand")
+```
+
+Uses `CLOUDINARY_CLOUD_NAME__BRAND` etc. for the upload.
+
+### If neither provider is configured
+
+Tell the user:
+> "No CDN is configured. Add Cloudinary credentials (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`) or an imgbb key (`IMGBB_API_KEY`) to your `~/.claude/spmc.env` file."
+
+### Supported file types
+
+| Type | Cloudinary | imgbb |
+|------|-----------|-------|
+| jpg / png / gif / webp | ✅ | ✅ |
+| mp4 / mov / webm | ✅ | ❌ |

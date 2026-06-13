@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <!-- panel overlay: lighter bg strip at bottom third -->
+  <rect width="1080" height="1080" fill="{{bg_color}}" />
+  <rect x="0" y="720" width="1080" height="360" fill="#121b33" opacity="0.85" />
+
+  <!-- accent bar -->
+  <rect x="80" y="700" width="6" height="220" fill="{{accent}}" />
+
+  <!-- headline -->
+  <text
+    x="110"
+    y="790"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="64"
+    font-weight="700"
+    fill="#8ac0dd"
+    dominant-baseline="hanging"
+    xml:space="preserve"
+  >{{headline_line1}}</text>
+  <text
+    x="110"
+    y="870"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="64"
+    font-weight="700"
+    fill="#8ac0dd"
+    dominant-baseline="hanging"
+    xml:space="preserve"
+  >{{headline_line2}}</text>
+
+  <!-- subtext -->
+  <text
+    x="110"
+    y="960"
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    font-size="32"
+    font-weight="400"
+    fill="{{accent}}"
+    opacity="0.85"
+    dominant-baseline="hanging"
+    xml:space="preserve"
+  >{{subtext}}</text>
+</svg>

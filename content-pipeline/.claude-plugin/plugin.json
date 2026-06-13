@@ -1,0 +1,8 @@
+{
+  "name": "content-pipeline",
+  "version": "1.1.0",
+  "description": "Multi-agent social media content pipeline: manual ideas or trend research → concepts → review → content → schedule → publish",
+  "author": {
+    "name": "Content Pipeline"
+  }
+}

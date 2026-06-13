@@ -1,0 +1,9 @@
+{
+  "name": "social-publisher",
+  "version": "0.1.0",
+  "description": "Publish content directly to X (Twitter) and Instagram from Claude.",
+  "author": {
+    "name": "towb"
+  },
+  "keywords": ["social media", "twitter", "x", "instagram", "publishing", "content"]
+}

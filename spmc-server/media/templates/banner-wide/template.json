@@ -1,0 +1,14 @@
+{
+  "id": "banner-wide",
+  "name": "Banner Wide",
+  "description": "1200×628 (1.91:1) dark banner. X link preview card / Facebook share image.",
+  "dimensions": { "width": 1200, "height": 628 },
+  "platforms": ["x", "facebook"],
+  "variables": [
+    { "id": "headline",    "label": "Headline",    "type": "text", "required": true,  "default": "" },
+    { "id": "subtext",     "label": "Subtext",     "type": "text", "required": false, "default": "" },
+    { "id": "bg_color",    "label": "Background",  "type": "color","required": false, "default": "#05091e" },
+    { "id": "accent",      "label": "Accent color","type": "color","required": false, "default": "#1df7ed" },
+    { "id": "bg_image_url","label": "Backdrop image URL", "type": "url", "required": false, "default": "" }
+  ]
+}

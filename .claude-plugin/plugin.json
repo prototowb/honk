@@ -1,0 +1,13 @@
+{
+  "name": "spmc",
+  "version": "0.1.0",
+  "description": "Social Publishing Mission Control — AI-native publishing to X, Instagram, TikTok, Facebook, Threads, and Bluesky. Includes content queue and scheduling. Powered by MCP.",
+  "author": {
+    "name": "towb"
+  },
+  "keywords": [
+    "social media", "publishing", "content", "queue", "scheduling",
+    "twitter", "x", "instagram", "tiktok", "facebook", "threads", "bluesky",
+    "mcp", "ai-native"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "story-dark",
+  "name": "Story Dark",
+  "description": "1080×1920 (9:16) dark background with headline and optional subtext. Instagram Stories / TikTok.",
+  "dimensions": { "width": 1080, "height": 1920 },
+  "platforms": ["instagram", "tiktok"],
+  "variables": [
+    { "id": "headline",    "label": "Headline",    "type": "text", "required": true,  "default": "" },
+    { "id": "subtext",     "label": "Subtext",     "type": "text", "required": false, "default": "" },
+    { "id": "bg_color",    "label": "Background",  "type": "color","required": false, "default": "#05091e" },
+    { "id": "accent",      "label": "Accent color","type": "color","required": false, "default": "#1df7ed" },
+    { "id": "bg_image_url","label": "Backdrop image URL", "type": "url", "required": false, "default": "" }
+  ]
+}
