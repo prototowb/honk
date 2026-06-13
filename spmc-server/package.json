@@ -1,9 +1,22 @@
 {
-  "name": "spmc-server",
-  "version": "0.1.0",
-  "description": "Social Publishing Mission Control — MCP server",
+  "name": "spmc",
+  "version": "0.1.0-alpha.1",
+  "description": "Social Publishing Mission Control — AI-native MCP server for X, Instagram, TikTok, Facebook, Threads, and Bluesky",
   "type": "module",
   "main": "index.js",
+  "bin": {
+    "spmc": "./run.js"
+  },
+  "files": [
+    "adapters/",
+    "media/",
+    "queue/store.js",
+    "scheduler/",
+    "index.js",
+    "run.js",
+    "start.js",
+    ".env.example"
+  ],
   "scripts": {
     "start": "node run.js",
     "dev": "node --watch index.js",
@@ -16,5 +29,10 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "keywords": [
+    "mcp", "social-media", "publishing", "x", "twitter", "instagram",
+    "tiktok", "facebook", "threads", "bluesky", "ai-native", "queue"
+  ],
+  "license": "MIT"
 }

@@ -1,24 +1,21 @@
 {
-  "_comment": "Drop this mcpServers block into your Claude Desktop claude_desktop_config.json (usually at %APPDATA%\\Claude\\claude_desktop_config.json on Windows or ~/Library/Application Support/Claude/ on macOS). Credentials are loaded from %USERPROFILE%\\.claude\\spmc.env — see .env.example for the format.",
+  "_comment": [
+    "Drop the mcpServers block into your Claude Desktop config.",
+    "Windows: %APPDATA%\\Claude\\claude_desktop_config.json",
+    "macOS:   ~/Library/Application Support/Claude/claude_desktop_config.json",
+    "",
+    "OPTION A — npm (after 'npm install -g spmc' or 'npm pack && npm install -g spmc-0.1.0-alpha.1.tgz'):",
+    "  Use the npx block below. Credentials load from ~/.claude/spmc.env automatically.",
+    "",
+    "OPTION B — local clone (replace the path with your actual clone location):",
+    "  { \"command\": \"node\", \"args\": [\"/path/to/spmc-server/run.js\"] }",
+    "",
+    "Either way, store credentials in ~/.claude/spmc.env (see .env.example)."
+  ],
   "mcpServers": {
     "spmc": {
-      "command": "node",
-      "args": ["G:\\Projects\\_Plugins\\spmc-server\\run.js"],
-      "env": {
-        "X_API_KEY":                 "${X_API_KEY}",
-        "X_API_SECRET":              "${X_API_SECRET}",
-        "X_ACCESS_TOKEN":            "${X_ACCESS_TOKEN}",
-        "X_ACCESS_TOKEN_SECRET":     "${X_ACCESS_TOKEN_SECRET}",
-        "INSTAGRAM_USER_ID":         "${INSTAGRAM_USER_ID}",
-        "INSTAGRAM_ACCESS_TOKEN":    "${INSTAGRAM_ACCESS_TOKEN}",
-        "FACEBOOK_PAGE_ID":          "${FACEBOOK_PAGE_ID}",
-        "FACEBOOK_ACCESS_TOKEN":     "${FACEBOOK_ACCESS_TOKEN}",
-        "TIKTOK_ACCESS_TOKEN":       "${TIKTOK_ACCESS_TOKEN}",
-        "THREADS_USER_ID":           "${THREADS_USER_ID}",
-        "THREADS_ACCESS_TOKEN":      "${THREADS_ACCESS_TOKEN}",
-        "BLUESKY_IDENTIFIER":        "${BLUESKY_IDENTIFIER}",
-        "BLUESKY_APP_PASSWORD":      "${BLUESKY_APP_PASSWORD}"
-      }
+      "command": "npx",
+      "args": ["-y", "spmc"]
     }
   }
 }

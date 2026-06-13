@@ -1,16 +1,10 @@
-import { execSync }                        from 'child_process';
-import { existsSync, readFileSync }         from 'fs';
-import { dirname, join }                    from 'path';
-import { homedir }                          from 'os';
-import { fileURLToPath }                    from 'url';
+#!/usr/bin/env node
+import { existsSync, readFileSync } from 'fs';
+import { dirname, join }            from 'path';
+import { homedir }                  from 'os';
+import { fileURLToPath }            from 'url';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
-
-if (!existsSync(join(__dir, 'node_modules', '@modelcontextprotocol'))) {
-  process.stderr.write('[spmc] Installing dependencies...\n');
-  execSync('npm install --silent', { cwd: __dir, stdio: 'pipe' });
-  process.stderr.write('[spmc] Dependencies ready.\n');
-}
 
 // ─── Load credentials from a .env file ────────────────────────────────────
 // Priority order:

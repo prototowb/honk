@@ -1,218 +1,329 @@
-# Social Publishing Mission Control (SPMC)
+# SPMC — Social Publishing Mission Control
 
-AI-native social publishing infrastructure. MCP server + skills + scheduler. No UI required — the agent is the interface.
+AI-native MCP server for publishing to X, Instagram, TikTok, Facebook, Threads, and Bluesky.  
+The agent is the interface — no UI required.
 
-**Platforms:** X · Instagram · TikTok · Facebook · Threads · Bluesky  
-**Status:** MVP + Alpha (Phase 0–1)
-
----
-
-## Quick start
-
-### 1. Put your credentials in `~/.claude/spmc.env`
-
-```bash
-# Windows: %USERPROFILE%\.claude\spmc.env
-# macOS/Linux: ~/.claude/spmc.env
-```
-
-Copy `.env.example` and fill in your keys. This file is auto-loaded by the server on startup and survives reinstalls.
-
-### 2. Register with Claude Desktop
-
-Merge the `mcpServers` block from `claude_desktop_config.json` into  
-`%APPDATA%\Claude\claude_desktop_config.json` (Windows) or  
-`~/Library/Application Support/Claude/claude_desktop_config.json` (macOS).
-
-It points at `spmc-server/start.js`, which launches both the MCP server and the scheduler in one process.
-
-### 3. Restart Claude Desktop
-
-The `spmc` server appears in the MCP connections list. All 13 tools are immediately available.
+**15 MCP tools:** direct posting · content queue · scheduler · media pipeline (compose + CDN upload)
 
 ---
 
-## Structure
+## Credentials — do this first
+
+All agent surfaces load credentials from the same file. Set it up once and every integration works:
 
 ```
-spmc-server/
-├── index.js          MCP server — 13 tools
-├── run.js            Launcher: load creds → start MCP server
-├── start.js          Launcher: spawn scheduler child → start MCP server (use this for Claude Desktop)
-├── adapters/         One file per platform
-│   ├── x.js
-│   ├── instagram.js
-│   ├── tiktok.js
-│   ├── facebook.js
-│   ├── threads.js
-│   └── bluesky.js
-├── queue/
-│   └── store.js      File-backed JSON queue
-└── scheduler/
-    ├── index.js      Scheduler launcher (load creds → start scheduler)
-    └── scheduler.js  Polls queue every 60s, dispatches due items
-
-skills/               Claude Code SKILL.md files (trigger detection)
-hermes/               Hermes agent integration (CONTEXT.md, SKILLS.md, mcp-config.json)
-.claude-plugin/       Claude Desktop plugin manifest
-claude_desktop_config.json   Drop-in MCP config
-.env.example          All required env vars + multi-account examples
+Windows:     %USERPROFILE%\.claude\spmc.env
+macOS/Linux: ~/.claude/spmc.env
 ```
+
+Copy `.env.example` to that path and fill in your keys. This file survives reinstalls and is the primary location for all surfaces. A `spmc-server/.env` fallback is also supported for local dev.
 
 ---
 
-## MCP tools
+## Claude App (Claude Code Plugin)
 
-### Media
+The project ships as a Claude Code plugin. When active, Claude Code:
+- Loads the MCP server automatically via `.mcp.json`
+- Discovers and activates the 8 skills in `skills/`
 
-| Tool | What it does |
-|------|-------------|
-| `media_compose` | Render a branded image from a template locally (sharp, no external service) → auto-upload → public URL |
-| `media_upload` | Upload an existing local file → public URL |
+**Setup:**
 
-**Templates** (all based on brand palette from `DESIGN_GUIDE.md`):
+1. Run `npm install` inside `spmc-server/`
+2. Add credentials to `~/.claude/spmc.env`
+3. Load the plugin in Claude Code (the `.claude-plugin/plugin.json` and `.mcp.json` are auto-read from the project root)
 
-| ID | Dimensions | Platforms |
-|----|-----------|-----------|
-| `square-dark` | 1080×1080 | Instagram, Threads, Facebook |
-| `story-dark` | 1080×1920 | Instagram Stories, TikTok |
-| `banner-wide` | 1200×628 | X card, Facebook share |
+**How it works:**
 
-All templates accept: `headline`, `subtext`, `bg_color`, `accent`, `bg_image_url` (optional backdrop).
+`.mcp.json` declares the server connection using `${CLAUDE_PLUGIN_ROOT}` — Claude Code resolves this to wherever the plugin lives, so no path hardcoding is needed. Credentials flow in as `${VAR}` placeholders resolved from the running environment.
 
-CDN provider is auto-selected: Cloudinary (images + video) → imgbb fallback (images only). Set `CLOUDINARY_*` or `IMGBB_API_KEY` in your env.
+**Skills (`skills/`):**
 
-### Publishing
+| Skill | Trigger examples |
+|-------|-----------------|
+| `post-to-x` | "post to X", "tweet this", "post a thread" |
+| `post-to-instagram` | "post to Instagram", "post this photo" |
+| `post-to-tiktok` | "upload to TikTok", "post this video" |
+| `post-to-facebook` | "post to Facebook", "publish to my page" |
+| `post-to-threads` | "post to Threads", "share on Threads" |
+| `post-to-bluesky` | "post to Bluesky", "publish on Bluesky" |
+| `manage-queue` | "show my queue", "schedule this for tomorrow", "dispatch queued post" |
+| `upload-media` | "upload this image", "get a public URL for this file" |
 
-| Tool | Platform | Required inputs |
-|------|----------|-----------------|
-| `x_post_tweet` | X | `text` |
-| `x_post_thread` | X | `tweets[]` |
-| `instagram_post` | Instagram | `image_url`, `caption` |
-| `tiktok_post_video` | TikTok | `video_url`, `caption` |
-| `tiktok_check_publish_status` | TikTok | `publish_id` |
-| `facebook_post` | Facebook | `message` |
-| `threads_post` | Threads | `text` |
-| `bluesky_post` | Bluesky | `text` |
-
-All publishing tools accept an optional `account` field — see [Multi-account](#multi-account) below.
-
-### Queue
-
-| Tool | What it does |
-|------|-------------|
-| `queue_add` | Add a post (optionally scheduled) |
-| `queue_list` | List items, filter by `status` or `platform` |
-| `queue_update` | Edit content, scheduled_at, or status |
-| `queue_remove` | Delete an item |
-| `queue_dispatch` | Publish immediately regardless of scheduled_at |
-
-Queue item lifecycle: `pending` → `dispatched` → `published` \| `failed`
+All skills route to tools on the `spmc` MCP server.
 
 ---
 
-## Scheduling
+## Claude Desktop App
 
-Add an item with a future `scheduled_at` and the scheduler handles dispatch automatically:
+Merge the `mcpServers` block into your Claude Desktop config file:
 
+| OS | Path |
+|----|------|
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+
+**Option A — npm (after `npm install -g spmc` or once published):**
+
+```json
+{
+  "mcpServers": {
+    "spmc": {
+      "command": "npx",
+      "args": ["-y", "spmc"]
+    }
+  }
+}
 ```
-queue_add(
-  platform: "bluesky",
-  content: { text: "good morning" },
-  scheduled_at: "2026-06-11T09:00:00Z"
-)
+
+**Option B — local clone:**
+
+```json
+{
+  "mcpServers": {
+    "spmc": {
+      "command": "node",
+      "args": ["C:\\path\\to\\spmc-server\\run.js"]
+    }
+  }
+}
 ```
 
-The scheduler polls every 60 seconds. Logs go to `~/.claude/spmc-scheduler.log`.
+**With scheduler** (auto-dispatches scheduled queue items every 60s):  
+Replace `run.js` with `start.js`. The scheduler runs as a background child process and logs to `~/.claude/spmc-scheduler.log`.
 
-To run the scheduler standalone (without the MCP server):
+Credentials load automatically from `~/.claude/spmc.env` at startup — do not put raw secrets in the Desktop config.
+
+Restart Claude Desktop after editing the config. The `spmc` server appears in the MCP connections panel and all 15 tools are immediately available.
+
+---
+
+## Hermes
+
+Hermes has its own self-contained integration pack in `hermes/`:
+
+| File | Purpose |
+|------|---------|
+| `hermes/mcp-config.json` | Drop-in MCP server connection block |
+| `hermes/CONTEXT.md` | Full operational briefing: all 15 tools, return values, platform gotchas, credential loading |
+| `hermes/SKILLS.md` | Trigger → tool reference for every platform + queue management + multi-platform campaigns |
+| `hermes/persona.md` | Pre-publish checklist, voice/tone defaults, confirmation vs. autonomous behavior rules |
+
+**Connect:**
+
+Drop this into your Hermes MCP config (update the path to match your clone):
+
+```json
+{
+  "mcpServers": {
+    "spmc": {
+      "command": "node",
+      "args": ["C:\\path\\to\\spmc-server\\run.js"]
+    }
+  }
+}
+```
+
+Or reference `hermes/mcp-config.json` directly if your Hermes setup supports file-based MCP configs.
+
+**Onboarding:**  
+On first contact, point Hermes at `hermes/CONTEXT.md`. It's written to be read once and then operated from — no external files required during a session. `hermes/SKILLS.md` gives Hermes its trigger mappings; `hermes/persona.md` defines the publishing persona and what requires user confirmation.
+
+**What Hermes operates autonomously (no confirmation needed):**
+- Reading the queue (`queue_list`)
+- Checking TikTok publish status
+- Adding to queue without dispatching
+
+**What always requires explicit user approval:**
+- Any publishing action (direct or `queue_dispatch`)
+- Deleting a queue item
+- Rescheduling to a different time than requested
+
+---
+
+## OpenClaw / Generic MCP Clients
+
+Any MCP client supporting stdio transport connects with a standard config block:
+
+```json
+{
+  "mcpServers": {
+    "spmc": {
+      "command": "node",
+      "args": ["/absolute/path/to/spmc-server/run.js"]
+    }
+  }
+}
+```
+
+Server name: `spmc`. All 15 tools are listed on `tools/list` with full JSON Schema definitions.
+
+**Credentials:** three options in priority order:
+1. `~/.claude/spmc.env` — file-based, auto-loaded on startup
+2. `spmc-server/.env` — local dev fallback
+3. Inherited from environment — if neither file exists, the server uses `process.env` directly
+
+**With scheduler:**  
+Use `start.js` instead of `run.js`. The scheduler spawns as a background process and logs to `~/.claude/spmc-scheduler.log` — this directory must exist. If running outside a Claude environment, change the log path in `spmc-server/start.js` or run the scheduler separately:
+
 ```bash
 node spmc-server/scheduler/index.js
 ```
 
 ---
 
-## Multi-account
+## Global / CLI Agents (npm)
 
-Any number of named accounts per platform, using double-underscore suffixes in your `.env`:
+The `spmc-server` package is structured for npm distribution. Install once and any config can reference it without a local clone.
 
+**Install globally:**
 ```bash
-# Default account (no suffix) — always the fallback
-X_API_KEY=...
+cd spmc-server
+npm install -g .           # install from local clone
 
-# Named account "brand"
-X_API_KEY__BRAND=...
-X_API_SECRET__BRAND=...
-X_ACCESS_TOKEN__BRAND=...
-X_ACCESS_TOKEN_SECRET__BRAND=...
+# or after npm publish:
+npm install -g spmc
 ```
 
-Pass `account: "brand"` to any publishing or queue tool to use it:
-
+**Run:**
+```bash
+spmc                       # MCP server (stdio)
+npx -y spmc                # without global install
 ```
-x_post_tweet(text: "hello from brand", account: "brand")
-queue_add(platform: "x", content: { text: "..." }, account: "brand")
+
+**Config block (any client):**
+```json
+{
+  "command": "npx",
+  "args": ["-y", "spmc"]
+}
 ```
 
-Account names are case-insensitive — `"brand"` and `"BRAND"` resolve to the same credentials. See `.env.example` for all platform examples.
+Credentials load from `~/.claude/spmc.env` automatically. No path hardcoding needed.
+
+**Scheduler** is not started by the npm bin (`run.js`). Run it separately if needed:
+```bash
+node $(npm root -g)/spmc/scheduler/index.js
+```
+Or use `start.js` as the entry point:
+```json
+{
+  "command": "node",
+  "args": ["$(npm root -g)/spmc/start.js"]
+}
+```
 
 ---
 
-## Agent integration
+## Quick Reference
 
-### Claude Code
-Skills in `skills/` are auto-discovered. Natural language triggers route to the right tool — "post to Instagram", "schedule a tweet", "show my queue", etc.
+| Surface | Entry point | Skills | Credentials |
+|---------|------------|--------|-------------|
+| Claude Code plugin | `.mcp.json` → `run.js` | `skills/` (auto-loaded) | `.mcp.json` `${VAR}` → env |
+| Claude Desktop | `claude_desktop_config.json` | — | `~/.claude/spmc.env` |
+| Hermes | `hermes/mcp-config.json` | `hermes/SKILLS.md` | `~/.claude/spmc.env` or env |
+| OpenClaw / other | stdio `node run.js` | — | `~/.claude/spmc.env` or env |
+| CLI / npm | `npx spmc` | — | `~/.claude/spmc.env` or env |
 
-### Claude Desktop App
-`start.js` is registered in `claude_desktop_config.json`. Tools appear automatically.
-
-### Hermes / custom agents
-See `hermes/` — contains `CONTEXT.md` (full briefing), `SKILLS.md` (trigger → tool reference), and `mcp-config.json` (drop-in server config).
-
-### Any MCP-compatible agent
-```bash
-node spmc-server/run.js   # MCP server only
-node spmc-server/start.js # MCP server + scheduler
-```
+**`run.js`** — MCP server only  
+**`start.js`** — MCP server + scheduler daemon (use this for always-on surfaces like Claude Desktop)
 
 ---
 
-## Credentials reference
+## MCP Tools
+
+### Publishing
+
+| Tool | Platform | Required | Notes |
+|------|----------|----------|-------|
+| `x_post_tweet` | X | `text` | Max 280 chars; URLs = 23 chars regardless of length |
+| `x_post_thread` | X | `tweets[]` | Ordered array; each item = one chained tweet |
+| `instagram_post` | Instagram | `image_url`, `caption` | Image URL must be publicly accessible |
+| `tiktok_post_video` | TikTok | `video_url`, `caption` | Async — returns `publish_id`, not a final URL |
+| `tiktok_check_publish_status` | TikTok | `publish_id` | Poll after `tiktok_post_video` to confirm |
+| `facebook_post` | Facebook | `message` | Optional `image_url`; posts to Page feed |
+| `threads_post` | Threads | `text` | Max 500 chars; optional `image_url` |
+| `bluesky_post` | Bluesky | `text` | Max 300 graphemes; app password auth |
+
+### Queue
+
+| Tool | What it does |
+|------|-------------|
+| `queue_add` | Add a post; optionally set `scheduled_at` (ISO 8601) |
+| `queue_list` | List items; filter by `status` or `platform` |
+| `queue_update` | Edit `content`, `scheduled_at`, or `status` |
+| `queue_remove` | Delete an item permanently |
+| `queue_dispatch` | Publish immediately regardless of scheduled time |
+
+Status lifecycle: `pending` → `dispatched` → `published` | `failed`
+
+### Media
+
+| Tool | What it does |
+|------|-------------|
+| `media_compose` | Render a branded image from a template (local sharp, no external service) → auto-upload → public URL |
+| `media_upload` | Upload a local file to a CDN → public URL |
+
+Templates: `square-dark` (1080×1080) · `story-dark` (1080×1920) · `banner-wide` (1200×628)  
+CDN: Cloudinary (images + video) auto-selected; imgbb fallback (images only).
+
+---
+
+## Credentials Reference
 
 | Platform | Required vars | Notes |
 |----------|--------------|-------|
-| X | `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET` | OAuth 1.0a. Pay-per-use since early 2026 (~$0.015/post). |
-| Instagram | `INSTAGRAM_USER_ID`, `INSTAGRAM_ACCESS_TOKEN` | Must be `EAA…` token from Facebook Login for Business — not `IGAA…`. Linked FB Page required. |
-| Facebook | `FACEBOOK_PAGE_ID`, `FACEBOOK_ACCESS_TOKEN` | Reuse Instagram `EAA…` token with `pages_manage_posts` scope added. |
-| TikTok | `TIKTOK_ACCESS_TOKEN` | `video.publish` scope. Posts are private/self-only until app passes audit. |
-| Threads | `THREADS_USER_ID`, `THREADS_ACCESS_TOKEN` | Separate from Instagram — own app registration and token. |
-| Bluesky | `BLUESKY_IDENTIFIER`, `BLUESKY_APP_PASSWORD` | App password only, no OAuth. Generate at bsky.app/settings/app-passwords. |
+| X | `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET` | OAuth 1.0a. Regenerate tokens after changing app permissions. |
+| Instagram | `INSTAGRAM_USER_ID`, `INSTAGRAM_ACCESS_TOKEN` | `EAA…` token (Facebook Login for Business), not `IGAA…`. Requires linked FB Page. |
+| Facebook | `FACEBOOK_PAGE_ID`, `FACEBOOK_ACCESS_TOKEN` | Same `EAA…` token as Instagram with `pages_manage_posts` scope. |
+| TikTok | `TIKTOK_ACCESS_TOKEN` | `video.publish` scope. Posts are `SELF_ONLY` until app passes TikTok audit. |
+| Threads | `THREADS_USER_ID`, `THREADS_ACCESS_TOKEN` | Separate app from Instagram — own token via `graph.threads.net`. |
+| Bluesky | `BLUESKY_IDENTIFIER`, `BLUESKY_APP_PASSWORD` | No OAuth. Generate at bsky.app/settings/app-passwords. |
+| Cloudinary | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Used by `media_compose` and `media_upload`. |
+| imgbb | `IMGBB_API_KEY` | Fallback CDN for images only. |
+
+**Multi-account:** suffix any credential key with `__ACCOUNTNAME` and pass `account: "name"` to any tool. See `.env.example` for examples.
 
 ---
 
-## Platform gotchas
+## Platform Gotchas
 
-**X** — Tokens need Read+Write permissions; regenerate after changing the permission level. No free tier for posting as of 2026.
+**X** — Tokens need Read+Write permissions set in the developer portal. Regenerate after changing permission level; the existing token won't gain the new scope.
 
-**Instagram** — Use the classic Graph API path (`graph.facebook.com`, `EAA…` token), not Instagram Business Login (`IGAA…` token). Link the IG Business Account to a Facebook Page before generating credentials. Use a System User token, not a personal-login token.
+**Instagram** — Use the classic Graph API path (`graph.facebook.com`, `EAA…` token). The newer Instagram Business Login issues `IGAA…` tokens that don't work for this API. Link the IG Business Account to a Facebook Page before generating credentials. System User tokens are more stable than personal-login tokens.
 
-**TikTok** — Posting is async: `tiktok_post_video` returns a `publish_id`; always follow up with `tiktok_check_publish_status`. Domain verification may be required for `PULL_FROM_URL`.
+**TikTok** — Posts are async. `tiktok_post_video` returns `publish_id`, not a URL. Always follow up with `tiktok_check_publish_status`. Domain verification may be required for `PULL_FROM_URL`. All posts land as private until the app passes TikTok's API audit.
 
-**Threads** — Not the same credentials as Instagram/Facebook despite being Meta. Separate app, separate token, separate API host (`graph.threads.net`).
+**Threads** — Completely separate from Instagram/Facebook despite being Meta. Different app registration, different API host (`graph.threads.net`), different token.
 
-**Bluesky** — 300 graphemes (not characters). Emoji-heavy text can exceed the limit before the character count suggests it. Auth is per-call; there's no token to refresh.
+**Bluesky** — 300 graphemes, not characters. Emoji-heavy text can exceed the limit before the character count suggests it. Auth is per-call; no token refresh needed.
 
 ---
 
-## Roadmap
+## Structure
 
-| Phase | Status |
-|-------|--------|
-| 0 — MVP: MCP server, all platforms, queue, skills, configs | ✅ Done |
-| 1 — Alpha: scheduler, multi-account, Hermes pack | ✅ Done |
-| 1 — Alpha: media pipeline (local → CDN → public URL) | ✅ Done |
-| 1 — Alpha: analytics ingestion (engagement 24h post-publish) | Pending |
-| 2 — Beta: multi-user auth, analytics dashboard, webhooks | Planned |
-| 3 — SaaS: web UI, teams, public API, subscriptions | Planned |
+```
+.claude-plugin/
+  plugin.json             Claude Code plugin manifest
+.mcp.json                 Claude Code MCP server connection (${CLAUDE_PLUGIN_ROOT})
+claude_desktop_config.json  Drop-in Claude Desktop config
+.env.example              All credential keys + multi-account examples
+
+skills/                   Claude Code SKILL.md files (8 total)
+hermes/                   Hermes integration pack
+  mcp-config.json
+  CONTEXT.md
+  SKILLS.md
+  persona.md
+
+spmc-server/
+  run.js                  Entry point: load creds → start MCP server
+  start.js                Entry point: spawn scheduler → start MCP server
+  index.js                MCP server — 15 tools
+  adapters/               One file per platform (6 total)
+  queue/store.js          File-backed JSON queue
+  scheduler/              Scheduler daemon (polls every 60s)
+  media/                  Compose + upload pipeline
+  package.json            npm package (bin: spmc → run.js)
+```
 
 Full specification: `PROJECT_SPECIFICATIONS.md`
