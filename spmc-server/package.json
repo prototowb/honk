@@ -15,7 +15,7 @@
     "index.js",
     "run.js",
     "start.js",
-    ".env.example"
+    "env.example"
   ],
   "scripts": {
     "start": "node run.js",
