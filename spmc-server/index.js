@@ -2,17 +2,22 @@ import { Server }               from '@modelcontextprotocol/sdk/server/index.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
-import * as x         from './adapters/x.js';
-import * as instagram from './adapters/instagram.js';
 import * as tiktok    from './adapters/tiktok.js';
-import * as facebook  from './adapters/facebook.js';
-import * as threads   from './adapters/threads.js';
-import * as bluesky   from './adapters/bluesky.js';
 import * as queue     from './queue/store.js';
 import * as media     from './media/upload.js';
 import * as compose   from './media/compose.js';
 
+import { publishAudited }                 from './lib/dispatch.js';
+import { validate, formatValidation }     from './lib/validate.js';
+import { adapt, formatAdaptation }        from './lib/adapt.js';
+import { report as configReport, formatReport } from './lib/config.js';
+import { normalizeScheduledAt, isPast }   from './lib/schedule.js';
+import { read as auditRead, record as auditRecord } from './lib/audit.js';
+import { hashContent }                    from './lib/hash.js';
+
 // ─── Tool definitions ─────────────────────────────────────────────────────
+
+const DRY_RUN_PROP = { type: 'boolean', description: 'If true, validate and preview the post without publishing. Records a dry_run audit entry.' };
 
 const TOOLS = [
   // ── X (Twitter) ──────────────────────────────────────────────────────────
@@ -24,6 +29,7 @@ const TOOLS = [
       properties: {
         text:    { type: 'string', description: 'Tweet text (max 280 chars)' },
         account: { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
+        dry_run: DRY_RUN_PROP,
       },
       required: ['text'],
     },
@@ -36,6 +42,7 @@ const TOOLS = [
       properties: {
         tweets:  { type: 'array', items: { type: 'string' }, description: 'Ordered array of tweet texts' },
         account: { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
+        dry_run: DRY_RUN_PROP,
       },
       required: ['tweets'],
     },
@@ -50,6 +57,7 @@ const TOOLS = [
         image_url: { type: 'string', description: 'Public image URL' },
         caption:   { type: 'string', description: 'Caption text including hashtags' },
         account:   { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
+        dry_run:   DRY_RUN_PROP,
       },
       required: ['image_url', 'caption'],
     },
@@ -69,6 +77,7 @@ const TOOLS = [
           enum: ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'FOLLOWER_OF_CREATOR', 'SELF_ONLY'],
         },
         account: { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
+        dry_run: DRY_RUN_PROP,
       },
       required: ['video_url', 'caption'],
     },
@@ -95,6 +104,7 @@ const TOOLS = [
         message:   { type: 'string', description: 'Post text / photo caption' },
         image_url: { type: 'string', description: 'Optional public image URL' },
         account:   { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
+        dry_run:   DRY_RUN_PROP,
       },
       required: ['message'],
     },
@@ -109,6 +119,7 @@ const TOOLS = [
         text:      { type: 'string', description: 'Post text (max 500 chars)' },
         image_url: { type: 'string', description: 'Optional public image URL' },
         account:   { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
+        dry_run:   DRY_RUN_PROP,
       },
       required: ['text'],
     },
@@ -122,20 +133,75 @@ const TOOLS = [
       properties: {
         text:    { type: 'string', description: 'Post text (max 300 graphemes)' },
         account: { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
+        dry_run: DRY_RUN_PROP,
       },
       required: ['text'],
+    },
+  },
+  // ── Content intelligence ───────────────────────────────────────────────────
+  {
+    name: 'content_validate',
+    description: 'Validate a post payload against a platform\'s rules (length, required fields, media) without publishing. Returns errors that would block publishing and warnings. Use before queuing or posting.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        platform: { type: 'string', description: 'Target platform', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] },
+        content:  { type: 'object', description: 'Platform-specific content fields (same shape as the posting tools)' },
+      },
+      required: ['platform', 'content'],
+    },
+  },
+  {
+    name: 'content_adapt',
+    description: 'Fit one source text to multiple platforms\' hard limits: auto-splits a long post into an X thread, grapheme-truncates for Bluesky, etc. Returns ready-to-post content per platform plus warnings. This handles the deterministic length-fitting only — rewrite tone/hashtags yourself before posting.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        text:      { type: 'string', description: 'Source text to adapt' },
+        platforms: { type: 'array', items: { type: 'string', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] }, description: 'Target platforms. Omit for all six.' },
+      },
+      required: ['text'],
+    },
+  },
+  {
+    name: 'config_doctor',
+    description: 'Report which platforms and named accounts have credentials configured (by env-var presence only — never reveals values), plus media providers. Use to check setup before publishing.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'audit_log',
+    description: 'Read the publish audit trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, and result. Filter by platform/status/source.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        platform: { type: 'string', description: 'Filter by platform' },
+        status:   { type: 'string', description: 'Filter by status', enum: ['published', 'failed', 'dry_run'] },
+        source:   { type: 'string', description: 'Filter by source', enum: ['direct', 'queue', 'scheduler'] },
+        limit:    { type: 'number', description: 'Max entries to return (most recent first). Default 50.' },
+      },
+    },
+  },
+  {
+    name: 'schedule_check',
+    description: 'Validate and normalize a scheduled_at timestamp to canonical UTC ISO 8601. Rejects timestamps without an explicit timezone (which would fire at the wrong instant). Returns the normalized value and whether it is in the past.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        scheduled_at: { type: 'string', description: 'ISO 8601 datetime with explicit timezone, e.g. 2026-06-15T09:00:00-04:00 or 2026-06-15T13:00:00Z' },
+      },
+      required: ['scheduled_at'],
     },
   },
   // ── Queue ─────────────────────────────────────────────────────────────────
   {
     name: 'queue_add',
-    description: 'Add a post to the content queue. Optionally schedule it for a future ISO 8601 timestamp.',
+    description: 'Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601 with an explicit timezone). Content is validated; warnings are returned but do not block queuing.',
     inputSchema: {
       type: 'object',
       properties: {
         platform:     { type: 'string', description: 'Target platform: x, instagram, tiktok, facebook, threads, bluesky', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] },
         content:      { type: 'object', description: 'Platform-specific content fields (same as the direct posting tools)' },
-        scheduled_at: { type: 'string', description: 'Optional ISO 8601 datetime to schedule publishing' },
+        scheduled_at: { type: 'string', description: 'Optional ISO 8601 datetime with timezone (e.g. ...Z or -04:00) to schedule publishing' },
         account:      { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
       },
       required: ['platform', 'content'],
@@ -178,7 +244,10 @@ const TOOLS = [
     description: 'Immediately publish a queued post, regardless of its scheduled_at time.',
     inputSchema: {
       type: 'object',
-      properties: { id: { type: 'string', description: 'Queue item ID' } },
+      properties: {
+        id:      { type: 'string', description: 'Queue item ID' },
+        dry_run: DRY_RUN_PROP,
+      },
       required: ['id'],
     },
   },
@@ -216,43 +285,7 @@ const TOOLS = [
   },
 ];
 
-// ─── Dispatcher ───────────────────────────────────────────────────────────
-
-async function publish(platform, content, account = '') {
-  switch (platform) {
-    case 'x': {
-      if (content.tweets) return queue_fmt_thread(await x.postThread(content.tweets, account));
-      return `Tweet posted!\nURL: ${(await x.postSingleTweet(content.text, account)).url}`;
-    }
-    case 'instagram': {
-      const r = await instagram.post(content.image_url, content.caption, account);
-      return `Instagram post published! Media ID: ${r.id}`;
-    }
-    case 'tiktok': {
-      const r = await tiktok.postVideo(content.video_url, content.caption, content.privacy_level, account);
-      return `TikTok submitted! Publish ID: ${r.publish_id}\nUse tiktok_check_publish_status to confirm.`;
-    }
-    case 'facebook': {
-      const r = await facebook.post(content.message, content.image_url, account);
-      return `Facebook post published! ID: ${r.post_id || r.id}`;
-    }
-    case 'threads': {
-      const r = await threads.post(content.text, content.image_url, account);
-      return `Threads post published! ID: ${r.id}`;
-    }
-    case 'bluesky': {
-      const r = await bluesky.post(content.text, account);
-      const postId = r.uri.split('/').pop();
-      return `Bluesky post published!\nURI: ${r.uri}\nView: https://bsky.app/profile/${r.identifier}/post/${postId}`;
-    }
-    default:
-      throw new Error(`Unknown platform: ${platform}`);
-  }
-}
-
-function queue_fmt_thread(r) {
-  return `Thread posted! ${r.count} tweets.\nFirst: ${r.firstUrl}`;
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────
 
 function ok(text) {
   return { content: [{ type: 'text', text }] };
@@ -260,6 +293,24 @@ function ok(text) {
 
 function err(e) {
   return { content: [{ type: 'text', text: `Error: ${e.message}` }], isError: true };
+}
+
+// Single publish path for every direct posting tool: validate → (dry-run preview
+// | audited publish). Returns the agent-facing summary string.
+async function doPublish(platform, content, account, dryRun) {
+  const v = validate(platform, content);
+  if (!v.ok) {
+    throw new Error(`Validation failed for ${v.label || platform}:\n` + v.errors.map(e => `  - ${e}`).join('\n'));
+  }
+  const warn = v.warnings.length ? `\nWarnings:\n` + v.warnings.map(w => `  - ${w}`).join('\n') : '';
+
+  if (dryRun) {
+    auditRecord({ platform, account: account || null, source: 'direct', status: 'dry_run', content_hash: hashContent(content) });
+    return `DRY RUN — ${v.label} payload is valid; nothing was published.${warn}`;
+  }
+
+  const { summary } = await publishAudited(platform, content, account, { source: 'direct' });
+  return summary + warn;
 }
 
 // ─── Server ───────────────────────────────────────────────────────────────
@@ -276,44 +327,56 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     switch (name) {
       // ── Direct publishing ───────────────────────────────────────────────
-      case 'x_post_tweet': {
-        const r = await x.postSingleTweet(args.text, args.account ?? '');
-        return ok(`Tweet posted!\nID: ${r.id}\nURL: ${r.url}`);
-      }
-      case 'x_post_thread': {
-        const r = await x.postThread(args.tweets, args.account ?? '');
-        return ok(`Thread posted! ${r.count} tweets.\nFirst: ${r.firstUrl}`);
-      }
-      case 'instagram_post': {
-        const r = await instagram.post(args.image_url, args.caption, args.account ?? '');
-        return ok(`Instagram post published! Media ID: ${r.id}`);
-      }
-      case 'tiktok_post_video': {
-        const r = await tiktok.postVideo(args.video_url, args.caption, args.privacy_level, args.account ?? '');
-        return ok(`TikTok submitted! Publish ID: ${r.publish_id}\nUse tiktok_check_publish_status to confirm.\nNote: unaudited apps post as private/self-only regardless of privacy_level.`);
-      }
+      case 'x_post_tweet':
+        return ok(await doPublish('x', { text: args.text }, args.account ?? '', args.dry_run));
+      case 'x_post_thread':
+        return ok(await doPublish('x', { tweets: args.tweets }, args.account ?? '', args.dry_run));
+      case 'instagram_post':
+        return ok(await doPublish('instagram', { image_url: args.image_url, caption: args.caption }, args.account ?? '', args.dry_run));
+      case 'tiktok_post_video':
+        return ok(await doPublish('tiktok', { video_url: args.video_url, caption: args.caption, privacy_level: args.privacy_level }, args.account ?? '', args.dry_run));
       case 'tiktok_check_publish_status': {
         const r = await tiktok.checkStatus(args.publish_id, args.account ?? '');
         return ok(`TikTok publish status: ${r.status}${r.fail_reason ? ` (reason: ${r.fail_reason})` : ''}`);
       }
-      case 'facebook_post': {
-        const r = await facebook.post(args.message, args.image_url, args.account ?? '');
-        return ok(`Facebook post published! ID: ${r.post_id || r.id}`);
+      case 'facebook_post':
+        return ok(await doPublish('facebook', { message: args.message, image_url: args.image_url }, args.account ?? '', args.dry_run));
+      case 'threads_post':
+        return ok(await doPublish('threads', { text: args.text, image_url: args.image_url }, args.account ?? '', args.dry_run));
+      case 'bluesky_post':
+        return ok(await doPublish('bluesky', { text: args.text }, args.account ?? '', args.dry_run));
+
+      // ── Content intelligence ──────────────────────────────────────────────
+      case 'content_validate':
+        return ok(formatValidation(validate(args.platform, args.content)));
+      case 'content_adapt':
+        return ok(formatAdaptation(adapt(args.text, args.platforms)));
+      case 'config_doctor':
+        return ok(formatReport(configReport()));
+      case 'audit_log': {
+        const entries = auditRead({ platform: args.platform, status: args.status, source: args.source, limit: args.limit });
+        if (entries.length === 0) return ok('No audit entries yet.');
+        const lines = entries.map(e =>
+          `${e.ts} | ${e.status.padEnd(9)} | ${e.platform}${e.account ? `/${e.account}` : ''} | ${e.source} | #${e.content_hash}`
+          + (e.error ? `\n    error: ${e.error}` : '')
+        );
+        return ok(`${entries.length} entr${entries.length === 1 ? 'y' : 'ies'} (most recent first):\n${lines.join('\n')}`);
       }
-      case 'threads_post': {
-        const r = await threads.post(args.text, args.image_url, args.account ?? '');
-        return ok(`Threads post published! ID: ${r.id}`);
-      }
-      case 'bluesky_post': {
-        const r = await bluesky.post(args.text, args.account ?? '');
-        const postId = r.uri.split('/').pop();
-        return ok(`Bluesky post published!\nURI: ${r.uri}\nView: https://bsky.app/profile/${r.identifier}/post/${postId}`);
+      case 'schedule_check': {
+        const normalized = normalizeScheduledAt(args.scheduled_at);
+        return ok(`Normalized: ${normalized}\nIn the past: ${isPast(normalized) ? 'yes — would dispatch on next scheduler tick' : 'no'}`);
       }
 
       // ── Queue ────────────────────────────────────────────────────────────
       case 'queue_add': {
-        const item = queue.add(args.platform, args.content, args.scheduled_at ?? null, args.account ?? '');
-        return ok(`Queued! ID: ${item.id}\nPlatform: ${item.platform}\nStatus: ${item.status}${item.account ? `\nAccount: ${item.account}` : ''}${item.scheduled_at ? `\nScheduled: ${item.scheduled_at}` : ''}`);
+        const scheduledAt = normalizeScheduledAt(args.scheduled_at ?? null);
+        const v = validate(args.platform, args.content);
+        const item = queue.add(args.platform, args.content, scheduledAt, args.account ?? '');
+        const warn = v.ok
+          ? (v.warnings.length ? `\n⚠ ${v.warnings.join('; ')}` : '')
+          : `\n⚠ Content has validation errors (queued anyway):\n` + v.errors.map(e => `  - ${e}`).join('\n');
+        const past = scheduledAt && isPast(scheduledAt) ? `\n⚠ scheduled_at is in the past — will dispatch on next scheduler tick.` : '';
+        return ok(`Queued! ID: ${item.id}\nPlatform: ${item.platform}\nStatus: ${item.status}${item.account ? `\nAccount: ${item.account}` : ''}${item.scheduled_at ? `\nScheduled: ${item.scheduled_at}` : ''}${past}${warn}`);
       }
       case 'queue_list': {
         const items = queue.list({ status: args.status, platform: args.platform });
@@ -333,11 +396,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
       case 'queue_dispatch': {
         const item = queue.get(args.id);
+        if (args.dry_run) {
+          const v = validate(item.platform, item.content);
+          auditRecord({ platform: item.platform, account: item.account || null, source: 'queue', status: 'dry_run', content_hash: hashContent(item.content) });
+          return ok(`DRY RUN — ${item.id} (${item.platform}) ${v.ok ? 'is valid; not published.' : 'has errors:\n' + v.errors.map(e => `  - ${e}`).join('\n')}`);
+        }
         queue.update(args.id, { status: 'dispatched' });
         try {
-          const msg = await publish(item.platform, item.content, item.account ?? '');
-          queue.update(args.id, { status: 'published', published_at: new Date().toISOString(), result: msg });
-          return ok(`Dispatched!\n${msg}`);
+          const { summary } = await publishAudited(item.platform, item.content, item.account ?? '', { source: 'queue' });
+          queue.update(args.id, { status: 'published', published_at: new Date().toISOString(), result: summary });
+          return ok(`Dispatched!\n${summary}`);
         } catch (e) {
           queue.update(args.id, { status: 'failed', error: e.message });
           throw e;
