@@ -254,7 +254,7 @@ Every publishing tool (and `queue_dispatch`) accepts **`dry_run: true`** — it 
 | `content_adapt` | Fit one source text to multiple platforms' hard limits — auto-splits a long post into an X thread, grapheme-truncates for Bluesky, etc. Deterministic fitting only; you do the tone/hashtag rewrite. |
 | `config_doctor` | Report which platforms and named accounts have credentials configured (by env presence — never reveals values), plus media providers. |
 | `audit_log` | Read the append-only publish trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, result. Filter by platform/status/source. |
-| `schedule_check` | Validate + normalize a `scheduled_at` to canonical UTC ISO 8601. Rejects timestamps without an explicit timezone (which would fire at the wrong instant). |
+| `schedule_check` | Validate + normalize a `scheduled_at` to canonical UTC ISO 8601. A timestamp without a timezone is read as server-local and flagged with a warning (ambiguous under hosted deployment). |
 
 ### Queue
 

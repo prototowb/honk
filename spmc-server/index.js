@@ -11,7 +11,7 @@ import { publishAudited }                 from './lib/dispatch.js';
 import { validate, formatValidation }     from './lib/validate.js';
 import { adapt, formatAdaptation }        from './lib/adapt.js';
 import { report as configReport, formatReport } from './lib/config.js';
-import { normalizeScheduledAt, isPast }   from './lib/schedule.js';
+import { normalizeScheduledAt, isPast, timezoneWarning } from './lib/schedule.js';
 import { read as auditRead, record as auditRecord } from './lib/audit.js';
 import { hashContent }                    from './lib/hash.js';
 import { status as rateLimitStatus }      from './lib/ratelimit.js';
@@ -185,7 +185,7 @@ const TOOLS = [
   },
   {
     name: 'schedule_check',
-    description: 'Validate and normalize a scheduled_at timestamp to canonical UTC ISO 8601. Rejects timestamps without an explicit timezone (which would fire at the wrong instant). Returns the normalized value and whether it is in the past.',
+    description: 'Validate and normalize a scheduled_at timestamp to canonical UTC ISO 8601. A timestamp without an explicit timezone is interpreted as the server\'s local time and flagged with a warning (it becomes ambiguous under hosted/multi-user deployment). Returns the normalized value and whether it is in the past.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -228,13 +228,13 @@ const TOOLS = [
   // ── Queue ─────────────────────────────────────────────────────────────────
   {
     name: 'queue_add',
-    description: 'Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601 with an explicit timezone). Content is validated; warnings are returned but do not block queuing.',
+    description: 'Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing.',
     inputSchema: {
       type: 'object',
       properties: {
         platform:     { type: 'string', description: 'Target platform: x, instagram, tiktok, facebook, threads, bluesky', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] },
         content:      { type: 'object', description: 'Platform-specific content fields (same as the direct posting tools)' },
-        scheduled_at: { type: 'string', description: 'Optional ISO 8601 datetime with timezone (e.g. ...Z or -04:00) to schedule publishing' },
+        scheduled_at: { type: 'string', description: 'Optional ISO 8601 datetime to schedule publishing. Prefer an explicit timezone (e.g. ...Z or -04:00); a naive time is interpreted as server-local.' },
         account:      { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
       },
       required: ['platform', 'content'],
@@ -397,7 +397,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
       case 'schedule_check': {
         const normalized = normalizeScheduledAt(args.scheduled_at);
-        return ok(`Normalized: ${normalized}\nIn the past: ${isPast(normalized) ? 'yes — would dispatch on next scheduler tick' : 'no'}`);
+        const tzWarn = timezoneWarning(args.scheduled_at);
+        return ok(
+          `Normalized: ${normalized}\nIn the past: ${isPast(normalized) ? 'yes — would dispatch on next scheduler tick' : 'no'}`
+          + (tzWarn ? `\n⚠ ${tzWarn}` : ''),
+        );
       }
 
       // ── Observability ─────────────────────────────────────────────────────
@@ -433,7 +437,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           ? (v.warnings.length ? `\n⚠ ${v.warnings.join('; ')}` : '')
           : `\n⚠ Content has validation errors (queued anyway):\n` + v.errors.map(e => `  - ${e}`).join('\n');
         const past = scheduledAt && isPast(scheduledAt) ? `\n⚠ scheduled_at is in the past — will dispatch on next scheduler tick.` : '';
-        return ok(`Queued! ID: ${item.id}\nPlatform: ${item.platform}\nStatus: ${item.status}${item.account ? `\nAccount: ${item.account}` : ''}${item.scheduled_at ? `\nScheduled: ${item.scheduled_at}` : ''}${past}${warn}`);
+        const tzWarn = scheduledAt ? timezoneWarning(args.scheduled_at) : '';
+        return ok(`Queued! ID: ${item.id}\nPlatform: ${item.platform}\nStatus: ${item.status}${item.account ? `\nAccount: ${item.account}` : ''}${item.scheduled_at ? `\nScheduled: ${item.scheduled_at}` : ''}${past}${tzWarn ? `\n⚠ ${tzWarn}` : ''}${warn}`);
       }
       case 'queue_list': {
         const items = queue.list({ status: args.status, platform: args.platform });

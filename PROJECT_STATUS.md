@@ -58,7 +58,7 @@ or only additively extended.
 | BETA-004 | Audit log (`lib/audit.js`) + `audit_log` tool — append-only record of every publish/failure/dry-run | ✅ Done |
 | BETA-005 | `content_adapt` — deterministic cross-platform fitting (auto X thread-split, grapheme truncation) | ✅ Done |
 | BETA-006 | `config_doctor` — report configured platforms/accounts by env presence (no secret values) | ✅ Done |
-| BETA-007 | `scheduled_at` ISO normalization + `schedule_check` — reject tz-ambiguous timestamps (wrong-instant bug) | ✅ Done |
+| BETA-007 | `scheduled_at` ISO normalization + `schedule_check` — naive timestamp accepted as server-local but warned (avoids wrong-instant bug under hosting) | ✅ Done |
 | BETA-008 | Rate-limit tracking (`rate_limits`) + analytics ingestion scaffold (`analytics_fetch`/`analytics_report`, IG/FB/Threads) — **unverified pending live creds** | ✅ Done |
 | BETA-009 | Test suite: 37 `node:test` unit tests + MCP smoke test; `npm test` / `npm run test:smoke` | ✅ Done |
 

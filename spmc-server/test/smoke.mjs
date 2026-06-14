@@ -70,12 +70,14 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('audit_log records the dry-run', !r.isError && /dry_run/.test(text(r)));
 }
 
-// schedule_check — normalizes a tz-aware timestamp, rejects a naive one.
+// schedule_check — normalizes a tz-aware timestamp, warns on a naive one.
 {
   const good = await client.callTool({ name: 'schedule_check', arguments: { scheduled_at: '2026-06-15T09:00:00-04:00' } });
   check('schedule_check normalizes to UTC', !good.isError && /2026-06-15T13:00:00\.000Z/.test(text(good)));
-  const bad = await client.callTool({ name: 'schedule_check', arguments: { scheduled_at: '2026-06-15T09:00:00' } });
-  check('schedule_check rejects a naive timestamp', bad.isError && /timezone/i.test(text(bad)));
+  const naive = await client.callTool({ name: 'schedule_check', arguments: { scheduled_at: '2026-06-15T09:00:00' } });
+  check('schedule_check warns (not errors) on a naive timestamp', !naive.isError && /timezone|local time/i.test(text(naive)));
+  const bad = await client.callTool({ name: 'schedule_check', arguments: { scheduled_at: 'not-a-real-date' } });
+  check('schedule_check rejects an invalid timestamp', bad.isError && /valid/i.test(text(bad)));
 }
 
 // observability tools respond cleanly with no data yet.

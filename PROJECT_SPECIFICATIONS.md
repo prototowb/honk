@@ -48,7 +48,7 @@ Late-stage target: a multi-tenant SaaS that leaves Blotato, Buffer-AI, and Tapli
 - [x] AI content adaptation: `content_adapt` fits a source to each platform's hard limits (auto X thread-split, grapheme-aware truncation). The deterministic length-fitting is done in-server; per-channel tone/hashtag rewrite is left to the calling agent (agent-first by design).
 - [x] Media pipeline: local image → Cloudinary/CDN → public URL
 - [x] Hermes-specific skill pack: persona-aware publishing instructions for the Hermes agent
-- [x] Scheduling correctness: `scheduled_at` is normalized and **requires an explicit timezone** (`schedule_check` + `queue_add`), rejecting naive timestamps that would fire at the wrong instant. Natural-language parsing is intentionally left to the agent, which already knows the current date/time.
+- [x] Scheduling correctness: `scheduled_at` is normalized to absolute UTC (`schedule_check` + `queue_add`). A timezone-less timestamp is accepted as **server-local** (correct on a local single-user server) but **flagged with a warning**, since it becomes ambiguous under hosted/multi-user deployment. Natural-language parsing is intentionally left to the agent, which already knows the current date/time.
 
 ---
 

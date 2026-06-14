@@ -12,7 +12,7 @@ Tool surface **15 → 23**. All new tools are credential-free and verified by **
 - **Content intelligence (5 tools):** `content_validate`, `content_adapt` (auto X thread-split, grapheme-aware Bluesky truncation), `config_doctor` (credential presence, no secret values), `audit_log`, `schedule_check`.
 - **`dry_run`** on every publish tool + `queue_dispatch` — validate & preview without sending. This is the interim substitute for live testing.
 - **Audit log** (`lib/audit.js`): append-only JSONL in `spmc-server/data/audit.log` (gitignored); content hashed, not stored raw.
-- **`scheduled_at` normalization** (`lib/schedule.js`): requires an explicit timezone; rejects naive timestamps that would fire at the wrong instant. Wired into `queue_add`.
+- **`scheduled_at` normalization** (`lib/schedule.js`): canonicalizes to absolute UTC. A timezone-less timestamp is accepted as **server-local** (correct on a local single-user server) but **flagged with a warning** — it only becomes a wrong-instant risk under hosted/multi-tenant. Wired into `queue_add` + `schedule_check`. (Softened from an initial hard-reject after review — hard-reject was friction for the local case with no present-day benefit.)
 - **Observability (3 tools, UNVERIFIED):** `rate_limits` (tallies observed 429s), `analytics_fetch` / `analytics_report` (+ `getMetrics` on IG/FB/Threads adapters). Store + routing are real; **not exercised against live APIs**.
 - **Tests:** `spmc-server/test/*.test.mjs` (node:test, zero deps) + `test/smoke.mjs` (drives the real server over stdio). `npm test`, `npm run test:smoke`.
 - **Docs updated:** PROJECT_STATUS, PROJECT_SPECIFICATIONS (roadmap checkboxes), PROJECT_ARCHITECTURE (lib/ layer + design decisions), README (new tool tables, counts 15→23), new TESTING.md + BRANCHING.md.
@@ -23,6 +23,20 @@ Tool surface **15 → 23**. All new tools are credential-free and verified by **
 - **Live credential testing (still deferred by request)** — no platform tested end-to-end. Suggested order: Bluesky → X → Meta. This also confirms the unverified `analytics_*` / `getMetrics` paths.
 - **UI implementation planning — intentionally NOT started** (this was the stop line). Next phase: analytics dashboard + content calendar (Phase 2/3).
 - **Hermes pack + `skills/` predate the 8 new tools.** The tools work on every MCP surface regardless (they're in `tools/list`), but `hermes/CONTEXT.md`, `hermes/SKILLS.md`, and `skills/` don't yet document content_validate/content_adapt/config_doctor/audit_log/schedule_check/rate_limits/analytics_*. Worth a follow-up so agents discover them via skills, not just tool listing.
+
+## Verified By Inspection Only (no live creds)
+
+The test suite cannot reach these without real credentials — they're correct by
+reading, not by execution. Confirm during BETA-010 live testing:
+
+- **The scheduler `account` fix** — the bug that started this work. The smoke test
+  only exercises the **dry-run** branch, which returns *before* any adapter call,
+  so no test drives a real publish through `publishAudited`.
+- **The real publish path** through the unified dispatcher (direct + queue + scheduler).
+- **Scheduler post-refactor:** `node --check`'d only. It will load (same `dispatch.js`
+  the smoke test already imports), but **importing `scheduler/scheduler.js` starts it**
+  (top-level `tick()` + `setInterval`) — don't import it just to "check"; trust the
+  shared module graph or add an entry guard if you want it importable in a test.
 
 ## Conventions In Force
 

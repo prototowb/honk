@@ -52,7 +52,7 @@ Each platform lives in one file with named exports matching their semantic actio
 `lib/specs.js` is the single source of truth for platform constraints; `lib/validate.js` checks payloads against it. `dry_run` runs validation and previews routing without calling any platform API. This exercises the full server path (validation → formatting → dispatch routing) with zero credentials — the safety net used while live credential testing is deferred.
 
 ### Agent-first content intelligence
-`content_adapt` does only the deterministic residue (counting, grapheme-aware truncation, thread-splitting). The creative rewrite (tone, hashtags, per-channel voice) stays with the calling agent. Similarly, `scheduled_at` is normalized (timezone required) rather than parsed from natural language — the agent already knows the current time and produces an absolute timestamp.
+`content_adapt` does only the deterministic residue (counting, grapheme-aware truncation, thread-splitting). The creative rewrite (tone, hashtags, per-channel voice) stays with the calling agent. Similarly, `scheduled_at` is normalized to absolute UTC rather than parsed from natural language — the agent already knows the current time. A timezone-less timestamp is accepted as server-local (correct for the local single-user server) but warned, since it would be ambiguous once hosted/multi-tenant.
 
 ### Unverified scaffolds, clearly marked
 `lib/analytics.js` + adapter `getMetrics` and `lib/ratelimit.js` depend on live API behavior that has not been exercised. They are built (store, routing, tools) but labeled unverified in code and docs; the automatic backoff queue is intentionally not built yet.
