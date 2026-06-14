@@ -37,6 +37,12 @@ x_post_thread(tweets: ["Tweet 1 text", "Tweet 2 text", ...])
 
 On success, report the first tweet URL. On error, show which tweet failed.
 
+### Preview before posting (optional)
+
+- `x_post_tweet(text, dry_run: true)` / `x_post_thread(tweets, dry_run: true)` — validate and preview without sending.
+- `content_validate(platform: "x", content: { text })` (or `{ tweets }`) — check limits without posting.
+- Long single post? `content_adapt(text, ["x"])` auto-splits it into an in-limit thread. See the `content-intelligence` skill.
+
 ### After posting
 
 Confirm: platform, post type, URL, timestamp. Update queue item status if one exists.

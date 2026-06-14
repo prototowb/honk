@@ -22,10 +22,18 @@ Use queue tools from the `spmc` MCP server. All tools work without platform cred
 queue_add(
   platform: "x" | "instagram" | "tiktok" | "facebook" | "threads" | "bluesky",
   content: { /* same fields as the direct posting tool */ },
-  scheduled_at: "2026-06-11T09:00:00Z",  // optional ISO 8601
+  scheduled_at: "2026-06-11T09:00:00Z",  // optional ISO 8601 — prefer a timezone offset
   account: "brand"                        // optional — omit for default account
 )
 ```
+
+`queue_add` validates the content on the way in (warnings are returned but never
+block queuing). To check separately first, use `content_validate(platform, content)`.
+
+`scheduled_at`: include an explicit timezone (`...Z` or `±HH:MM`). A naive time
+(e.g. `2026-06-11T09:00:00`) is interpreted as the server's local time and the
+response warns you. Use `schedule_check(scheduled_at)` to preview how a timestamp
+normalizes and whether it's already in the past.
 
 Examples by platform:
 - X tweet: `content: { text: "hello world" }`
@@ -63,6 +71,9 @@ queue_remove(id: "q_...")
 
 ```
 queue_dispatch(id: "q_...")
+queue_dispatch(id: "q_...", dry_run: true)   // validate + preview, sends nothing
 ```
 
-Dispatches now regardless of `scheduled_at`. Updates status to `published` on success, `failed` on error.
+Dispatches now regardless of `scheduled_at`. Updates status to `published` on success, `failed` on error. With `dry_run: true` it validates the item and previews without sending (and records a `dry_run` audit entry).
+
+For setup checks and the publish history, see the `content-intelligence` skill (`config_doctor`, `audit_log`).

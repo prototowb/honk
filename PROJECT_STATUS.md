@@ -76,7 +76,7 @@ or only additively extended.
 |--------|-------|
 | Platforms supported | 6 (X, Instagram, TikTok, Facebook, Threads, Bluesky) |
 | MCP tools | 23 (7 publishing + 1 tiktok-status + 5 content-intelligence + 5 queue + 3 observability + 2 media) |
-| Claude Code skills | 8 (6 platform + manage-queue + upload-media) |
+| Claude Code skills | 9 (6 platform + manage-queue + upload-media + content-intelligence) |
 | Tests | 37 unit (`node:test`) + 12-check MCP smoke test |
 | npm package | `spmc` v0.1.0-alpha.1 |
 | Dependencies | 2 (`@modelcontextprotocol/sdk`, `sharp`) — unchanged |

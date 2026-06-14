@@ -24,7 +24,7 @@ Copy `.env.example` to that path and fill in your keys. This file survives reins
 
 The project ships as a Claude Code plugin. When active, Claude Code:
 - Loads the MCP server automatically via `.mcp.json`
-- Discovers and activates the 8 skills in `skills/`
+- Discovers and activates the 9 skills in `skills/`
 
 **Setup:**
 
@@ -48,6 +48,7 @@ The project ships as a Claude Code plugin. When active, Claude Code:
 | `post-to-bluesky` | "post to Bluesky", "publish on Bluesky" |
 | `manage-queue` | "show my queue", "schedule this for tomorrow", "dispatch queued post" |
 | `upload-media` | "upload this image", "get a public URL for this file" |
+| `content-intelligence` | "validate this post", "dry run", "adapt for all platforms", "check my setup", "show the audit log" |
 
 All skills route to tools on the `spmc` MCP server.
 
@@ -332,7 +333,7 @@ CDN: Cloudinary (images + video) auto-selected; imgbb fallback (images only).
 claude_desktop_config.json  Drop-in Claude Desktop config
 .env.example              All credential keys + multi-account examples
 
-skills/                   Claude Code SKILL.md files (8 total)
+skills/                   Claude Code SKILL.md files (9 total)
 hermes/                   Hermes integration pack
   mcp-config.json
   CONTEXT.md

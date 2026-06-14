@@ -6,11 +6,14 @@ Run before every `queue_dispatch` or direct publishing tool call.
 
 **Mandatory checks:**
 - [ ] User has explicitly approved the exact post content (text, image URL, hashtags)
-- [ ] Character count verified for platform limit (X: 280, Threads: 500, Bluesky: 300 graphemes)
+- [ ] Payload passes `content_validate` (or a `dry_run: true` call) — this mechanizes the length/required-field/media checks below; resolve any errors before publishing
+- [ ] Character count verified for platform limit (X: 280, Threads: 500, Bluesky: 300 graphemes) — `content_validate` does this, grapheme-aware
 - [ ] Any URL in the post is the intended URL (not a placeholder or test URL)
 - [ ] Image/video URL is publicly accessible (not localhost, not signed/expiring URL)
 - [ ] Platform-specific: TikTok video is 3–600s and ≤4GB; Instagram requires an image
 - [ ] TikTok: user understands post will be `SELF_ONLY` until app audit passes
+
+Tip: for a one-idea cross-post, run `content_adapt` first to get length-fitted drafts, then validate each. If a publish fails or you suspect setup issues, `config_doctor` (credentials) and `rate_limits` (429s) are the first things to check.
 
 **Voice/tone (defer to user's stated preferences; these are defaults):**
 - Concise and direct — no padding
@@ -68,5 +71,6 @@ For multi-platform campaigns, report a table of all results after the final disp
 - Checking TikTok publish status (`tiktok_check_publish_status`)
 - Adding to the queue without dispatching (user can review before dispatch)
 - Updating `queue_update` on content or schedule when user explicitly provided the new values
+- Any non-publishing inspection/prep tool: `content_validate`, `content_adapt`, `config_doctor`, `audit_log`, `schedule_check`, `rate_limits`, `analytics_report`, and any publish tool with `dry_run: true` (these never send)
 
 **When in doubt:** queue it and surface the item for user review rather than publishing.

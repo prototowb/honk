@@ -22,7 +22,7 @@ Tool surface **15 → 23**. All new tools are credential-free and verified by **
 - **Merge + push** `feature/BETA-001-capability-expansion` — awaiting user review. Nothing pushed to GitHub yet.
 - **Live credential testing (still deferred by request)** — no platform tested end-to-end. Suggested order: Bluesky → X → Meta. This also confirms the unverified `analytics_*` / `getMetrics` paths.
 - **UI implementation planning — intentionally NOT started** (this was the stop line). Next phase: analytics dashboard + content calendar (Phase 2/3).
-- **Hermes pack + `skills/` predate the 8 new tools.** The tools work on every MCP surface regardless (they're in `tools/list`), but `hermes/CONTEXT.md`, `hermes/SKILLS.md`, and `skills/` don't yet document content_validate/content_adapt/config_doctor/audit_log/schedule_check/rate_limits/analytics_*. Worth a follow-up so agents discover them via skills, not just tool listing.
+- **Hermes pack + `skills/` now cover the new tools** (done this session). `hermes/CONTEXT.md` (23 tools, Content Intelligence + Observability sections, `dry_run`, pre-publish flow), `hermes/SKILLS.md` + `persona.md` updated; new `skills/content-intelligence/SKILL.md`; `manage-queue` + all 6 platform skills note `dry_run`/`content_validate`. Skill count 8 → 9.
 
 ## Verified By Inspection Only (no live creds)
 
