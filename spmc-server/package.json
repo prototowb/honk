@@ -21,7 +21,9 @@
     "start": "node run.js",
     "dev": "node --watch index.js",
     "scheduler": "node scheduler/index.js",
-    "scheduler:dev": "node --watch scheduler/index.js"
+    "scheduler:dev": "node --watch scheduler/index.js",
+    "test": "node --test \"test/*.test.mjs\"",
+    "test:smoke": "node test/smoke.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",

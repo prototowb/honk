@@ -28,6 +28,11 @@ bluesky_post(text: "<post text>")
 
 Max 300 graphemes (not characters — emoji/multi-byte differ).
 
+### Preview before posting (optional)
+
+- `bluesky_post(text, dry_run: true)` — validate and preview without sending.
+- `content_validate(platform: "bluesky", content: { text })` — checks the 300-**grapheme** limit (emoji-aware) before posting. See the `content-intelligence` skill.
+
 ### After posting
 
 Confirm: platform, post URI, direct link. Update queue status if applicable.

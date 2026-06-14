@@ -31,6 +31,11 @@ instagram_post(image_url: "<public URL>", caption: "<caption>")
 - Keep the hook in the first 125 chars (truncated in feed preview).
 - Hashtags at the end or in the first comment.
 
+### Preview before posting (optional)
+
+- `instagram_post(image_url, caption, dry_run: true)` — validate and preview without sending.
+- `content_validate(platform: "instagram", content: { image_url, caption })` — confirms the image URL and caption length before posting. See the `content-intelligence` skill.
+
 ### After posting
 
 Confirm: platform, media ID, note it'll appear in the feed. Update queue status if applicable.

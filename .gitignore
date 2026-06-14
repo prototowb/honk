@@ -3,5 +3,6 @@ node_modules/
 *.env
 !.env.example
 spmc-server/queue/queue.json
+spmc-server/data/
 *.log
 .DS_Store

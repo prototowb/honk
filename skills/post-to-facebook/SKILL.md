@@ -29,6 +29,11 @@ Photo post (image with caption):
 facebook_post(message: "<caption>", image_url: "<public image URL>")
 ```
 
+### Preview before posting (optional)
+
+- `facebook_post(message, image_url?, dry_run: true)` — validate and preview without sending.
+- `content_validate(platform: "facebook", content: { message, image_url? })` — check before posting. See the `content-intelligence` skill.
+
 ### After posting
 
 Confirm: platform, post ID. Update queue status if applicable.

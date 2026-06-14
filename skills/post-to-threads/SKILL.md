@@ -31,6 +31,11 @@ threads_post(text: "<post text>", image_url: "<public image URL>")
 
 Max 500 characters for text.
 
+### Preview before posting (optional)
+
+- `threads_post(text, image_url?, dry_run: true)` — validate and preview without sending.
+- `content_validate(platform: "threads", content: { text, image_url? })` — checks the 500-char limit before posting. See the `content-intelligence` skill.
+
 ### After posting
 
 Confirm: platform, post ID. Update queue status if applicable.

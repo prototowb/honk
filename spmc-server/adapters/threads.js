@@ -32,3 +32,17 @@ export async function post(text, imageUrl = null, account = '') {
 
   return publishRes.json();
 }
+
+// Engagement metrics for a published thread via the insights edge.
+// Unverified against the live API (credential testing deferred).
+export async function getMetrics(mediaId, account = '') {
+  const accessToken = env('THREADS_ACCESS_TOKEN', account);
+  const metrics = 'views,likes,replies,reposts,quotes';
+  const res = await fetch(`${BASE}/${mediaId}/insights?metric=${metrics}&access_token=${accessToken}`);
+  if (!res.ok) throw new Error(`Threads insights ${res.status}: ${await res.text()}`);
+
+  const json = await res.json();
+  const out = {};
+  for (const d of json.data ?? []) out[d.name] = d.values?.[0]?.value ?? d.total_value?.value;
+  return out;
+}

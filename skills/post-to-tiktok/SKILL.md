@@ -37,6 +37,11 @@ Then confirm it processed:
 tiktok_check_publish_status(publish_id: "<id>")
 ```
 
+### Preview before posting (optional)
+
+- `tiktok_post_video(video_url, caption, dry_run: true)` — validate and preview without sending.
+- `content_validate(platform: "tiktok", content: { video_url, caption })` — confirms a public video URL and caption before posting. See the `content-intelligence` skill.
+
 ### After posting
 
 Confirm: platform, publish_id, current status, private/self-only caveat if unaudited.
