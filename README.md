@@ -3,7 +3,7 @@
 AI-native MCP server for publishing to X, Instagram, TikTok, Facebook, Threads, and Bluesky.  
 The agent is the interface — no UI required.
 
-**15 MCP tools:** direct posting · content queue · scheduler · media pipeline (compose + CDN upload)
+**23 MCP tools:** direct posting · content validation & cross-platform adaptation · dry-run previews · audit log · content queue · scheduler · media pipeline (compose + CDN upload) · config + rate-limit + analytics introspection
 
 ---
 
@@ -93,7 +93,7 @@ Replace `run.js` with `start.js`. The scheduler runs as a background child proce
 
 Credentials load automatically from `~/.claude/spmc.env` at startup — do not put raw secrets in the Desktop config.
 
-Restart Claude Desktop after editing the config. The `spmc` server appears in the MCP connections panel and all 15 tools are immediately available.
+Restart Claude Desktop after editing the config. The `spmc` server appears in the MCP connections panel and all 23 tools are immediately available.
 
 ---
 
@@ -104,7 +104,7 @@ Hermes has its own self-contained integration pack in `hermes/`:
 | File | Purpose |
 |------|---------|
 | `hermes/mcp-config.json` | Drop-in MCP server connection block |
-| `hermes/CONTEXT.md` | Full operational briefing: all 15 tools, return values, platform gotchas, credential loading |
+| `hermes/CONTEXT.md` | Full operational briefing: the publishing/queue/media tools, return values, platform gotchas, credential loading (predates the Beta-Prep content-intelligence tools — see SESSION_HANDOFF) |
 | `hermes/SKILLS.md` | Trigger → tool reference for every platform + queue management + multi-platform campaigns |
 | `hermes/persona.md` | Pre-publish checklist, voice/tone defaults, confirmation vs. autonomous behavior rules |
 
@@ -155,7 +155,7 @@ Any MCP client supporting stdio transport connects with a standard config block:
 }
 ```
 
-Server name: `spmc`. All 15 tools are listed on `tools/list` with full JSON Schema definitions.
+Server name: `spmc`. All 23 tools are listed on `tools/list` with full JSON Schema definitions.
 
 **Credentials:** three options in priority order:
 1. `~/.claude/spmc.env` — file-based, auto-loaded on startup
@@ -244,6 +244,18 @@ Or use `start.js` as the entry point:
 | `threads_post` | Threads | `text` | Max 500 chars; optional `image_url` |
 | `bluesky_post` | Bluesky | `text` | Max 300 graphemes; app password auth |
 
+Every publishing tool (and `queue_dispatch`) accepts **`dry_run: true`** — it validates the payload and previews routing without sending, and records a `dry_run` audit entry. Use it to rehearse a post before going live.
+
+### Content intelligence & safety
+
+| Tool | What it does |
+|------|-------------|
+| `content_validate` | Check a payload against a platform's rules (length, required fields, media URL) without publishing. Returns blocking errors + warnings. |
+| `content_adapt` | Fit one source text to multiple platforms' hard limits — auto-splits a long post into an X thread, grapheme-truncates for Bluesky, etc. Deterministic fitting only; you do the tone/hashtag rewrite. |
+| `config_doctor` | Report which platforms and named accounts have credentials configured (by env presence — never reveals values), plus media providers. |
+| `audit_log` | Read the append-only publish trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, result. Filter by platform/status/source. |
+| `schedule_check` | Validate + normalize a `scheduled_at` to canonical UTC ISO 8601. Rejects timestamps without an explicit timezone (which would fire at the wrong instant). |
+
 ### Queue
 
 | Tool | What it does |
@@ -265,6 +277,18 @@ Status lifecycle: `pending` → `dispatched` → `published` | `failed`
 
 Templates: `square-dark` (1080×1080) · `story-dark` (1080×1920) · `banner-wide` (1200×628)  
 CDN: Cloudinary (images + video) auto-selected; imgbb fallback (images only).
+
+### Observability
+
+| Tool | What it does |
+|------|-------------|
+| `rate_limits` | Show HTTP 429 responses observed per platform (tallied from publish errors). Observational — does not yet gate sending. |
+| `analytics_fetch` | Fetch engagement metrics for a published post and store a timestamped snapshot. Supported: Instagram, Facebook, Threads (Graph insights). |
+| `analytics_report` | Read stored engagement snapshots, most recent first; filter by platform/post. |
+
+> **Unverified:** `analytics_*` and `rate_limits` depend on live API behavior that
+> has not yet been exercised against real credentials. The store, routing, and
+> tools are real; live confirmation is pending credential testing.
 
 ---
 
@@ -318,12 +342,17 @@ hermes/                   Hermes integration pack
 spmc-server/
   run.js                  Entry point: load creds → start MCP server
   start.js                Entry point: spawn scheduler → start MCP server
-  index.js                MCP server — 15 tools
-  adapters/               One file per platform (6 total)
+  index.js                MCP server — 23 tools
+  adapters/               One file per platform (6 total) + getMetrics (IG/FB/Threads)
+  lib/                    Dispatcher, specs, validate, adapt, config, schedule, audit, analytics
   queue/store.js          File-backed JSON queue
   scheduler/              Scheduler daemon (polls every 60s)
   media/                  Compose + upload pipeline
+  data/                   Runtime state (audit log etc.) — gitignored
+  test/                   node:test unit suites + smoke.mjs
   package.json            npm package (bin: spmc → run.js)
 ```
+
+**Tests:** `cd spmc-server && npm test` (37 unit) · `npm run test:smoke` (drives the real server over MCP).
 
 Full specification: `PROJECT_SPECIFICATIONS.md`

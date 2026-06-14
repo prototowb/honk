@@ -64,6 +64,28 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('bluesky_post dry_run previews without publishing', !r.isError && /dry run/i.test(text(r)));
 }
 
+// audit_log — the dry-run above should be recorded.
+{
+  const r = await client.callTool({ name: 'audit_log', arguments: { status: 'dry_run' } });
+  check('audit_log records the dry-run', !r.isError && /dry_run/.test(text(r)));
+}
+
+// schedule_check — normalizes a tz-aware timestamp, rejects a naive one.
+{
+  const good = await client.callTool({ name: 'schedule_check', arguments: { scheduled_at: '2026-06-15T09:00:00-04:00' } });
+  check('schedule_check normalizes to UTC', !good.isError && /2026-06-15T13:00:00\.000Z/.test(text(good)));
+  const bad = await client.callTool({ name: 'schedule_check', arguments: { scheduled_at: '2026-06-15T09:00:00' } });
+  check('schedule_check rejects a naive timestamp', bad.isError && /timezone/i.test(text(bad)));
+}
+
+// observability tools respond cleanly with no data yet.
+{
+  const rl = await client.callTool({ name: 'rate_limits', arguments: {} });
+  check('rate_limits responds', !rl.isError);
+  const ar = await client.callTool({ name: 'analytics_report', arguments: {} });
+  check('analytics_report responds', !ar.isError);
+}
+
 // queue add/list/remove round-trip.
 {
   const add = await client.callTool({ name: 'queue_add', arguments: { platform: 'bluesky', content: { text: 'queued' } } });

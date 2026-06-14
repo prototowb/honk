@@ -43,25 +43,30 @@ Late-stage target: a multi-tenant SaaS that leaves Blotato, Buffer-AI, and Tapli
 ### Phase 1 — Alpha (private, us + Hermes)
 **Goal:** Content intelligence layer. Start extracting signal from what we publish.
 
-- [ ] Multi-account support (multiple X accounts, multiple IG pages, etc.)
-- [ ] Post analytics ingestion: fetch engagement metrics 24h after publish, store locally
-- [ ] AI content adaptation: given a long-form piece, generate platform-optimal variants per channel (character limits, tone, hashtag strategy)
-- [ ] Media pipeline: local image → Cloudinary/CDN → public URL, so agents don't have to pre-host images manually
-- [ ] Hermes-specific skill pack: persona-aware publishing instructions for the Hermes agent
-- [ ] Scheduling UX improvement: `schedule_post` tool accepts natural-language time ("tomorrow at 9am EST")
+- [x] Multi-account support (multiple X accounts, multiple IG pages, etc.)
+- [~] Post analytics ingestion: fetch engagement metrics, store locally — `analytics_fetch`/`analytics_report` + IG/FB/Threads adapter `getMetrics`. **Scaffold built; unverified against live APIs pending credential testing.**
+- [x] AI content adaptation: `content_adapt` fits a source to each platform's hard limits (auto X thread-split, grapheme-aware truncation). The deterministic length-fitting is done in-server; per-channel tone/hashtag rewrite is left to the calling agent (agent-first by design).
+- [x] Media pipeline: local image → Cloudinary/CDN → public URL
+- [x] Hermes-specific skill pack: persona-aware publishing instructions for the Hermes agent
+- [x] Scheduling correctness: `scheduled_at` is normalized and **requires an explicit timezone** (`schedule_check` + `queue_add`), rejecting naive timestamps that would fire at the wrong instant. Natural-language parsing is intentionally left to the agent, which already knows the current date/time.
 
 ---
 
 ### Phase 2 — Beta (closed, us + invited users)
 **Goal:** Multi-user, hardened, instrumented.
 
-- [ ] Auth layer: API key per user, scoped to their credential set
-- [ ] Per-user credential vault (encrypted at rest)
-- [ ] Analytics dashboard (first UI surface — read-only)
-- [ ] Content calendar view
-- [ ] Webhook ingest: receive platform webhooks (DMs, mentions) and surface them as MCP notifications
-- [ ] Rate-limit tracking across all platforms with automatic backoff queue
-- [ ] Audit log: every publish action recorded with agent ID, timestamp, payload hash
+- [ ] Auth layer: API key per user, scoped to their credential set _(deferred — pairs with multi-tenant/hosted, past the local-stdio stop line)_
+- [ ] Per-user credential vault (encrypted at rest) _(deferred — same)_
+- [ ] Analytics dashboard (first UI surface — read-only) **← UI stop line; planning not started**
+- [ ] Content calendar view **← UI**
+- [ ] Webhook ingest: receive platform webhooks (DMs, mentions) and surface them as MCP notifications _(deferred — needs a hosted listener)_
+- [~] Rate-limit tracking across all platforms with automatic backoff queue — `rate_limits` tool tallies observed 429s today. **Observational only; automatic backoff queue not yet built.**
+- [x] Audit log: every publish action recorded with timestamp, source, payload hash (`lib/audit.js` + `audit_log` tool)
+
+> **Capability/UI boundary:** everything above the dashboard line is agent-first
+> infrastructure and is largely in place. The dashboard, calendar, and the
+> multi-tenant auth/vault/webhook items are the UI/hosted phase — intentionally
+> not started.
 
 ---
 

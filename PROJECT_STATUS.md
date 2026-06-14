@@ -5,22 +5,29 @@
 ## Current State
 
 ```yaml
-project_phase: "Alpha"
+project_phase: "Beta-Prep"
 project_name: "Social Publishing Mission Control (SPMC)"
 framework: "MCP server + Claude skills"
 project_type: "AI-native social publishing plugin"
 initialization_date: "2026-06-10"
-current_sprint: "Alpha-1"
+current_sprint: "Beta-Prep"
 version: "0.1.0-alpha.1"
 ```
 
-## Sprint Alpha-1 — Complete
+## Sprint Beta-Prep — Complete (non-UI capabilities)
 
-Goal: Packaging, distribution, and documentation for first release.
+Goal: Expand capabilities toward a versatile, near-beta state — content
+intelligence, safety/observability, and a real test suite — without starting
+any UI work. Branch: `feature/BETA-001-capability-expansion`.
+
+Outcome: tool surface 15 → 23, all new tools credential-free and verified by
+37 unit tests + a 12-check MCP smoke test. Live credential testing remains
+deferred by decision; live-path adapters (publishing, analytics) are unchanged
+or only additively extended.
 
 ## Active Tickets
 
-*None.*
+*None.* Next phase is UI implementation **planning** (Beta) — not yet started.
 
 ## Completed Tickets
 
@@ -45,28 +52,39 @@ Goal: Packaging, distribution, and documentation for first release.
 | ALPHA-005d | `claude_desktop_config.json` updated: `npx spmc`, removed broken `${VAR}` env block | ✅ Done |
 | ALPHA-005e | `README.md` — full setup guide for all agent surfaces | ✅ Done |
 | ALPHA-005f | `.gitignore` finalized | ✅ Done |
+| BETA-001 | Unify publish dispatcher (`lib/dispatch.js`); fix scheduler dropping `account` on scheduled multi-account posts | ✅ Done |
+| BETA-002 | `lib/specs.js` + `content_validate`: platform rules engine (limits, required fields, media, grapheme-aware) | ✅ Done |
+| BETA-003 | `dry_run` on all publish tools + `queue_dispatch` — validate & preview without sending | ✅ Done |
+| BETA-004 | Audit log (`lib/audit.js`) + `audit_log` tool — append-only record of every publish/failure/dry-run | ✅ Done |
+| BETA-005 | `content_adapt` — deterministic cross-platform fitting (auto X thread-split, grapheme truncation) | ✅ Done |
+| BETA-006 | `config_doctor` — report configured platforms/accounts by env presence (no secret values) | ✅ Done |
+| BETA-007 | `scheduled_at` ISO normalization + `schedule_check` — reject tz-ambiguous timestamps (wrong-instant bug) | ✅ Done |
+| BETA-008 | Rate-limit tracking (`rate_limits`) + analytics ingestion scaffold (`analytics_fetch`/`analytics_report`, IG/FB/Threads) — **unverified pending live creds** | ✅ Done |
+| BETA-009 | Test suite: 37 `node:test` unit tests + MCP smoke test; `npm test` / `npm run test:smoke` | ✅ Done |
 
 ## Next Up
 
 | ID | Title | Priority |
 |----|-------|----------|
-| ALPHA-006 | `git init` + first commit + GitHub remote | 🔴 Now |
-| ALPHA-007 | `npm pack` dry run — verify package structure | 🔴 Now |
-| ALPHA-008 | Analytics ingestion: fetch post engagement 24h after publish | Low |
+| BETA-010 | Live credential testing (deferred): Bluesky → X → Meta. Confirms publish + analytics paths | 🔴 Now (deferred by request) |
+| BETA-011 | UI implementation **planning** — analytics dashboard + content calendar (Phase 2/3). NOT started | ⚪ Next phase (stop line) |
+| ALPHA-008 | Auto-fetch analytics 24h after publish (scheduler hook) | Low |
 
 ## Project Metrics
 
 | Metric | Value |
 |--------|-------|
 | Platforms supported | 6 (X, Instagram, TikTok, Facebook, Threads, Bluesky) |
-| MCP tools | 15 (8 publishing + 5 queue + 2 media) |
+| MCP tools | 23 (7 publishing + 1 tiktok-status + 5 content-intelligence + 5 queue + 3 observability + 2 media) |
 | Claude Code skills | 8 (6 platform + manage-queue + upload-media) |
+| Tests | 37 unit (`node:test`) + 12-check MCP smoke test |
 | npm package | `spmc` v0.1.0-alpha.1 |
-| Dependencies | 2 (`@modelcontextprotocol/sdk`, `sharp`) |
+| Dependencies | 2 (`@modelcontextprotocol/sdk`, `sharp`) — unchanged |
 | Agent surfaces | 5 (Claude Code, Claude Desktop, Hermes, OpenClaw/generic, CLI/npm) |
 
 ## Recent Updates
 
+- 2026-06-14: Beta-Prep sprint — tool surface 15 → 23, content intelligence + audit + observability + tests; dispatcher unified (scheduler account bug fixed). UI work intentionally not started.
 - 2026-06-14: Alpha-1 packaged — npm package, Claude Code plugin, README, git init
 - 2026-06-10: Media pipeline shipped (ALPHA-003)
 - 2026-06-10: MVP shipped — MCP server live, all tools verified, configs ready

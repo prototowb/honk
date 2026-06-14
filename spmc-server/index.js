@@ -14,6 +14,8 @@ import { report as configReport, formatReport } from './lib/config.js';
 import { normalizeScheduledAt, isPast }   from './lib/schedule.js';
 import { read as auditRead, record as auditRecord } from './lib/audit.js';
 import { hashContent }                    from './lib/hash.js';
+import { status as rateLimitStatus }      from './lib/ratelimit.js';
+import { fetchMetrics, report as analyticsReport, SUPPORTED_PLATFORMS } from './lib/analytics.js';
 
 // ─── Tool definitions ─────────────────────────────────────────────────────
 
@@ -192,6 +194,37 @@ const TOOLS = [
       required: ['scheduled_at'],
     },
   },
+  // ── Observability ──────────────────────────────────────────────────────────
+  {
+    name: 'rate_limits',
+    description: 'Show rate-limit responses (HTTP 429) observed per platform, tallied from publish errors. Observational only — does not yet gate sending.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'analytics_fetch',
+    description: 'Fetch engagement metrics for a published post and store a timestamped snapshot. Supported: instagram, facebook, threads (Graph insights). Requires the platform post/media ID. NOTE: unverified against live APIs pending credential testing.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        platform: { type: 'string', description: 'Platform the post was published to', enum: ['instagram', 'facebook', 'threads'] },
+        post_id:  { type: 'string', description: 'Platform post/media ID returned at publish time' },
+        account:  { type: 'string', description: "Named account (e.g. 'brand'). Must match the publishing account." },
+      },
+      required: ['platform', 'post_id'],
+    },
+  },
+  {
+    name: 'analytics_report',
+    description: 'Read stored engagement snapshots, most recent first. Filter by platform or post_id.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        platform: { type: 'string', description: 'Filter by platform' },
+        post_id:  { type: 'string', description: 'Filter by post/media ID' },
+        limit:    { type: 'number', description: 'Max snapshots to return. Default 50.' },
+      },
+    },
+  },
   // ── Queue ─────────────────────────────────────────────────────────────────
   {
     name: 'queue_add',
@@ -365,6 +398,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'schedule_check': {
         const normalized = normalizeScheduledAt(args.scheduled_at);
         return ok(`Normalized: ${normalized}\nIn the past: ${isPast(normalized) ? 'yes — would dispatch on next scheduler tick' : 'no'}`);
+      }
+
+      // ── Observability ─────────────────────────────────────────────────────
+      case 'rate_limits': {
+        const s = rateLimitStatus();
+        const platforms = Object.keys(s);
+        if (platforms.length === 0) return ok('No rate-limit responses observed.');
+        const lines = platforms.map(p =>
+          `${p}: ${s[p].count} hit(s) | last: ${s[p].last_seen}${s[p].last_message ? `\n    ${s[p].last_message}` : ''}`
+        );
+        return ok(`Rate-limit responses seen:\n${lines.join('\n')}`);
+      }
+      case 'analytics_fetch': {
+        const metrics = await fetchMetrics(args.platform, args.post_id, args.account ?? '');
+        const lines = Object.entries(metrics).map(([k, v]) => `  ${k}: ${v}`);
+        return ok(`Metrics for ${args.platform} post ${args.post_id}:\n${lines.join('\n') || '  (none returned)'}`);
+      }
+      case 'analytics_report': {
+        const snaps = analyticsReport({ platform: args.platform, post_id: args.post_id, limit: args.limit });
+        if (snaps.length === 0) return ok(`No analytics snapshots yet. Supported platforms: ${SUPPORTED_PLATFORMS.join(', ')}.`);
+        const lines = snaps.map(s =>
+          `${s.ts} | ${s.platform}${s.account ? `/${s.account}` : ''} | ${s.post_id} | ${JSON.stringify(s.metrics)}`
+        );
+        return ok(`${snaps.length} snapshot(s):\n${lines.join('\n')}`);
       }
 
       // ── Queue ────────────────────────────────────────────────────────────
