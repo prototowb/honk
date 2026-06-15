@@ -102,6 +102,11 @@ const ARTIFACTS = [
   { path: 'TOOLS.md', render: renderToolCatalog },
 ];
 
+// Compare line-ending-independent: the generator emits LF, but git autocrlf
+// can leave CRLF in the working tree after a clone/checkout. Without this,
+// --check would report spurious drift on a fresh checkout (esp. on Windows).
+const norm = (s) => (s == null ? s : s.replace(/\r\n/g, '\n'));
+
 function run({ check }) {
   let drift = 0;
   for (const a of ARTIFACTS) {
@@ -109,16 +114,17 @@ function run({ check }) {
     const next     = a.render();
     const current  = existsSync(abs) ? readFileSync(abs, 'utf8') : null;
     const rel       = relative(ROOT, abs).replace(/\\/g, '/');
+    const matches   = norm(current) === next;
 
     if (check) {
-      if (current !== next) {
+      if (!matches) {
         drift++;
         console.error(`✗ stale: ${rel}${current === null ? ' (missing)' : ''}`);
       } else {
         console.log(`✓ up to date: ${rel}`);
       }
     } else {
-      if (current === next) {
+      if (matches) {
         console.log(`= unchanged: ${rel}`);
       } else {
         writeFileSync(abs, next);

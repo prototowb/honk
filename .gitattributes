@@ -1,0 +1,4 @@
+# Generated build artifacts are emitted with LF — keep them LF in the working
+# tree so `npm run build:check` never reports spurious drift from CRLF conversion.
+TOOLS.md     text eol=lf
+build/*.mjs  text eol=lf
