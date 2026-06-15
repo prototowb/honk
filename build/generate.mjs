@@ -96,10 +96,25 @@ function renderToolCatalog() {
   return md;
 }
 
+// ─── Artifact: .claude-plugin/plugin.json (Claude plugin manifest) ───────────
+
+function renderPluginManifest() {
+  const manifest = {
+    name:        pkg.name,
+    version:     pkg.version,
+    description: pkg.description,
+    author:      { name: typeof pkg.author === 'string' ? pkg.author : pkg.author?.name },
+    license:     pkg.license,
+    keywords:    pkg.keywords,
+  };
+  return JSON.stringify(manifest, null, 2) + '\n';
+}
+
 // ─── Artifact registry + write/check plumbing ────────────────────────────────
 
 const ARTIFACTS = [
-  { path: 'TOOLS.md', render: renderToolCatalog },
+  { path: 'TOOLS.md',                    render: renderToolCatalog },
+  { path: '.claude-plugin/plugin.json',  render: renderPluginManifest },
 ];
 
 // Compare line-ending-independent: the generator emits LF, but git autocrlf

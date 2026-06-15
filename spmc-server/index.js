@@ -17,9 +17,16 @@ import { hashContent }                    from './lib/hash.js';
 import { status as rateLimitStatus }      from './lib/ratelimit.js';
 import { fetchMetrics, report as analyticsReport, SUPPORTED_PLATFORMS } from './lib/analytics.js';
 import { TOOLS } from './lib/tools.js';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join }  from 'node:path';
 
 // Tool schemas live in lib/tools.js — the single origin shared by this server
 // and the build generator. See BUILD_CONCEPT.md.
+
+// Server identity comes from package.json — the single version origin (the
+// build generator reads the same file for plugin.json). No hardcoded version.
+const pkg = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'package.json'), 'utf8'));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -52,7 +59,7 @@ async function doPublish(platform, content, account, dryRun) {
 // ─── Server ───────────────────────────────────────────────────────────────
 
 const server = new Server(
-  { name: 'spmc', version: '0.1.0' },
+  { name: pkg.name, version: pkg.version },
   { capabilities: { tools: {} } },
 );
 
