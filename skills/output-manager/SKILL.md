@@ -1,6 +1,8 @@
 ---
-name: Manage content queue & schedule
-description: Manage the content dashboard, review queued content, generate platform-specific visuals, schedule posts, and publish to Instagram, Facebook, X, and TikTok. ALWAYS use this skill when the user wants to publish, post, schedule, queue, or review social media content — even if they don't say "output manager" or "queue." Also triggers when the user says "post this," "publish concept X," "schedule for Tuesday," or "what's in my queue."
+name: output-manager
+description: Generate platform-specific visuals for finished pipeline content before publishing — conversion-grade visual copy plus the protocode logo overlay for Instagram, Facebook, and TikTok. Use after the pipeline produces content and before handing it to the queue. For queueing, scheduling, dispatching, and publishing mechanics, use the manage-queue skill and the spmc queue tools.
+metadata:
+  version: "0.2.0"
 ---
 
 # Output Manager Skill

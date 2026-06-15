@@ -1,6 +1,8 @@
 ---
-name: Research topic trends
-description: Research trending topics and news to generate content ideas. Fetches trends from Google Trends, Reddit, news, and social platforms. Optional alternative to manual idea submission.
+name: research-trends
+description: Research trending topics and news to generate content ideas for the SPMC content pipeline. Surveys Google Trends, Reddit, news, and social platforms, then produces a pipeline-ready brief. Automated alternative to the idea-input skill; output feeds pipeline-orchestrator.
+metadata:
+  version: "0.2.0"
 ---
 
 # Topic Trends Research Skill

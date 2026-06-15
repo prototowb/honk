@@ -24,7 +24,7 @@ Copy `.env.example` to that path and fill in your keys. This file survives reins
 
 The project ships as a Claude Code plugin. When active, Claude Code:
 - Loads the MCP server automatically via `.mcp.json`
-- Discovers and activates the 9 skills in `skills/`
+- Discovers and activates the 13 skills in `skills/`
 
 **Setup:**
 
@@ -36,7 +36,9 @@ The project ships as a Claude Code plugin. When active, Claude Code:
 
 `.mcp.json` declares the server connection using `${CLAUDE_PLUGIN_ROOT}` — Claude Code resolves this to wherever the plugin lives, so no path hardcoding is needed. Credentials flow in as `${VAR}` placeholders resolved from the running environment.
 
-**Skills (`skills/`):**
+**Skills (`skills/`)** — two layers of one plugin:
+
+*Publishing engine — route to tools on the `spmc` MCP server:*
 
 | Skill | Trigger examples |
 |-------|-----------------|
@@ -50,7 +52,38 @@ The project ships as a Claude Code plugin. When active, Claude Code:
 | `upload-media` | "upload this image", "get a public URL for this file" |
 | `content-intelligence` | "validate this post", "dry run", "adapt for all platforms", "check my setup", "show the audit log" |
 
-All skills route to tools on the `spmc` MCP server.
+*Content pipeline — the creative layer (ideation → research → concept → review → content → hand-off to the queue):*
+
+| Skill | Trigger examples |
+|-------|-----------------|
+| `idea-input` | "I have a content idea", "submit a new idea" |
+| `research-trends` | "what's trending", "research topics for content" |
+| `pipeline-orchestrator` | "run the content pipeline", "generate concepts from this brief" |
+| `output-manager` | "make the visuals for this post", "add the logo overlay" |
+
+The pipeline produces platform-native content and hands it to the SPMC queue; the publishing-engine skills then schedule and publish it. See **Content Pipeline** below for the end-to-end workflow.
+
+---
+
+## Content Pipeline (creative layer)
+
+SPMC is two layers of one plugin: the **publishing engine** (the `spmc` MCP tools + their skills) and the **content pipeline** — an agent-side creative workflow that turns an idea or a trend into platform-native content, then hands it to the queue. The pipeline does creative work, not schema-driven work, so it lives entirely in skills (no server tools of its own).
+
+**Path A — manual idea:**
+
+```
+/idea-input            describe the idea (topic, audience, tone, references)
+  ↓
+/pipeline-orchestrator concepts → editorial review → platform-native content
+  ↓
+/output-manager        generate platform visuals (+ logo overlay)
+  ↓
+/manage-queue          review, schedule, dispatch  →  publishing engine
+```
+
+**Path B — trend research (automated):** swap the first step for `/research-trends`, which surveys Google Trends, Reddit, news, and social hashtags, selects a promising angle, and emits a pipeline-ready brief — then continues through the same orchestrator → visuals → queue path.
+
+**Scheduling:** both paths are schedulable (e.g. via Cowork's scheduler) — run trend research daily for a timely queue, mix in manual ideas for specific angles, and let the SPMC scheduler auto-dispatch queued items when their `scheduled_at` arrives. All paths feed the same queue.
 
 ---
 
@@ -333,7 +366,7 @@ CDN: Cloudinary (images + video) auto-selected; imgbb fallback (images only).
 claude_desktop_config.json  Drop-in Claude Desktop config
 .env.example              All credential keys + multi-account examples
 
-skills/                   Claude Code SKILL.md files (9 total)
+skills/                   Claude Code SKILL.md files (13 total: 9 publishing + 4 pipeline)
 hermes/                   Hermes integration pack
   mcp-config.json
   CONTEXT.md

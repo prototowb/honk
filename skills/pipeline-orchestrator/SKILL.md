@@ -1,6 +1,8 @@
 ---
-name: Run content pipeline
-description: Execute the full multi-agent pipeline in sequence. Takes an idea brief and produces platform-specific content ready for scheduling.
+name: pipeline-orchestrator
+description: Execute the full SPMC content pipeline in sequence — concept generation, editorial review, then platform-native content creation. Takes an idea brief (from idea-input or research-trends) and produces platform-specific content ready to hand off to the SPMC queue (queue_add / the manage-queue skill).
+metadata:
+  version: "0.2.0"
 ---
 
 # Content Pipeline Orchestrator

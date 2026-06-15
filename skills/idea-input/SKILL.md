@@ -1,6 +1,8 @@
 ---
-name: Submit content idea
-description: Capture a new content idea with metadata (topic, audience, tone, brand guidelines, references). Trigger this to start a new pipeline run.
+name: idea-input
+description: Capture a new content idea with metadata (topic, audience, tone, brand guidelines, references) to start an SPMC content-pipeline run. First step of the creative pipeline — the structured brief feeds the pipeline-orchestrator skill.
+metadata:
+  version: "0.2.0"
 ---
 
 # Idea Input Skill
