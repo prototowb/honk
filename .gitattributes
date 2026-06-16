@@ -7,3 +7,7 @@ build/*.mjs                  text eol=lf
 # (between the gen:tools markers); the generator rewrites the whole file as LF.
 README.md                    text eol=lf
 hermes/CONTEXT.md            text eol=lf
+# MCP server configs — all three rendered from one template in generate.mjs.
+.mcp.json                    text eol=lf
+hermes/mcp-config.json       text eol=lf
+claude_desktop_config.json   text eol=lf
