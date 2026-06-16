@@ -1,9 +1,0 @@
-{
-  "name": "social-publisher",
-  "version": "0.2.0",
-  "description": "Publish content directly to X (Twitter), Instagram, Facebook, Threads, TikTok, and Bluesky from Claude.",
-  "author": {
-    "name": "towb"
-  },
-  "keywords": ["social media", "twitter", "x", "instagram", "facebook", "threads", "tiktok", "bluesky", "publishing", "content"]
-}
