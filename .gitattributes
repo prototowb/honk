@@ -15,3 +15,6 @@ claude_desktop_config.json   text eol=lf
 # (from capabilities/hermes/SKILLS.md) — same LF rule.
 skills/**/SKILL.md           text eol=lf
 hermes/SKILLS.md             text eol=lf
+# Pre-commit hook is a POSIX shell script — must stay LF or a CRLF shebang
+# breaks it ("bad interpreter") on Linux/macOS clones.
+.githooks/pre-commit         text eol=lf

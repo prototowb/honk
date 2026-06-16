@@ -174,6 +174,14 @@ function renderMcpJson() {
 // Hermes: outside the Claude plugin ecosystem, so no ${CLAUDE_PLUGIN_ROOT} — it
 // needs an absolute path to run.js (machine-specific by nature). No env block:
 // run.js self-loads creds from ~/.claude/spmc.env.
+//
+// This is the one artifact `build:check` does NOT verify (see `localOnly` in the
+// registry). build:check asserts reproducibility-from-origin; this file's only
+// variable part is the machine's absolute install path — environment, not origin,
+// so it can't be byte-stable across checkouts (CI on Linux would see drift vs. a
+// Windows clone's path). Its *shape* is still origin-checked: it renders from the
+// same mcpConfig() template as .mcp.json and claude_desktop_config.json, which
+// stay checked, so the template can't drift. `npm run build` still regenerates it.
 function renderHermesMcpConfig() {
   return mcpConfig({
     command: 'node',
@@ -358,13 +366,32 @@ const ARTIFACTS = [
   { path: 'README.md',                   render: injectArtifact('README.md',        TOOLS_MARKER, renderInjectedTools) },
   { path: 'hermes/CONTEXT.md',           render: injectArtifact('hermes/CONTEXT.md', TOOLS_MARKER, renderInjectedTools) },
   { path: '.mcp.json',                   render: renderMcpJson },
-  { path: 'hermes/mcp-config.json',      render: renderHermesMcpConfig },
+  { path: 'hermes/mcp-config.json',      render: renderHermesMcpConfig, localOnly: true },
   { path: 'claude_desktop_config.json',  render: renderClaudeDesktopConfig },
   ...SKILL_ARTIFACTS,
   { path: 'hermes/SKILLS.md',            render: renderHermesSkills },
 ];
 
+// Invariant: every credential the server actually reads must be documented in
+// .env.example. We assert completeness rather than generate the file — the
+// where-to-get-each-token onboarding prose lives in no origin, so a generated
+// file would lose it. A new platform/provider credential added to lib/specs.js
+// or lib/config.js but not documented here fails the build, closing the same
+// drift class (a fourth hand-maintained copy of the key list) the generated MCP
+// configs already close. Base keys only — `__ACCOUNT` variants are illustrative.
+function checkEnvExample() {
+  const rel  = '.env.example';
+  const text = norm(readFileSync(join(ROOT, rel), 'utf8'));
+  const missing = credentialEnvKeys().filter(k => !new RegExp(`^${k}=`, 'm').test(text));
+  if (missing.length) {
+    throw new Error(
+      `${rel} is missing credential key(s): ${missing.join(', ')}. ` +
+      `They're read by the server but undocumented — add each with setup guidance.`);
+  }
+}
+
 function run({ check }) {
+  checkEnvExample();
   let drift = 0;
   for (const a of ARTIFACTS) {
     const abs      = join(ROOT, a.path);
@@ -374,6 +401,10 @@ function run({ check }) {
     const matches   = norm(current) === next;
 
     if (check) {
+      if (a.localOnly) {
+        console.log(`~ skipped (machine-local, shape checked via template): ${rel}`);
+        continue;
+      }
       if (!matches) {
         drift++;
         console.error(`✗ stale: ${rel}${current === null ? ' (missing)' : ''}`);
