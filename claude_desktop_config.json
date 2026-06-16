@@ -5,7 +5,7 @@
     "Windows: %APPDATA%\\Claude\\claude_desktop_config.json",
     "macOS:   ~/Library/Application Support/Claude/claude_desktop_config.json",
     "",
-    "OPTION A — npm (after 'npm install -g spmc', or 'npm pack && npm install -g spmc-0.1.0-alpha.1.tgz'):",
+    "OPTION A — npm (after 'npm install -g spmc', or 'npm pack && npm install -g spmc-0.2.0-alpha.tgz'):",
     "  Use the npx block below. Credentials load from ~/.claude/spmc.env automatically.",
     "",
     "OPTION B — local clone (replace the path with your actual clone location):",

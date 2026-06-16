@@ -4,7 +4,7 @@
 
 # SPMC Tool Reference
 
-**23 tools** · generated from `spmc-server/lib/tools.js` + `lib/specs.js` · server v0.1.0-alpha.1
+**23 tools** · generated from `spmc-server/lib/tools.js` + `lib/specs.js` · server v0.2.0-alpha
 
 ## Publishing & status
 
