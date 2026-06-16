@@ -3,3 +3,7 @@
 TOOLS.md                     text eol=lf
 .claude-plugin/plugin.json   text eol=lf
 build/*.mjs                  text eol=lf
+# README and Hermes CONTEXT carry a generator-injected tool table region
+# (between the gen:tools markers); the generator rewrites the whole file as LF.
+README.md                    text eol=lf
+hermes/CONTEXT.md            text eol=lf

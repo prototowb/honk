@@ -3,7 +3,7 @@
 AI-native MCP server for publishing to X, Instagram, TikTok, Facebook, Threads, and Bluesky.  
 The agent is the interface — no UI required.
 
-**23 MCP tools:** direct posting · content validation & cross-platform adaptation · dry-run previews · audit log · content queue · scheduler · media pipeline (compose + CDN upload) · config + rate-limit + analytics introspection
+**MCP tools:** direct posting · content validation & cross-platform adaptation · dry-run previews · audit log · content queue · scheduler · media pipeline (compose + CDN upload) · config + rate-limit + analytics introspection
 
 ---
 
@@ -127,7 +127,7 @@ Replace `run.js` with `start.js`. The scheduler runs as a background child proce
 
 Credentials load automatically from `~/.claude/spmc.env` at startup — do not put raw secrets in the Desktop config.
 
-Restart Claude Desktop after editing the config. The `spmc` server appears in the MCP connections panel and all 23 tools are immediately available.
+Restart Claude Desktop after editing the config. The `spmc` server appears in the MCP connections panel and all SPMC tools are immediately available.
 
 ---
 
@@ -138,7 +138,7 @@ Hermes has its own self-contained integration pack in `hermes/`:
 | File | Purpose |
 |------|---------|
 | `hermes/mcp-config.json` | Drop-in MCP server connection block |
-| `hermes/CONTEXT.md` | Full operational briefing: the publishing/queue/media tools, return values, platform gotchas, credential loading (predates the Beta-Prep content-intelligence tools — see SESSION_HANDOFF) |
+| `hermes/CONTEXT.md` | Full operational briefing: the full tool catalog (publishing, content-intelligence, queue, observability, media — generator-injected), return values, platform gotchas, credential loading |
 | `hermes/SKILLS.md` | Trigger → tool reference for every platform + queue management + multi-platform campaigns |
 | `hermes/persona.md` | Pre-publish checklist, voice/tone defaults, confirmation vs. autonomous behavior rules |
 
@@ -189,7 +189,7 @@ Any MCP client supporting stdio transport connects with a standard config block:
 }
 ```
 
-Server name: `spmc`. All 23 tools are listed on `tools/list` with full JSON Schema definitions.
+Server name: `spmc`. All SPMC tools are listed on `tools/list` with full JSON Schema definitions.
 
 **Credentials:** three options in priority order:
 1. `~/.claude/spmc.env` — file-based, auto-loaded on startup
@@ -265,64 +265,65 @@ Or use `start.js` as the entry point:
 
 ## MCP Tools
 
-### Publishing
+<!-- gen:tools:start -->
+_23 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit between these markers; run `npm run build`._
 
-| Tool | Platform | Required | Notes |
-|------|----------|----------|-------|
-| `x_post_tweet` | X | `text` | Max 280 chars; URLs = 23 chars regardless of length |
-| `x_post_thread` | X | `tweets[]` | Ordered array; each item = one chained tweet |
-| `instagram_post` | Instagram | `image_url`, `caption` | Image URL must be publicly accessible |
-| `tiktok_post_video` | TikTok | `video_url`, `caption` | Async — returns `publish_id`, not a final URL |
-| `tiktok_check_publish_status` | TikTok | `publish_id` | Poll after `tiktok_post_video` to confirm |
-| `facebook_post` | Facebook | `message` | Optional `image_url`; posts to Page feed |
-| `threads_post` | Threads | `text` | Max 500 chars; optional `image_url` |
-| `bluesky_post` | Bluesky | `text` | Max 300 graphemes; app password auth |
+### Publishing & status
 
-Every publishing tool (and `queue_dispatch`) accepts **`dry_run: true`** — it validates the payload and previews routing without sending, and records a `dry_run` audit entry. Use it to rehearse a post before going live.
+| Tool | Required | Optional | Platform limit | Description |
+|------|----------|----------|----------------|-------------|
+| `x_post_tweet` | `text` (string) | `account` (string), `dry_run` (boolean) | 280 chars | Post a single tweet to X (Twitter). Max 280 characters. |
+| `x_post_thread` | `tweets` (array) | `account` (string), `dry_run` (boolean) | — | Post a thread of tweets to X. Each array item is one tweet, chained as replies. |
+| `instagram_post` | `image_url` (string), `caption` (string) | `account` (string), `dry_run` (boolean) | 2200 chars | Post an image with caption to Instagram. Requires a publicly accessible image URL. |
+| `tiktok_post_video` | `video_url` (string), `caption` (string) | `privacy_level` (string), `account` (string), `dry_run` (boolean) | 2200 chars | Post a video to TikTok (PULL_FROM_URL). Until your app passes audit, posts land as private/self-only regardless of privacy_level. |
+| `tiktok_check_publish_status` | `publish_id` (string) | `account` (string) | — | Check the async publish status of a TikTok video post. |
+| `facebook_post` | `message` (string) | `image_url` (string), `account` (string), `dry_run` (boolean) | 63206 chars | Post to a Facebook Page feed. Optionally attach a public image URL to post as a photo. |
+| `threads_post` | `text` (string) | `image_url` (string), `account` (string), `dry_run` (boolean) | 500 chars | Post text (optionally with an image) to Threads. |
+| `bluesky_post` | `text` (string) | `account` (string), `dry_run` (boolean) | 300 graphemes | Post text to Bluesky via the AT Protocol. No OAuth — just an app password. |
 
-### Content intelligence & safety
+### Content intelligence
 
-| Tool | What it does |
-|------|-------------|
-| `content_validate` | Check a payload against a platform's rules (length, required fields, media URL) without publishing. Returns blocking errors + warnings. |
-| `content_adapt` | Fit one source text to multiple platforms' hard limits — auto-splits a long post into an X thread, grapheme-truncates for Bluesky, etc. Deterministic fitting only; you do the tone/hashtag rewrite. |
-| `config_doctor` | Report which platforms and named accounts have credentials configured (by env presence — never reveals values), plus media providers. |
-| `audit_log` | Read the append-only publish trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, result. Filter by platform/status/source. |
-| `schedule_check` | Validate + normalize a `scheduled_at` to canonical UTC ISO 8601. A timestamp without a timezone is read as server-local and flagged with a warning (ambiguous under hosted deployment). |
-
-### Queue
-
-| Tool | What it does |
-|------|-------------|
-| `queue_add` | Add a post; optionally set `scheduled_at` (ISO 8601) |
-| `queue_list` | List items; filter by `status` or `platform` |
-| `queue_update` | Edit `content`, `scheduled_at`, or `status` |
-| `queue_remove` | Delete an item permanently |
-| `queue_dispatch` | Publish immediately regardless of scheduled time |
-
-Status lifecycle: `pending` → `dispatched` → `published` | `failed`
-
-### Media
-
-| Tool | What it does |
-|------|-------------|
-| `media_compose` | Render a branded image from a template (local sharp, no external service) → auto-upload → public URL |
-| `media_upload` | Upload a local file to a CDN → public URL |
-
-Templates: `square-dark` (1080×1080) · `story-dark` (1080×1920) · `banner-wide` (1200×628)  
-CDN: Cloudinary (images + video) auto-selected; imgbb fallback (images only).
+| Tool | Required | Optional | Platform limit | Description |
+|------|----------|----------|----------------|-------------|
+| `content_validate` | `platform` (string), `content` (object) | — | — | Validate a post payload against a platform's rules (length, required fields, media) without publishing. Returns errors that would block publishing and warnings. Use before queuing or posting. |
+| `content_adapt` | `text` (string) | `platforms` (array) | — | Fit one source text to multiple platforms' hard limits: auto-splits a long post into an X thread, grapheme-truncates for Bluesky, etc. Returns ready-to-post content per platform plus warnings. This handles the deterministic length-fitting only — rewrite tone/hashtags yourself before posting. |
+| `config_doctor` | — | — | — | Report which platforms and named accounts have credentials configured (by env-var presence only — never reveals values), plus media providers. Use to check setup before publishing. |
+| `audit_log` | — | `platform` (string), `status` (string), `source` (string), `limit` (number) | — | Read the publish audit trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, and result. Filter by platform/status/source. |
+| `schedule_check` | `scheduled_at` (string) | — | — | Validate and normalize a scheduled_at timestamp to canonical UTC ISO 8601. A timestamp without an explicit timezone is interpreted as the server's local time and flagged with a warning (it becomes ambiguous under hosted/multi-user deployment). Returns the normalized value and whether it is in the past. |
 
 ### Observability
 
-| Tool | What it does |
-|------|-------------|
-| `rate_limits` | Show HTTP 429 responses observed per platform (tallied from publish errors). Observational — does not yet gate sending. |
-| `analytics_fetch` | Fetch engagement metrics for a published post and store a timestamped snapshot. Supported: Instagram, Facebook, Threads (Graph insights). |
-| `analytics_report` | Read stored engagement snapshots, most recent first; filter by platform/post. |
+| Tool | Required | Optional | Platform limit | Description |
+|------|----------|----------|----------------|-------------|
+| `rate_limits` | — | — | — | Show rate-limit responses (HTTP 429) observed per platform, tallied from publish errors. Observational only — does not yet gate sending. |
+| `analytics_fetch` | `platform` (string), `post_id` (string) | `account` (string) | — | Fetch engagement metrics for a published post and store a timestamped snapshot. Supported: instagram, facebook, threads (Graph insights). Requires the platform post/media ID. NOTE: unverified against live APIs pending credential testing. |
+| `analytics_report` | — | `platform` (string), `post_id` (string), `limit` (number) | — | Read stored engagement snapshots, most recent first. Filter by platform or post_id. |
 
-> **Unverified:** `analytics_*` and `rate_limits` depend on live API behavior that
-> has not yet been exercised against real credentials. The store, routing, and
-> tools are real; live confirmation is pending credential testing.
+### Queue
+
+| Tool | Required | Optional | Platform limit | Description |
+|------|----------|----------|----------------|-------------|
+| `queue_add` | `platform` (string), `content` (object) | `scheduled_at` (string), `account` (string) | — | Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing. |
+| `queue_list` | — | `status` (string), `platform` (string) | — | List queued posts. Optionally filter by status or platform. |
+| `queue_update` | `id` (string), `updates` (object) | — | — | Update a queue item — change its content, scheduled_at, or status. |
+| `queue_remove` | `id` (string) | — | — | Remove a post from the queue. |
+| `queue_dispatch` | `id` (string) | `dry_run` (boolean) | — | Immediately publish a queued post, regardless of its scheduled_at time. |
+
+### Media
+
+| Tool | Required | Optional | Platform limit | Description |
+|------|----------|----------|----------------|-------------|
+| `media_compose` | `template` (string), `headline` (string) | `subtext` (string), `bg_color` (string), `accent` (string), `bg_image_url` (string), `provider` (string), `account` (string) | — | Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), story-dark (1080×1920), banner-wide (1200×628). |
+| `media_upload` | `file_path` (string) | `provider` (string), `account` (string) | — | Upload a local image or video file to a CDN and get back a public URL. Use this before posting to Instagram (requires image URL) or TikTok (requires video URL). Supported providers: cloudinary (images + videos), imgbb (images only). Provider is auto-selected from available credentials. |
+
+<!-- gen:tools:end -->
+
+**Notes:**
+
+- Every publishing tool (and `queue_dispatch`) accepts **`dry_run: true`** — it validates the payload and previews routing without sending, and records a `dry_run` audit entry. Use it to rehearse a post before going live.
+- Queue status lifecycle: `pending` → `dispatched` → `published` | `failed`.
+- Media templates: `square-dark` (1080×1080) · `story-dark` (1080×1920) · `banner-wide` (1200×628). CDN: Cloudinary (images + video) auto-selected; imgbb fallback (images only).
+- **Unverified:** `analytics_*` and `rate_limits` depend on live API behavior not yet exercised against real credentials. The store, routing, and tools are real; live confirmation is pending credential testing.
 
 ---
 
@@ -345,7 +346,7 @@ CDN: Cloudinary (images + video) auto-selected; imgbb fallback (images only).
 
 ## Platform Gotchas
 
-**X** — Tokens need Read+Write permissions set in the developer portal. Regenerate after changing permission level; the existing token won't gain the new scope.
+**X** — Tokens need Read+Write permissions set in the developer portal. Regenerate after changing permission level; the existing token won't gain the new scope. Counting: URLs always count as 23 characters regardless of length, and emoji above U+FFFF count as 2.
 
 **Instagram** — Use the classic Graph API path (`graph.facebook.com`, `EAA…` token). The newer Instagram Business Login issues `IGAA…` tokens that don't work for this API. Link the IG Business Account to a Facebook Page before generating credentials. System User tokens are more stable than personal-login tokens.
 
@@ -376,7 +377,7 @@ hermes/                   Hermes integration pack
 spmc-server/
   run.js                  Entry point: load creds → start MCP server
   start.js                Entry point: spawn scheduler → start MCP server
-  index.js                MCP server — 23 tools
+  index.js                MCP server (all tool definitions)
   adapters/               One file per platform (6 total) + getMetrics (IG/FB/Threads)
   lib/                    Dispatcher, specs, validate, adapt, config, schedule, audit, analytics
   queue/store.js          File-backed JSON queue

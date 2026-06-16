@@ -63,23 +63,26 @@ function inputs(tool) {
 
 // ─── Artifact: TOOLS.md (generated tool catalog) ─────────────────────────────
 
-function renderToolCatalog() {
+function toolsByCategory() {
   const byCat = new Map();
   for (const t of TOOLS) {
     const c = categoryOf(t.name);
     if (!byCat.has(c)) byCat.set(c, []);
     byCat.get(c).push(t);
   }
-
   const order = ['Publishing & status', 'Content intelligence', 'Observability', 'Queue', 'Media'];
   const cats  = [...order.filter(c => byCat.has(c)), ...[...byCat.keys()].filter(c => !order.includes(c))];
+  return { byCat, cats };
+}
 
-  let md = GENERATED_HEADER('npm run build:check');
-  md += `\n# SPMC Tool Reference\n\n`;
-  md += `**${TOOLS.length} tools** · generated from \`spmc-server/lib/tools.js\` + \`lib/specs.js\` · server v${pkg.version}\n`;
-
+// The categorized tool tables — shared verbatim by TOOLS.md and the injected
+// README / Hermes regions. `heading` is the markdown prefix per category: `##`
+// under the TOOLS.md H1, `###` under a host doc's existing H2 section.
+function renderToolTables(heading = '##') {
+  const { byCat, cats } = toolsByCategory();
+  let md = '';
   for (const cat of cats) {
-    md += `\n## ${cat}\n\n`;
+    md += `\n${heading} ${cat}\n\n`;
     md += `| Tool | Required | Optional | Platform limit | Description |\n`;
     md += `|------|----------|----------|----------------|-------------|\n`;
     for (const t of byCat.get(cat)) {
@@ -93,6 +96,14 @@ function renderToolCatalog() {
       md += `| \`${t.name}\` | ${required} | ${optional} | ${limit || '—'} | ${desc} |\n`;
     }
   }
+  return md;
+}
+
+function renderToolCatalog() {
+  let md = GENERATED_HEADER('npm run build:check');
+  md += `\n# SPMC Tool Reference\n\n`;
+  md += `**${TOOLS.length} tools** · generated from \`spmc-server/lib/tools.js\` + \`lib/specs.js\` · server v${pkg.version}\n`;
+  md += renderToolTables('##');
   return md;
 }
 
@@ -110,17 +121,51 @@ function renderPluginManifest() {
   return JSON.stringify(manifest, null, 2) + '\n';
 }
 
+// Compare line-ending-independent: the generator emits LF, but git autocrlf
+// can leave CRLF in the working tree after a clone/checkout. Without this,
+// --check would report spurious drift on a fresh checkout (esp. on Windows).
+// Also normalizes host files before marker injection so the whole-file compare
+// (and the written output) is consistently LF.
+const norm = (s) => (s == null ? s : s.replace(/\r\n/g, '\n'));
+
+// ─── Artifact: injected tool tables (README.md + hermes/CONTEXT.md) ───────────
+
+const TOOLS_MARKER = 'gen:tools';
+
+// The block placed between <!-- gen:tools:start --> / <!-- gen:tools:end --> in
+// host docs: a provenance line + the same categorized tables as TOOLS.md, one
+// heading level deeper so they sit under the host's existing H2 section.
+function renderInjectedTools() {
+  const note = `_${TOOLS.length} tools — generated from \`lib/tools.js\` + \`lib/specs.js\`. ` +
+               `Do not edit between these markers; run \`npm run build\`._\n`;
+  return note + renderToolTables('###');
+}
+
+// Read a host file, replace the content between a marker pair with bodyFn(),
+// and return the WHOLE file (LF-normalized). Returning the whole file lets the
+// existing whole-file compare in run() cover the injected region for free.
+function injectArtifact(hostRel, marker, bodyFn) {
+  return () => {
+    const start = `<!-- ${marker}:start -->`;
+    const end   = `<!-- ${marker}:end -->`;
+    const src   = norm(readFileSync(join(ROOT, hostRel), 'utf8'));
+    const si = src.indexOf(start);
+    const ei = src.indexOf(end);
+    if (si === -1 || ei === -1 || ei < si) {
+      throw new Error(`inject: markers '${marker}' missing or out of order in ${hostRel}`);
+    }
+    return `${src.slice(0, si + start.length)}\n${bodyFn()}\n${src.slice(ei)}`;
+  };
+}
+
 // ─── Artifact registry + write/check plumbing ────────────────────────────────
 
 const ARTIFACTS = [
   { path: 'TOOLS.md',                    render: renderToolCatalog },
   { path: '.claude-plugin/plugin.json',  render: renderPluginManifest },
+  { path: 'README.md',                   render: injectArtifact('README.md',        TOOLS_MARKER, renderInjectedTools) },
+  { path: 'hermes/CONTEXT.md',           render: injectArtifact('hermes/CONTEXT.md', TOOLS_MARKER, renderInjectedTools) },
 ];
-
-// Compare line-ending-independent: the generator emits LF, but git autocrlf
-// can leave CRLF in the working tree after a clone/checkout. Without this,
-// --check would report spurious drift on a fresh checkout (esp. on Windows).
-const norm = (s) => (s == null ? s : s.replace(/\r\n/g, '\n'));
 
 function run({ check }) {
   let drift = 0;

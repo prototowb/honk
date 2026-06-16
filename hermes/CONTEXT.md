@@ -25,54 +25,70 @@ Primary location (used by `run.js`, loaded at startup):
 ```
 Format: `KEY=value`, one per line. Fallback: `.env` next to `run.js`. If neither is present, server inherits from environment. Scheduler logs to `%USERPROFILE%\.claude\spmc-scheduler.log`.
 
-## 23 MCP Tools
+## MCP Tools
 
-### Direct Publishing
+<!-- gen:tools:start -->
+_23 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit between these markers; run `npm run build`._
 
-Every publishing tool accepts **`dry_run` (bool)** — validates the payload and previews routing **without sending**, and records a `dry_run` audit entry. Use it to rehearse a post before going live.
+### Publishing & status
 
-| Tool | Required inputs | Optional inputs | Notes |
-|------|----------------|----------------|-------|
-| `x_post_tweet` | `text` (str) | `account` (str), `dry_run` (bool) | Max 280 chars; URLs = 23 chars; emoji > U+FFFF = 2 chars |
-| `x_post_thread` | `tweets` (str[]) | `account`, `dry_run` | Ordered array; each item is one tweet in the chain |
-| `instagram_post` | `image_url` (str), `caption` (str) | `account`, `dry_run` | `image_url` must be publicly accessible |
-| `tiktok_post_video` | `video_url` (str), `caption` (str) | `privacy_level` (str), `account`, `dry_run` | Async — returns `publish_id`, not a URL; check status separately |
-| `tiktok_check_publish_status` | `publish_id` (str) | `account` | Poll until `status` indicates completion or failure (adapter forwards TikTok's raw status string) |
-| `facebook_post` | `message` (str) | `image_url` (str), `account`, `dry_run` | Posts to Page feed; `image_url` must be public |
-| `threads_post` | `text` (str) | `image_url` (str), `account`, `dry_run` | Max 500 chars |
-| `bluesky_post` | `text` (str) | `account`, `dry_run` | Max 300 graphemes; no OAuth — app password |
+| Tool | Required | Optional | Platform limit | Description |
+|------|----------|----------|----------------|-------------|
+| `x_post_tweet` | `text` (string) | `account` (string), `dry_run` (boolean) | 280 chars | Post a single tweet to X (Twitter). Max 280 characters. |
+| `x_post_thread` | `tweets` (array) | `account` (string), `dry_run` (boolean) | — | Post a thread of tweets to X. Each array item is one tweet, chained as replies. |
+| `instagram_post` | `image_url` (string), `caption` (string) | `account` (string), `dry_run` (boolean) | 2200 chars | Post an image with caption to Instagram. Requires a publicly accessible image URL. |
+| `tiktok_post_video` | `video_url` (string), `caption` (string) | `privacy_level` (string), `account` (string), `dry_run` (boolean) | 2200 chars | Post a video to TikTok (PULL_FROM_URL). Until your app passes audit, posts land as private/self-only regardless of privacy_level. |
+| `tiktok_check_publish_status` | `publish_id` (string) | `account` (string) | — | Check the async publish status of a TikTok video post. |
+| `facebook_post` | `message` (string) | `image_url` (string), `account` (string), `dry_run` (boolean) | 63206 chars | Post to a Facebook Page feed. Optionally attach a public image URL to post as a photo. |
+| `threads_post` | `text` (string) | `image_url` (string), `account` (string), `dry_run` (boolean) | 500 chars | Post text (optionally with an image) to Threads. |
+| `bluesky_post` | `text` (string) | `account` (string), `dry_run` (boolean) | 300 graphemes | Post text to Bluesky via the AT Protocol. No OAuth — just an app password. |
 
-### Content Intelligence
+### Content intelligence
 
-Credential-free. Use these to prepare and check content before publishing.
+| Tool | Required | Optional | Platform limit | Description |
+|------|----------|----------|----------------|-------------|
+| `content_validate` | `platform` (string), `content` (object) | — | — | Validate a post payload against a platform's rules (length, required fields, media) without publishing. Returns errors that would block publishing and warnings. Use before queuing or posting. |
+| `content_adapt` | `text` (string) | `platforms` (array) | — | Fit one source text to multiple platforms' hard limits: auto-splits a long post into an X thread, grapheme-truncates for Bluesky, etc. Returns ready-to-post content per platform plus warnings. This handles the deterministic length-fitting only — rewrite tone/hashtags yourself before posting. |
+| `config_doctor` | — | — | — | Report which platforms and named accounts have credentials configured (by env-var presence only — never reveals values), plus media providers. Use to check setup before publishing. |
+| `audit_log` | — | `platform` (string), `status` (string), `source` (string), `limit` (number) | — | Read the publish audit trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, and result. Filter by platform/status/source. |
+| `schedule_check` | `scheduled_at` (string) | — | — | Validate and normalize a scheduled_at timestamp to canonical UTC ISO 8601. A timestamp without an explicit timezone is interpreted as the server's local time and flagged with a warning (it becomes ambiguous under hosted/multi-user deployment). Returns the normalized value and whether it is in the past. |
 
-| Tool | Required inputs | Optional inputs | Notes |
-|------|----------------|----------------|-------|
-| `content_validate` | `platform` (str), `content` (obj) | — | Checks length / required fields / media URL against the platform's rules. Returns blocking errors + warnings. Run before `queue_add` or publishing. |
-| `content_adapt` | `text` (str) | `platforms` (str[]) | Fits one source text to each platform's hard limits: auto-splits a long post into an X thread, grapheme-truncates for Bluesky, etc. Returns ready-to-post `content` per platform + warnings. Deterministic fitting only — **you** still do tone/hashtag rewriting. Omit `platforms` for all six. |
-| `config_doctor` | — | — | Reports which platforms/named accounts have credentials configured (env presence only — never reveals values) + media providers. Use to check setup before publishing. |
-| `audit_log` | — | `platform`, `status` (`published`\|`failed`\|`dry_run`), `source` (`direct`\|`queue`\|`scheduler`), `limit` | Reads the append-only publish trail: ts, platform, account, content hash, result/error. |
-| `schedule_check` | `scheduled_at` (str) | — | Normalizes a timestamp to UTC ISO 8601. A timezone-less value is read as **server-local** and flagged with a warning. Returns the normalized value + whether it's in the past. |
+### Observability
 
-### Queue Management
+| Tool | Required | Optional | Platform limit | Description |
+|------|----------|----------|----------------|-------------|
+| `rate_limits` | — | — | — | Show rate-limit responses (HTTP 429) observed per platform, tallied from publish errors. Observational only — does not yet gate sending. |
+| `analytics_fetch` | `platform` (string), `post_id` (string) | `account` (string) | — | Fetch engagement metrics for a published post and store a timestamped snapshot. Supported: instagram, facebook, threads (Graph insights). Requires the platform post/media ID. NOTE: unverified against live APIs pending credential testing. |
+| `analytics_report` | — | `platform` (string), `post_id` (string), `limit` (number) | — | Read stored engagement snapshots, most recent first. Filter by platform or post_id. |
 
-| Tool | Required inputs | Optional inputs | Notes |
-|------|----------------|----------------|-------|
-| `queue_add` | `platform` (str), `content` (obj) | `scheduled_at` (ISO 8601), `account` (str) | `content` fields match the direct publishing tool. Content is validated (warnings returned, never blocks). Prefer a timezone offset on `scheduled_at`; a naive time is read as server-local and warned. |
-| `queue_list` | — | `status` (str), `platform` (str) | Statuses: `pending` → `dispatched` → `published` \| `failed` |
-| `queue_update` | `id` (str), `updates` (obj) | — | Can update `content`, `scheduled_at`, `status` |
-| `queue_remove` | `id` (str) | — | Permanent |
-| `queue_dispatch` | `id` (str) | `dry_run` (bool) | Publishes immediately; transitions status to `published` or `failed` automatically. `dry_run` validates & previews without sending. |
+### Queue
 
-### Observability — UNVERIFIED against live APIs (pending credential testing)
+| Tool | Required | Optional | Platform limit | Description |
+|------|----------|----------|----------------|-------------|
+| `queue_add` | `platform` (string), `content` (object) | `scheduled_at` (string), `account` (string) | — | Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing. |
+| `queue_list` | — | `status` (string), `platform` (string) | — | List queued posts. Optionally filter by status or platform. |
+| `queue_update` | `id` (string), `updates` (object) | — | — | Update a queue item — change its content, scheduled_at, or status. |
+| `queue_remove` | `id` (string) | — | — | Remove a post from the queue. |
+| `queue_dispatch` | `id` (string) | `dry_run` (boolean) | — | Immediately publish a queued post, regardless of its scheduled_at time. |
 
-| Tool | Required inputs | Optional inputs | Notes |
-|------|----------------|----------------|-------|
-| `rate_limits` | — | — | Tallies HTTP 429 responses observed per platform (from publish errors). Observational — does not gate sending. |
-| `analytics_fetch` | `platform` (`instagram`\|`facebook`\|`threads`), `post_id` (str) | `account` | Fetches engagement metrics for a published post (Graph insights) and stores a timestamped snapshot. X/TikTok/Bluesky not supported yet. |
-| `analytics_report` | — | `platform`, `post_id`, `limit` | Reads stored engagement snapshots, most recent first. |
+### Media
 
-Platform enum: `x` `instagram` `tiktok` `facebook` `threads` `bluesky`
+| Tool | Required | Optional | Platform limit | Description |
+|------|----------|----------|----------------|-------------|
+| `media_compose` | `template` (string), `headline` (string) | `subtext` (string), `bg_color` (string), `accent` (string), `bg_image_url` (string), `provider` (string), `account` (string) | — | Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), story-dark (1080×1920), banner-wide (1200×628). |
+| `media_upload` | `file_path` (string) | `provider` (string), `account` (string) | — | Upload a local image or video file to a CDN and get back a public URL. Use this before posting to Instagram (requires image URL) or TikTok (requires video URL). Supported providers: cloudinary (images + videos), imgbb (images only). Provider is auto-selected from available credentials. |
+
+<!-- gen:tools:end -->
+
+**Operating notes:**
+
+- Every publishing tool (and `queue_dispatch`) accepts **`dry_run` (bool)** — validates the payload and previews routing **without sending**, and records a `dry_run` audit entry. Use it to rehearse a post before going live.
+- Content-intelligence tools are **credential-free** — use them to prepare and check content before publishing.
+- Observability tools (`rate_limits`, `analytics_*`) are **UNVERIFIED against live APIs** pending credential testing. `analytics_fetch` / `analytics_report` cover Instagram, Facebook, Threads only (X/TikTok/Bluesky not supported yet).
+- Queue status lifecycle: `pending` → `dispatched` → `published` | `failed`. `queue_dispatch` transitions status automatically.
+- Platform enum: `x` `instagram` `tiktok` `facebook` `threads` `bluesky`
+
+See **Platform-Specific Gotchas**, **Return Values by Platform**, and **Queue Content Format by Platform** below for the per-platform detail that isn't in the tool schemas.
 
 ## Agent Integration Contract
 
@@ -92,7 +108,7 @@ Platform enum: `x` `instagram` `tiktok` `facebook` `threads` `bluesky`
 
 | Platform | Key constraints |
 |----------|----------------|
-| **X** | 280 chars hard limit; URLs always 23 chars; threads chain as replies; no silent truncation |
+| **X** | 280 chars hard limit; URLs always 23 chars; emoji above U+FFFF count as 2; threads chain as replies; no silent truncation |
 | **Instagram** | Image URL must be publicly reachable (no localhost, no signed URLs); returns Media ID, not a public URL |
 | **TikTok** | Post is async — `tiktok_post_video` returns `publish_id`, not a final status; call `tiktok_check_publish_status` to confirm. Until app passes TikTok audit, `privacy_level` is forced to `SELF_ONLY` regardless of what you pass |
 | **Facebook** | Posts to a Page (not personal profile); requires Page access token in env |
