@@ -84,6 +84,7 @@ or only additively extended.
 
 ## Recent Updates
 
+- 2026-06-16: BUILD-001 single-origin — slice C (one SPMC plugin: content-pipeline absorbed, 13 skills, dead trees removed) + slice B1 (tool tables generated from `lib/tools.js`+`lib/specs.js` and injected into README + Hermes CONTEXT). Generator emits 4 artifacts; `build:check` green. Remaining: B2 (skills ← capabilities) → A (MCP configs from one template).
 - 2026-06-14: Beta-Prep sprint — tool surface 15 → 23, content intelligence + audit + observability + tests; dispatcher unified (scheduler account bug fixed). UI work intentionally not started.
 - 2026-06-14: Alpha-1 packaged — npm package, Claude Code plugin, README, git init
 - 2026-06-10: Media pipeline shipped (ALPHA-003)
