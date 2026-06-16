@@ -30,7 +30,7 @@ Wire-up + merge-back + the gated merge — the whole tail of BUILD-001:
 ## Flags / Known-but-out-of-scope
 - **Pre-existing content truncations (since `e31dd68`, NOT this session):** `capabilities/skills/pipeline-orchestrator.md` ends on a dangling `2`; `output-manager`'s "Rules (non-negotiable)" lost rules 3+. Creative-content gaps to fill by hand in `capabilities/`, then `npm run build`.
 - **SKILL.md header placement** still reasoned-safe, not load-tested (no skill loaded post-B2).
-- **CI runs on Node 20** (deliberate — verified the glob fix on the version that failed). Local dev is Node 24; bump CI to 22 LTS later if wanted. GitHub's Node-20-actions deprecation warning on the run is about the action internals (`checkout`/`setup-node` are already v4), not our matrix — non-blocking.
+- **CI runs on Node 22 LTS** (local dev is Node 24). The unit-test glob fix was first verified green on Node 20 — the version that originally failed — before bumping. GitHub's Node-20-actions deprecation warning seen on earlier runs is about the action internals (`checkout`/`setup-node`, already v4), not our matrix — non-blocking.
 - `spmc-server/package.json` `files` array still lists `env.example` (the actual onboarding file is the repo-root `.env.example`) — packaging nit, out of scope.
 
 ## Conventions In Force
