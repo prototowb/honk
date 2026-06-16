@@ -11,3 +11,7 @@ hermes/CONTEXT.md            text eol=lf
 .mcp.json                    text eol=lf
 hermes/mcp-config.json       text eol=lf
 claude_desktop_config.json   text eol=lf
+# Generated skills (from capabilities/skills/) + the Hermes skill-trigger doc
+# (from capabilities/hermes/SKILLS.md) — same LF rule.
+skills/**/SKILL.md           text eol=lf
+hermes/SKILLS.md             text eol=lf
