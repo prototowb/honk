@@ -1,7 +1,7 @@
 import { PLATFORM_SPECS } from './specs.js';
 import { env, hasAll, discoverAccounts } from './env.js';
 
-const MEDIA_PROVIDERS = {
+export const MEDIA_PROVIDERS = {
   cloudinary: ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'],
   imgbb:      ['IMGBB_API_KEY'],
 };

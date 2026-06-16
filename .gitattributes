@@ -1,0 +1,20 @@
+# Generated build artifacts are emitted with LF — keep them LF in the working
+# tree so `npm run build:check` never reports spurious drift from CRLF conversion.
+TOOLS.md                     text eol=lf
+.claude-plugin/plugin.json   text eol=lf
+build/*.mjs                  text eol=lf
+# README and Hermes CONTEXT carry a generator-injected tool table region
+# (between the gen:tools markers); the generator rewrites the whole file as LF.
+README.md                    text eol=lf
+hermes/CONTEXT.md            text eol=lf
+# MCP server configs — all three rendered from one template in generate.mjs.
+.mcp.json                    text eol=lf
+hermes/mcp-config.json       text eol=lf
+claude_desktop_config.json   text eol=lf
+# Generated skills (from capabilities/skills/) + the Hermes skill-trigger doc
+# (from capabilities/hermes/SKILLS.md) — same LF rule.
+skills/**/SKILL.md           text eol=lf
+hermes/SKILLS.md             text eol=lf
+# Pre-commit hook is a POSIX shell script — must stay LF or a CRLF shebang
+# breaks it ("bad interpreter") on Linux/macOS clones.
+.githooks/pre-commit         text eol=lf

@@ -2,7 +2,9 @@
   "mcpServers": {
     "spmc": {
       "command": "node",
-      "args": ["G:\\Projects\\_Plugins\\spmc-server\\run.js"]
+      "args": [
+        "G:\\Projects\\_Plugins\\spmc-server\\run.js"
+      ]
     }
   }
 }

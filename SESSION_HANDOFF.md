@@ -2,54 +2,43 @@
 
 > Read this before anything else. Replace entirely at session end — this is current state, not a log.
 
-## What Just Shipped
+## Where We Are
 
-**Beta-Prep capability expansion — branch `feature/BETA-001-capability-expansion` (NOT merged, NOT pushed).**
+**`feature/BUILD-001-single-origin` — single-origin build system + its wire-up + merge-back are ALL COMPLETE.** Every build slice shipped earlier (C, B1, A, B2); this session finished the enforcement + documentation layer. The branch is feature-complete. **The only thing left is the gated outward step: merge `feature/BUILD-001-single-origin` → `main` (+ optional `0.2.0-alpha` bump) — held for explicit user confirmation.** `main` holds BETA-001 (merged `--no-ff` 2026-06-15) and is **ahead of `origin/main`, not yet pushed**.
 
-Tool surface **15 → 23**. All new tools are credential-free and verified by **37 unit tests + a 12-check MCP smoke test**. Two commits on the branch.
+Design reference is now **`PROJECT_ARCHITECTURE.md`** (BUILD_CONCEPT.md was folded into it this session and reduced to a pointer + contributor TL;DR).
 
-- **Unified dispatcher** (`spmc-server/lib/dispatch.js`): the publish switch was duplicated in `index.js` and `scheduler/scheduler.js` and had diverged — the scheduler dropped `account`, so **scheduled multi-account posts published from the default account**. Both now route through one dispatcher. `publishAudited()` is the single hook point for audit + rate-limit recording (direct, queue, scheduler all record).
-- **Content intelligence (5 tools):** `content_validate`, `content_adapt` (auto X thread-split, grapheme-aware Bluesky truncation), `config_doctor` (credential presence, no secret values), `audit_log`, `schedule_check`.
-- **`dry_run`** on every publish tool + `queue_dispatch` — validate & preview without sending. This is the interim substitute for live testing.
-- **Audit log** (`lib/audit.js`): append-only JSONL in `spmc-server/data/audit.log` (gitignored); content hashed, not stored raw.
-- **`scheduled_at` normalization** (`lib/schedule.js`): canonicalizes to absolute UTC. A timezone-less timestamp is accepted as **server-local** (correct on a local single-user server) but **flagged with a warning** — it only becomes a wrong-instant risk under hosted/multi-tenant. Wired into `queue_add` + `schedule_check`. (Softened from an initial hard-reject after review — hard-reject was friction for the local case with no present-day benefit.)
-- **Observability (3 tools, UNVERIFIED):** `rate_limits` (tallies observed 429s), `analytics_fetch` / `analytics_report` (+ `getMetrics` on IG/FB/Threads adapters). Store + routing are real; **not exercised against live APIs**.
-- **Tests:** `spmc-server/test/*.test.mjs` (node:test, zero deps) + `test/smoke.mjs` (drives the real server over stdio). `npm test`, `npm run test:smoke`.
-- **Docs updated:** PROJECT_STATUS, PROJECT_SPECIFICATIONS (roadmap checkboxes), PROJECT_ARCHITECTURE (lib/ layer + design decisions), README (new tool tables, counts 15→23), new TESTING.md + BRANCHING.md.
+## What Shipped This Session — wire-up + merge-back
 
-## Pending / In Progress
+1. **CI gate (`.github/workflows/ci.yml`, new):** on push to `main` + every PR, runs `npm --prefix spmc-server ci` → `npm run build:check` → `npm test` → `test:smoke` on `ubuntu-latest`/node 20. Remote is `github.com/prototowb/honk` (GitHub Actions).
+2. **Pre-commit hook (`.githooks/pre-commit`, new):** POSIX `sh`, runs `build:check`; mirrors the CI gate locally. **No husky** (keeps zero-build-deps). Opt-in per clone: `git config core.hooksPath .githooks` — **already set in this clone**. Pinned `eol=lf` in `.gitattributes` so the shebang survives Linux/macOS. Verified firing on both commits this session.
+3. **`hermes/mcp-config.json` excluded from `--check` (`localOnly` in `ARTIFACTS`):** its only variable part is the machine's absolute install path = environment, not origin, so it can't be byte-stable across checkouts (this was the CI-drift blocker the prior handoff flagged). `npm run build` still regenerates it; its *shape* stays checked via the shared `mcpConfig()` template that `.mcp.json` / `claude_desktop_config.json` keep `--check`'d. **Chosen over the prior plan's `SPMC_HERMES_ROOT ?? ROOT`** — that only made CI green by baking a Windows path into a Linux workflow.
+4. **`.env.example` single-origined as a completeness assertion (`checkEnvExample()`):** every `credentialEnvKeys()` entry must be documented in `.env.example` or the build throws (closes the 4th hand-maintained copy of the key list). Kept the file hand-authored — its where-to-get-each-token onboarding prose lives in no origin, so it's *asserted complete*, not generated.
+5. **Merge-back:** `PROJECT_ARCHITECTURE.md` gained the generated/source directory split, the *Single origin + generated distribution* Design Decision, and the verified per-surface viability matrix (+ sources). `BUILD_CONCEPT.md` reduced to a pointer + an edit-the-source TL;DR table.
 
-- **Merge + push** `feature/BETA-001-capability-expansion` — awaiting user review. Nothing pushed to GitHub yet.
-- **Live credential testing (still deferred by request)** — no platform tested end-to-end. Suggested order: Bluesky → X → Meta. This also confirms the unverified `analytics_*` / `getMetrics` paths.
-- **UI implementation planning — intentionally NOT started** (this was the stop line). Next phase: analytics dashboard + content calendar (Phase 2/3).
-- **Hermes pack + `skills/` now cover the new tools** (done this session). `hermes/CONTEXT.md` (23 tools, Content Intelligence + Observability sections, `dry_run`, pre-publish flow), `hermes/SKILLS.md` + `persona.md` updated; new `skills/content-intelligence/SKILL.md`; `manage-queue` + all 6 platform skills note `dry_run`/`content_validate`. Skill count 8 → 9.
+**Verified:** `build:check` green (**20 checked + 1 skipped**); `npm test` = **38/38**; `test:smoke` = **SMOKE PASS**. Both session commits passed through the live pre-commit hook.
 
-## Verified By Inspection Only (no live creds)
+## Commits this session
+- `feat(build): wire build:check into CI + pre-commit hook` — CI workflow, hook, hermes `localOnly`, `checkEnvExample()`, `.gitattributes` LF rule.
+- `docs: fold single-origin build system into PROJECT_ARCHITECTURE` — merge-back; BUILD_CONCEPT → pointer.
 
-The test suite cannot reach these without real credentials — they're correct by
-reading, not by execution. Confirm during BETA-010 live testing:
+## NEXT — the gated merge (needs user confirmation)
 
-- **The scheduler `account` fix** — the bug that started this work. The smoke test
-  only exercises the **dry-run** branch, which returns *before* any adapter call,
-  so no test drives a real publish through `publishAudited`.
-- **The real publish path** through the unified dispatcher (direct + queue + scheduler).
-- **Scheduler post-refactor:** `node --check`'d only. It will load (same `dispatch.js`
-  the smoke test already imports), but **importing `scheduler/scheduler.js` starts it**
-  (top-level `tick()` + `setInterval`) — don't import it just to "check"; trust the
-  shared module graph or add an entry guard if you want it importable in a test.
+> Nothing else is pending. These two are coupled and outward-facing — confirm before doing.
+
+1. **Optional `0.2.0-alpha` version bump:** edit `spmc-server/package.json` `version` → `npm run build` (propagates to `plugin.json`, `TOOLS.md` provenance, and the runtime `Server({ version })`). Single source already — one edit, rebuild.
+2. **Merge `feature/BUILD-001-single-origin` → `main`** (recommend `--no-ff`, suite + `build:check` green pre-merge), then decide on **pushing** `main` to `origin` (currently main is local-only ahead of `origin/main`, so a push publishes both BETA-001 and BUILD-001).
+
+## Still Deferred / Stop-Lines (unchanged)
+- **Live credential testing — deferred by user choice.** Nothing has published end-to-end; `analytics_*` / `getMetrics` / `rate_limits` UNVERIFIED against live APIs. Order: Bluesky → X → Meta.
+- **UI implementation planning — intentionally NOT started** (the stop-line). Analytics dashboard + calendar = Phase 2/3.
+
+## Flags / Known-but-out-of-scope
+- **Pre-existing content truncations (since `e31dd68`, NOT this session):** `capabilities/skills/pipeline-orchestrator.md` ends on a dangling `2`; `output-manager`'s "Rules (non-negotiable)" lost rules 3+. **Creative-content gaps to fill by hand** in `capabilities/`, then `npm run build` — not build bugs.
+- **SKILL.md header placement** still reasoned-safe, not load-tested (no skill loaded post-B2). Eyeball-load one if convenient.
 
 ## Conventions In Force
-
-- Server is `spmc`; npm bin `run.js` (MCP only); scheduler separate (`start.js` / `npm run scheduler`).
-- **One dispatcher**: add a platform → adapter + `lib/specs.js` entry + skill + dispatcher case. `lib/specs.js` is the single source of truth for limits/rules.
-- Every real publish goes through `publishAudited` so it lands in the audit log.
-- Runtime state lives in `spmc-server/data/` (gitignored); tests isolate it via `SPMC_DATA_DIR`.
-- Credentials: `~/.claude/spmc.env` primary. Multi-account = `KEY__ACCOUNT` suffix.
-- `node --test` needs a glob on Node 24: `npm test` runs `node --test "test/*.test.mjs"`.
-- Keep the suite green at every commit; no new runtime deps (still 2).
-
-## Open Questions
-
-- Bump version for the expanded surface (e.g. `0.2.0-alpha`)? Currently still `0.1.0-alpha.1` in `package.json` and `0.1.0` hardcoded in `index.js`'s `Server({version})`.
-- Should `analytics_*` auto-run 24h after publish via a scheduler hook (ALPHA-008), or stay manual?
-- `rate_limits` is observational — do we want the automatic backoff queue (Phase 2) before beta, or is observation enough?
+- **Build origin:** tool → `lib/tools.js`; limit → `lib/specs.js`; credential/media key → `lib/config.js` (+ document in `.env.example`); skill/Hermes prose → `capabilities/`; version/metadata → `spmc-server/package.json`. Then `npm run build`. **Never hand-edit generated artifacts** — `build:check` (CI + pre-commit) rejects it. Hand-editing **outside** the `gen:tools` markers in README/CONTEXT is fine.
+- Server `spmc`; `run.js` = MCP only; `start.js` = MCP + scheduler. One dispatcher (`lib/dispatch.js`); every real publish goes through `publishAudited`.
+- Credentials: `~/.claude/spmc.env` (self-loaded by `run.js`); multi-account `KEY__ACCOUNT`.
+- Keep `npm test` + `build:check` green at every commit. Runtime deps 2; build tooling adds **zero**.

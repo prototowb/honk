@@ -1,0 +1,14 @@
+#!/bin/sh
+# SPMC pre-commit — fail the commit if any generated artifact has drifted from
+# the single origin (spmc-server/lib/{tools,specs,config}.js + capabilities/), or
+# if .env.example is missing a credential the server reads. Mirrors the CI gate
+# (.github/workflows/ci.yml) so drift is caught before it reaches a PR.
+#
+# Enable once per clone:   git config core.hooksPath .githooks
+# Bypass a single commit:  git commit --no-verify
+if ! npm run build:check; then
+  echo "" >&2
+  echo "✗ pre-commit blocked: generated artifacts are stale (or .env.example is" >&2
+  echo "  missing a credential key). Run 'npm run build', stage the result, retry." >&2
+  exit 1
+fi
