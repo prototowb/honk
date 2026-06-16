@@ -27,7 +27,10 @@ or only additively extended.
 
 ## Active Tickets
 
-*None.* Next phase is UI implementation **planning** (Beta) — not yet started.
+**None — nothing in progress or pending.** BUILD-001 (single-origin build system,
+`v0.2.0-alpha`) shipped, merged to `main`, and went CI-green on 2026-06-16. Every
+remaining item is a deferred stop-line that needs an explicit user go-ahead before
+it starts (see *Next Up*): live credential testing and UI implementation planning.
 
 ## Completed Tickets
 
@@ -61,6 +64,7 @@ or only additively extended.
 | BETA-007 | `scheduled_at` ISO normalization + `schedule_check` — naive timestamp accepted as server-local but warned (avoids wrong-instant bug under hosting) | ✅ Done |
 | BETA-008 | Rate-limit tracking (`rate_limits`) + analytics ingestion scaffold (`analytics_fetch`/`analytics_report`, IG/FB/Threads) — **unverified pending live creds** | ✅ Done |
 | BETA-009 | Test suite: 37 `node:test` unit tests + MCP smoke test; `npm test` / `npm run test:smoke` | ✅ Done |
+| BUILD-001 | Single-origin build system: `build/generate.mjs` emits 21 artifacts from one origin (`lib/{tools,specs,config}.js` + `capabilities/` prose) via a `{{limit\|unit\|tool}}` resolver; `build:check` enforced by CI + pre-commit hook; merged to `main`, `v0.2.0-alpha` | ✅ Done |
 
 ## Next Up
 
