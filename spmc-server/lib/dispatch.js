@@ -28,6 +28,10 @@ export async function publish(platform, content, account = '') {
       return { summary: `Tweet posted!\nID: ${r.id}\nURL: ${r.url}`, raw: r };
     }
     case 'instagram': {
+      if (Array.isArray(content.image_urls) && content.image_urls.length) {
+        const r = await instagram.postCarousel(content.image_urls, content.caption, account);
+        return { summary: `Instagram carousel published! Media ID: ${r.id} (${r.children} slides)`, raw: r };
+      }
       const r = await instagram.post(content.image_url, content.caption, account);
       return { summary: `Instagram post published! Media ID: ${r.id}`, raw: r };
     }

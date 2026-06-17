@@ -34,7 +34,12 @@ export function report() {
 
   const media = {};
   for (const [name, keys] of Object.entries(MEDIA_PROVIDERS)) {
-    media[name] = { configured: hasAll(keys), missing: keys.filter(k => !env(k)) };
+    // Cloudinary is also satisfiable by the single CLOUDINARY_URL one-liner.
+    if (name === 'cloudinary' && !hasAll(keys) && env('CLOUDINARY_URL')) {
+      media[name] = { configured: true, missing: [] };
+    } else {
+      media[name] = { configured: hasAll(keys), missing: keys.filter(k => !env(k)) };
+    }
   }
 
   return { platforms, media };

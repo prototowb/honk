@@ -11,7 +11,7 @@ framework: "MCP server + Claude skills"
 project_type: "AI-native social publishing plugin"
 initialization_date: "2026-06-10"
 current_sprint: "Beta-Prep"
-version: "0.2.0-alpha"
+version: "0.3.0-alpha"
 ```
 
 ## Sprint Beta-Prep — Complete (non-UI capabilities)
@@ -27,10 +27,11 @@ or only additively extended.
 
 ## Active Tickets
 
-**None — nothing in progress or pending.** BUILD-001 (single-origin build system,
-`v0.2.0-alpha`) shipped, merged to `main`, and went CI-green on 2026-06-16. Every
-remaining item is a deferred stop-line that needs an explicit user go-ahead before
-it starts (see *Next Up*): live credential testing and UI implementation planning.
+**None — nothing in progress or pending.** BETA-010 (live credential testing) and
+BETA-012 (carousel + branded slides + account_info + media-host backup) shipped
+this session (`v0.3.0-alpha`); see *Completed*. The only remaining item is the
+UI implementation planning stop-line (BETA-011), which still needs an explicit
+user go-ahead (see *Next Up*).
 
 ## Completed Tickets
 
@@ -65,29 +66,32 @@ it starts (see *Next Up*): live credential testing and UI implementation plannin
 | BETA-008 | Rate-limit tracking (`rate_limits`) + analytics ingestion scaffold (`analytics_fetch`/`analytics_report`, IG/FB/Threads) — **unverified pending live creds** | ✅ Done |
 | BETA-009 | Test suite: 37 `node:test` unit tests + MCP smoke test; `npm test` / `npm run test:smoke` | ✅ Done |
 | BUILD-001 | Single-origin build system: `build/generate.mjs` emits 21 artifacts from one origin (`lib/{tools,specs,config}.js` + `capabilities/` prose) via a `{{limit\|unit\|tool}}` resolver; `build:check` enforced by CI + pre-commit hook; merged to `main`, `v0.2.0-alpha` | ✅ Done |
+| BETA-010 | Live credential testing (Meta): published a real 6-slide Instagram carousel + a Facebook Page post end-to-end through the spine. Verified live: IG publish, FB publish, IG analytics, audit log, rate-limit tracking, `account_info` read. Surfaced + resolved: expired FB token, invalid imgbb key, unparsed Cloudinary one-liner. Bluesky/Threads/TikTok creds still empty; X is credit-blocked (402) | ✅ Done |
+| BETA-012 | IG carousel publishing (`image_urls[]`, multi-container Graph flow) · `account_info` read tool (IG/FB profile) · `square-news` branded template (handle + circular-icon footer, body word-wrap) · `compose` empty-value→default fix · FB analytics metric set corrected to live-valid (`post_impressions*` deprecated) · imgbb-primary/Cloudinary-fallback selection + `CLOUDINARY_URL` one-liner parsing | ✅ Done |
 
 ## Next Up
 
 | ID | Title | Priority |
 |----|-------|----------|
-| BETA-010 | Live credential testing (deferred): Bluesky → X → Meta. Confirms publish + analytics paths | 🔴 Now (deferred by request) |
 | BETA-011 | UI implementation **planning** — analytics dashboard + content calendar (Phase 2/3). NOT started | ⚪ Next phase (stop line) |
-| ALPHA-008 | Auto-fetch analytics 24h after publish (scheduler hook) | Low |
+| BETA-013 | Remaining live creds: refresh/verify Bluesky (`BLUESKY_APP_PASSWORD` empty), Threads (both empty), TikTok (token empty); add X credits to unblock 402 | Medium |
+| ALPHA-008 | Auto-fetch analytics 24h after publish (scheduler hook) — IG verified, FB metric set now live-valid | Low |
 
 ## Project Metrics
 
 | Metric | Value |
 |--------|-------|
 | Platforms supported | 6 (X, Instagram, TikTok, Facebook, Threads, Bluesky) |
-| MCP tools | 23 (7 publishing + 1 tiktok-status + 5 content-intelligence + 5 queue + 3 observability + 2 media) |
+| MCP tools | 24 (7 publishing + 1 tiktok-status + 5 content-intelligence + 5 queue + 3 observability + 1 account_info + 2 media) |
 | Claude Code skills | 13 (9 publishing: 6 platform + manage-queue + upload-media + content-intelligence · 4 pipeline: idea-input + research-trends + pipeline-orchestrator + output-manager) |
 | Tests | 37 unit (`node:test`) + 12-check MCP smoke test |
-| npm package | `spmc` v0.2.0-alpha |
+| npm package | `spmc` v0.3.0-alpha |
 | Dependencies | 2 (`@modelcontextprotocol/sdk`, `sharp`) — unchanged |
 | Agent surfaces | 5 (Claude Code, Claude Desktop, Hermes, OpenClaw/generic, CLI/npm) |
 
 ## Recent Updates
 
+- 2026-06-17: **BETA-010 live test executed + BETA-012 features shipped (`v0.3.0-alpha`).** Published a real, researched 6-slide Instagram carousel (US gov pulling Anthropic's Fable 5 / Mythos 5) to `@protocode_` + a Facebook Page post, end-to-end through the spine. New product surface: IG carousel publishing (`instagram_post` `image_urls[]`), `account_info` read tool, `square-news` branded slide template (handle + circular-icon footer, body word-wrap), imgbb-primary/Cloudinary-fallback selection with `CLOUDINARY_URL` one-liner parsing. Live testing surfaced + fixed real issues: **FB analytics metrics were all-deprecated** (`post_impressions*` → engagement metrics, verified valid live), a `compose` empty-value bug that blanked the accent/handle, an expired FB token, an invalid imgbb key, and the unparsed Cloudinary one-liner (last three resolved by user-supplied creds). Verified live: IG+FB publish, IG analytics, audit, rate-limits, profile reads. 41 unit tests + smoke + `build:check` green. **Merged into `development` + pushed; PR #1 (`development` → `main`) open.** Git flow formalized this session: `development` is now the default/integration branch (branch off it, merge into it, push it; `main` only via PR) — `BRANCHING.md`/`AGENTS.md`/`AGENT_CONTEXT.md` reconciled.
 - 2026-06-16: BUILD-001 single-origin — **SHIPPED + MERGED to `main` (v0.2.0-alpha), pushed, CI green.** Wire-up + merge-back closed it out: CI workflow (`.github/workflows/ci.yml`) + opt-in pre-commit hook (`.githooks/pre-commit`, no husky) both run `build:check`; `hermes/mcp-config.json` excluded from `--check` (machine-local absolute path = environment, shape still template-checked); `.env.example` single-origined as a `credentialEnvKeys()` completeness assertion; design folded into `PROJECT_ARCHITECTURE.md`, `BUILD_CONCEPT.md` reduced to a pointer; version single-sourced + bumped to `0.2.0-alpha`. Merged `--no-ff` (`f401b44`) and pushed `main` to `origin/honk`. First CI run caught a latent test-glob bug (quoted `node --test` glob needs Node ≥21; CI's Node 20 couldn't expand it) — unquoted so the shell expands it; next run green (`build:check` 20 checked + 1 skipped, 38 tests, smoke). **No active tickets; next = the deferred stop-lines (live cred testing / UI planning), awaiting user go-ahead.**
 - 2026-06-16: BUILD-001 single-origin — **slice B2** (the final slice): `skills/*` (13) + `hermes/SKILLS.md` are now generated from a hand-authored `capabilities/` prose tree. New token resolver (`{{limit:…}}` / `{{unit:…}}` / `{{tool:…}}`, 1:1 specs object-path, build-failing on any bad token) single-sources platform limits + tool names into prose. `output-manager` body reconciled (dropped queue/scheduling overlap with `manage-queue`). Generator now emits **21 artifacts**; `build:check` green, 38 tests + smoke pass. The single-origin build system is complete — remaining work is CI/pre-commit wire-up + merge-back (no slices left).
 - 2026-06-16: BUILD-001 single-origin — slice C (one SPMC plugin: content-pipeline absorbed, 13 skills, dead trees removed) + slice B1 (tool tables injected into README + Hermes CONTEXT) + slice A (all 3 MCP configs rendered from one template; 17 credential keys single-sourced via `lib/config.js`). Generator emits **7 artifacts**; `build:check` green, 38 tests + smoke pass. Remaining: B2 (skills ← capabilities), then CI wire-up + merge-back.

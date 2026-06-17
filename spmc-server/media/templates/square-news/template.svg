@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <clipPath id="iconClip"><circle cx="116" cy="1011" r="36" /></clipPath>
+  </defs>
+
+  <!-- background -->
+  <rect width="1080" height="1080" fill="{{bg_color}}" />
+
+  <!-- accent bar beside the headline -->
+  <rect x="80" y="150" width="8" height="200" fill="{{accent}}" />
+
+  <!-- headline (auto-split to two lines) -->
+  <text x="110" y="160" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+        font-size="76" font-weight="700" fill="#f4f8ff" dominant-baseline="hanging" xml:space="preserve">{{headline_line1}}</text>
+  <text x="110" y="250" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+        font-size="76" font-weight="700" fill="#f4f8ff" dominant-baseline="hanging" xml:space="preserve">{{headline_line2}}</text>
+
+  <!-- body (word-wrapped tspans injected by compose) -->
+  <text x="110" y="400" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+        font-size="42" font-weight="400" fill="#c7d2e6" dominant-baseline="hanging" xml:space="preserve">{{subtext_tspans}}</text>
+
+  <!-- footer -->
+  <line x1="80" y1="945" x2="1000" y2="945" stroke="{{accent}}" stroke-width="2" opacity="0.35" />
+  {{icon_image}}
+  <text x="176" y="996" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+        font-size="36" font-weight="600" fill="{{accent}}" dominant-baseline="hanging" xml:space="preserve">{{handle}}</text>
+</svg>

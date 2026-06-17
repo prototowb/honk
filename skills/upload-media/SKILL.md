@@ -25,8 +25,9 @@ media_upload(file_path: "C:\\path\\to\\image.jpg")
 ```
 
 Returns a `Public URL` — use that in the next step. Provider is auto-selected:
-- **Cloudinary** (if `CLOUDINARY_*` vars are set) — images and videos
-- **imgbb** (if `IMGBB_API_KEY` is set) — images only
+- **Images** — imgbb first (`IMGBB_API_KEY`), then Cloudinary as fallback
+- **Video** — always Cloudinary (imgbb is images-only)
+- **Cloudinary** creds: the three `CLOUDINARY_*` vars or a single `CLOUDINARY_URL` one-liner
 
 Explicitly pick a provider with `provider: "cloudinary"` or `provider: "imgbb"`.
 

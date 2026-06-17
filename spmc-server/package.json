@@ -1,6 +1,6 @@
 {
   "name": "spmc",
-  "version": "0.2.0-alpha",
+  "version": "0.3.0-alpha",
   "description": "Social Publishing Mission Control — AI-native MCP server for X, Instagram, TikTok, Facebook, Threads, and Bluesky",
   "author": "towb",
   "type": "module",

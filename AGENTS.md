@@ -106,7 +106,7 @@ This project uses Proto Gear for AI agent coordination.
 | `BRANCHING.md` | Git workflow, branch naming, commit format | Before any git operations (if exists) |
 | `.proto-gear/INDEX.md` | Capabilities: commands, skills, workflows | When starting a task (if exists) |
 
-Rules: never commit to `main`/`development` directly · run `pg status` before starting work
+Rules: `development` is the default branch — branch off it, merge into it, push it · never commit to `main`/`development` directly · never push to or merge features into `main` directly — `development` → `main` via PR only · run `pg status` before starting work
 ---
 
 **Do not add** project name, tech stack, architecture notes, ticket lists, directory structure, or any other project information. Those live in Proto Gear files.
