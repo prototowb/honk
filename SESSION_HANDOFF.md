@@ -4,7 +4,7 @@
 
 ## Where We Are
 
-**BUILD-001 single-origin build system is SHIPPED and MERGED to `main` (v0.2.0-alpha), pushed to `origin`, with CI green on a real run.** The branch `feature/BUILD-001-single-origin` is feature-complete and merged (`--no-ff`, merge commit `f401b44`). There are **no active development tickets** — the next phases are the long-standing stop-lines (UI planning; live credential testing), both awaiting an explicit user go-ahead.
+**BUILD-001 single-origin build system is SHIPPED and MERGED to `main` (v0.2.0-alpha), pushed to `origin`, with CI green on a real run.** The branch `feature/BUILD-001-single-origin` is feature-complete and merged (`--no-ff`, merge commit `f401b44`); BUILD-001 is recorded as Done in `PROJECT_STATUS.md`. **Nothing is in progress or pending** — the only remaining items are the long-standing stop-lines (UI planning; live credential testing), both awaiting an explicit user go-ahead.
 
 Design reference is **`PROJECT_ARCHITECTURE.md`** (the *Single origin + generated distribution* Design Decision). `BUILD_CONCEPT.md` is now just a pointer + a contributor edit-the-source TL;DR.
 
@@ -21,7 +21,7 @@ Wire-up + merge-back + the gated merge — the whole tail of BUILD-001:
 7. **Merged `feature/BUILD-001-single-origin` → `main` (`--no-ff`) and pushed `main` + the feature branch to `origin`.**
 8. **CI follow-up fix:** the first post-merge CI run failed on `node --test "test/*.test.mjs"` — the quoted glob needs Node ≥21 to expand; CI's Node 20 couldn't. Unquoted it so the POSIX shell expands it to file paths (works on any Node); next run green.
 
-**State:** `main` == `origin/main` (`25a025f`); `build:check` green (20 checked + 1 skipped); 38 unit + smoke pass; CI green.
+**State:** `main` == `origin/main`, working tree clean; `build:check` green (20 checked + 1 skipped); 38 unit + smoke pass; CI green on Node 22.
 
 ## NEXT — stop-lines (need user go-ahead; nothing is mid-flight)
 - **Live credential testing — deferred by user choice.** Nothing has published end-to-end; `analytics_*` / `getMetrics` / `rate_limits` UNVERIFIED against live APIs. Order: Bluesky → X → Meta.
