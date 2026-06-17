@@ -33,6 +33,23 @@ test('media field must be an http(s) url', () => {
   assert.equal(validate('instagram', { caption: 'hi', image_url: 'https://x/y.jpg' }).ok, true);
 });
 
+test('instagram carousel accepts 2–10 http(s) image urls', () => {
+  const v = validate('instagram', { caption: 'hi', image_urls: ['https://x/1.jpg', 'https://x/2.jpg'] });
+  assert.equal(v.ok, true);
+});
+
+test('instagram carousel rejects fewer than 2 images', () => {
+  const v = validate('instagram', { caption: 'hi', image_urls: ['https://x/1.jpg'] });
+  assert.equal(v.ok, false);
+  assert.match(v.errors.join(), /2–10/);
+});
+
+test('instagram carousel rejects a non-url slide', () => {
+  const v = validate('instagram', { caption: 'hi', image_urls: ['https://x/1.jpg', 'not-a-url'] });
+  assert.equal(v.ok, false);
+  assert.match(v.errors.join(), /image 2/);
+});
+
 test('bluesky counts graphemes, not code units', () => {
   assert.equal(validate('bluesky', { text: '👍'.repeat(300) }).ok, true);
   assert.equal(validate('bluesky', { text: '👍'.repeat(301) }).ok, false);

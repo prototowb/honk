@@ -14,7 +14,7 @@ export const PLATFORM_SPECS = {
   instagram: {
     label: 'Instagram',
     text:  { field: 'caption', max: 2200, unit: 'chars', required: true },
-    media: { field: 'image_url', kind: 'image', required: true },
+    media: { field: 'image_url', kind: 'image', required: true, carousel: { field: 'image_urls', min: 2, max: 10 } },
     credentials: ['INSTAGRAM_USER_ID', 'INSTAGRAM_ACCESS_TOKEN'],
   },
   tiktok: {

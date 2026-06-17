@@ -3,6 +3,8 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 
 import * as tiktok    from './adapters/tiktok.js';
+import * as instagram from './adapters/instagram.js';
+import * as facebook  from './adapters/facebook.js';
 import * as queue     from './queue/store.js';
 import * as media     from './media/upload.js';
 import * as compose   from './media/compose.js';
@@ -74,8 +76,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return ok(await doPublish('x', { text: args.text }, args.account ?? '', args.dry_run));
       case 'x_post_thread':
         return ok(await doPublish('x', { tweets: args.tweets }, args.account ?? '', args.dry_run));
-      case 'instagram_post':
-        return ok(await doPublish('instagram', { image_url: args.image_url, caption: args.caption }, args.account ?? '', args.dry_run));
+      case 'instagram_post': {
+        const igContent = { caption: args.caption };
+        if (Array.isArray(args.image_urls) && args.image_urls.length) igContent.image_urls = args.image_urls;
+        else igContent.image_url = args.image_url;
+        return ok(await doPublish('instagram', igContent, args.account ?? '', args.dry_run));
+      }
       case 'tiktok_post_video':
         return ok(await doPublish('tiktok', { video_url: args.video_url, caption: args.caption, privacy_level: args.privacy_level }, args.account ?? '', args.dry_run));
       case 'tiktok_check_publish_status': {
@@ -96,6 +102,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return ok(formatAdaptation(adapt(args.text, args.platforms)));
       case 'config_doctor':
         return ok(formatReport(configReport()));
+      case 'account_info': {
+        const mod = { instagram, facebook }[args.platform];
+        if (!mod) throw new Error(`account_info not available for "${args.platform}". Supported: instagram, facebook.`);
+        const p = await mod.getProfile(args.account ?? '');
+        return ok(
+          `${p.platform}${args.account ? `/${args.account}` : ''} profile:\n`
+          + `  name:   ${p.name ?? '(none)'}\n`
+          + `  handle: ${p.handle ?? '(none set)'}\n`
+          + `  id:     ${p.id}\n`
+          + `  icon:   ${p.icon_url ?? '(none)'}`
+        );
+      }
       case 'audit_log': {
         const entries = auditRead({ platform: args.platform, status: args.status, source: args.source, limit: args.limit });
         if (entries.length === 0) return ok('No audit entries yet.');
@@ -192,6 +210,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           bg_color:     args.bg_color     ?? '',
           accent:       args.accent       ?? '',
           bg_image_url: args.bg_image_url ?? '',
+          handle:       args.handle       ?? '',
+          icon_url:     args.icon_url      ?? '',
         }, { provider: args.provider ?? null, account: args.account ?? '' });
         return ok(
           `Composed ${result.template} (${result.dimensions.width}×${result.dimensions.height})\n`

@@ -23,16 +23,37 @@ export async function post(message, imageUrl = null, account = '') {
   return res.json();
 }
 
-// Post-level insights for a published Page post.
-// Unverified against the live API (credential testing deferred).
+// Page profile: name + handle (vanity username, if set) + avatar URL.
+// Read-only; used for branding (slide footers) and to confirm the connected Page.
+export async function getProfile(account = '') {
+  const pageId      = env('FACEBOOK_PAGE_ID', account);
+  const accessToken = env('FACEBOOK_ACCESS_TOKEN', account);
+
+  const res = await fetch(`${BASE}/${pageId}?fields=name,username,picture.type(large){url}&access_token=${accessToken}`);
+  if (!res.ok) throw new Error(`Facebook profile ${res.status}: ${await res.text()}`);
+
+  const j = await res.json();
+  return {
+    platform: 'facebook',
+    id:       j.id ?? pageId,
+    handle:   j.username ? `@${j.username}` : null,
+    name:     j.name ?? null,
+    icon_url: j.picture?.data?.url ?? null,
+  };
+}
+
+// Post-level insights for a published Page post. Metric set verified against
+// the live Graph API (v19, 2026-06): the post_impressions* family is deprecated
+// and 400s with "(#100) must be a valid insights metric" — these engagement
+// metrics are the currently-accepted replacements.
 export async function getMetrics(postId, account = '') {
   const accessToken = env('FACEBOOK_ACCESS_TOKEN', account);
-  const metrics = 'post_impressions,post_impressions_unique,post_reactions_by_type_total';
+  const metrics = 'post_engagements,post_clicks,post_reactions_like_total,post_reactions_by_type_total';
   const res = await fetch(`${BASE}/${postId}/insights?metric=${metrics}&access_token=${accessToken}`);
   if (!res.ok) throw new Error(`Facebook insights ${res.status}: ${await res.text()}`);
 
   const json = await res.json();
   const out = {};
-  for (const d of json.data ?? []) out[d.name] = d.values?.[0]?.value;
+  for (const d of json.data ?? []) out[d.name] = d.values?.[0]?.value ?? d.total_value?.value;
   return out;
 }

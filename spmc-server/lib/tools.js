@@ -38,16 +38,17 @@ export const TOOLS = [
   // ── Instagram ─────────────────────────────────────────────────────────────
   {
     name: 'instagram_post',
-    description: 'Post an image with caption to Instagram. Requires a publicly accessible image URL.',
+    description: 'Post to Instagram. Provide image_url for a single image, OR image_urls (2–10 public URLs) for a carousel. Requires publicly accessible image URL(s).',
     inputSchema: {
       type: 'object',
       properties: {
-        image_url: { type: 'string', description: 'Public image URL' },
-        caption:   { type: 'string', description: 'Caption text including hashtags' },
-        account:   { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
-        dry_run:   DRY_RUN_PROP,
+        image_url:  { type: 'string', description: 'Public image URL (single-image post)' },
+        image_urls: { type: 'array', items: { type: 'string' }, description: 'Ordered 2–10 public image URLs (carousel post). Use instead of image_url.' },
+        caption:    { type: 'string', description: 'Caption text including hashtags' },
+        account:    { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
+        dry_run:    DRY_RUN_PROP,
       },
-      required: ['image_url', 'caption'],
+      required: ['caption'],
     },
   },
   // ── TikTok ────────────────────────────────────────────────────────────────
@@ -155,6 +156,18 @@ export const TOOLS = [
     name: 'config_doctor',
     description: 'Report which platforms and named accounts have credentials configured (by env-var presence only — never reveals values), plus media providers. Use to check setup before publishing.',
     inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'account_info',
+    description: 'Fetch the connected account profile (handle, display name, avatar URL) for a platform. Read-only — confirms which account is wired up and supplies branding assets. Supported: instagram, facebook (Graph API).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        platform: { type: 'string', description: 'Platform to query', enum: ['instagram', 'facebook'] },
+        account:  { type: 'string', description: "Named account (e.g. 'brand'). Omit for the default account." },
+      },
+      required: ['platform'],
+    },
   },
   {
     name: 'audit_log',
@@ -273,16 +286,18 @@ export const TOOLS = [
   // ── Media ─────────────────────────────────────────────────────────────────
   {
     name: 'media_compose',
-    description: 'Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), story-dark (1080×1920), banner-wide (1200×628).',
+    description: 'Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), story-dark (1080×1920), banner-wide (1200×628), square-news (1080×1080 branded carousel slide with wrapped body + handle/icon footer).',
     inputSchema: {
       type: 'object',
       properties: {
-        template:    { type: 'string', description: 'Template ID. One of: square-dark, story-dark, banner-wide.', enum: ['square-dark', 'story-dark', 'banner-wide'] },
+        template:    { type: 'string', description: 'Template ID. One of: square-dark, story-dark, banner-wide, square-news.', enum: ['square-dark', 'story-dark', 'banner-wide', 'square-news'] },
         headline:    { type: 'string', description: 'Main headline text. Auto-wrapped to two lines.' },
-        subtext:     { type: 'string', description: 'Secondary text line below the headline.' },
+        subtext:     { type: 'string', description: 'Secondary/body text below the headline. Word-wrapped to multiple lines on square-news.' },
         bg_color:    { type: 'string', description: 'Background hex color. Default: #05091e' },
         accent:      { type: 'string', description: 'Accent hex color for bar and subtext. Default: #1df7ed' },
         bg_image_url:{ type: 'string', description: 'Optional public URL of a backdrop image. Composited behind the text panel.' },
+        handle:      { type: 'string', description: 'Account handle for the footer (e.g. @brand). square-news only.' },
+        icon_url:    { type: 'string', description: 'Public URL of an avatar/logo image rendered as a circular footer icon. square-news only.' },
         provider:    { type: 'string', description: 'CDN provider for the upload. Auto-selected if omitted.', enum: ['cloudinary', 'imgbb'] },
         account:     { type: 'string', description: "Named account for CDN credentials (e.g. 'brand')." },
       },
