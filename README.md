@@ -266,7 +266,7 @@ Or use `start.js` as the entry point:
 ## MCP Tools
 
 <!-- gen:tools:start -->
-_23 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit between these markers; run `npm run build`._
+_24 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit between these markers; run `npm run build`._
 
 ### Publishing & status
 
@@ -274,7 +274,7 @@ _23 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 |------|----------|----------|----------------|-------------|
 | `x_post_tweet` | `text` (string) | `account` (string), `dry_run` (boolean) | 280 chars | Post a single tweet to X (Twitter). Max 280 characters. |
 | `x_post_thread` | `tweets` (array) | `account` (string), `dry_run` (boolean) | — | Post a thread of tweets to X. Each array item is one tweet, chained as replies. |
-| `instagram_post` | `image_url` (string), `caption` (string) | `account` (string), `dry_run` (boolean) | 2200 chars | Post an image with caption to Instagram. Requires a publicly accessible image URL. |
+| `instagram_post` | `caption` (string) | `image_url` (string), `image_urls` (array), `account` (string), `dry_run` (boolean) | 2200 chars | Post to Instagram. Provide image_url for a single image, OR image_urls (2–10 public URLs) for a carousel. Requires publicly accessible image URL(s). |
 | `tiktok_post_video` | `video_url` (string), `caption` (string) | `privacy_level` (string), `account` (string), `dry_run` (boolean) | 2200 chars | Post a video to TikTok (PULL_FROM_URL). Until your app passes audit, posts land as private/self-only regardless of privacy_level. |
 | `tiktok_check_publish_status` | `publish_id` (string) | `account` (string) | — | Check the async publish status of a TikTok video post. |
 | `facebook_post` | `message` (string) | `image_url` (string), `account` (string), `dry_run` (boolean) | 63206 chars | Post to a Facebook Page feed. Optionally attach a public image URL to post as a photo. |
@@ -288,6 +288,7 @@ _23 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 | `content_validate` | `platform` (string), `content` (object) | — | — | Validate a post payload against a platform's rules (length, required fields, media) without publishing. Returns errors that would block publishing and warnings. Use before queuing or posting. |
 | `content_adapt` | `text` (string) | `platforms` (array) | — | Fit one source text to multiple platforms' hard limits: auto-splits a long post into an X thread, grapheme-truncates for Bluesky, etc. Returns ready-to-post content per platform plus warnings. This handles the deterministic length-fitting only — rewrite tone/hashtags yourself before posting. |
 | `config_doctor` | — | — | — | Report which platforms and named accounts have credentials configured (by env-var presence only — never reveals values), plus media providers. Use to check setup before publishing. |
+| `account_info` | `platform` (string) | `account` (string) | — | Fetch the connected account profile (handle, display name, avatar URL) for a platform. Read-only — confirms which account is wired up and supplies branding assets. Supported: instagram, facebook (Graph API). |
 | `audit_log` | — | `platform` (string), `status` (string), `source` (string), `limit` (number) | — | Read the publish audit trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, and result. Filter by platform/status/source. |
 | `schedule_check` | `scheduled_at` (string) | — | — | Validate and normalize a scheduled_at timestamp to canonical UTC ISO 8601. A timestamp without an explicit timezone is interpreted as the server's local time and flagged with a warning (it becomes ambiguous under hosted/multi-user deployment). Returns the normalized value and whether it is in the past. |
 
@@ -313,7 +314,7 @@ _23 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 
 | Tool | Required | Optional | Platform limit | Description |
 |------|----------|----------|----------------|-------------|
-| `media_compose` | `template` (string), `headline` (string) | `subtext` (string), `bg_color` (string), `accent` (string), `bg_image_url` (string), `provider` (string), `account` (string) | — | Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), story-dark (1080×1920), banner-wide (1200×628). |
+| `media_compose` | `template` (string), `headline` (string) | `subtext` (string), `bg_color` (string), `accent` (string), `bg_image_url` (string), `handle` (string), `icon_url` (string), `provider` (string), `account` (string) | — | Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), story-dark (1080×1920), banner-wide (1200×628), square-news (1080×1080 branded carousel slide with wrapped body + handle/icon footer). |
 | `media_upload` | `file_path` (string) | `provider` (string), `account` (string) | — | Upload a local image or video file to a CDN and get back a public URL. Use this before posting to Instagram (requires image URL) or TikTok (requires video URL). Supported providers: cloudinary (images + videos), imgbb (images only). Provider is auto-selected from available credentials. |
 
 <!-- gen:tools:end -->

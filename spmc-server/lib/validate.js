@@ -47,13 +47,27 @@ export function validate(platform, content) {
   }
 
   // Media: required for some platforms, must be a public URL when present.
+  // Carousel form (e.g. Instagram image_urls[]) is validated per item.
   if (spec.media) {
-    const m = c[spec.media.field];
-    const present = typeof m === 'string' && m.trim() !== '';
-    if (spec.media.required && !present) {
-      errors.push(`${spec.label} requires "${spec.media.field}" — a public ${spec.media.kind} URL.`);
-    } else if (present && !/^https?:\/\//i.test(m.trim())) {
-      errors.push(`"${spec.media.field}" must be a public http(s) URL.`);
+    const cz   = spec.media.carousel;
+    const urls = cz && Array.isArray(c[cz.field]) ? c[cz.field] : null;
+    if (urls) {
+      if (urls.length < cz.min || urls.length > cz.max) {
+        errors.push(`${spec.label} carousel needs ${cz.min}–${cz.max} images (got ${urls.length}).`);
+      }
+      urls.forEach((u, i) => {
+        if (typeof u !== 'string' || !/^https?:\/\//i.test(String(u).trim())) {
+          errors.push(`Carousel image ${i + 1} must be a public http(s) URL.`);
+        }
+      });
+    } else {
+      const m = c[spec.media.field];
+      const present = typeof m === 'string' && m.trim() !== '';
+      if (spec.media.required && !present) {
+        errors.push(`${spec.label} requires "${spec.media.field}" — a public ${spec.media.kind} URL.`);
+      } else if (present && !/^https?:\/\//i.test(m.trim())) {
+        errors.push(`"${spec.media.field}" must be a public http(s) URL.`);
+      }
     }
   }
 

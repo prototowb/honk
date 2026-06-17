@@ -38,6 +38,21 @@ function splitHeadline(text, maxLen = 18) {
   return [line1, text.slice(line1.length).trim()];
 }
 
+// Greedy word-wrap into lines no wider than maxLen characters. A single word
+// longer than maxLen is left on its own line (no hard split — body copy).
+function wrapBody(text, maxLen) {
+  const words = String(text ?? '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length > maxLen && current) { lines.push(current); current = word; }
+    else current = candidate;
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
 // ─── SVG rendering ───────────────────────────────────────────────────────
 
 function escapeXml(s) {
@@ -62,16 +77,49 @@ export async function compose(templateId, variables = {}, uploadOpts = {}) {
   const { meta, svg } = getTemplate(templateId);
   const { width, height } = meta.dimensions;
 
-  // Merge variable defaults from template.json
+  // Merge variable defaults from template.json. An omitted OR empty-string
+  // value falls back to the template default — callers commonly pass '' for
+  // optional fields (e.g. accent/bg_color), which must not blank out a styled
+  // default and render text/shapes in SVG's default black.
   const resolved = {};
-  for (const v of meta.variables)
-    resolved[v.id] = variables[v.id] ?? v.default ?? '';
+  for (const v of meta.variables) {
+    const passed = variables[v.id];
+    resolved[v.id] = (passed === undefined || passed === null || passed === '')
+      ? (v.default ?? '')
+      : passed;
+  }
 
   // Auto-split headline into two lines for the SVG template
   const maxLen = templateId === 'banner-wide' ? 16 : 18;
   [resolved.headline_line1, resolved.headline_line2] = splitHeadline(resolved.headline, maxLen);
 
-  const svgBuf = Buffer.from(renderSvg(svg, resolved));
+  // Raw (unescaped) SVG fragments for templates that use them. Built here and
+  // injected before renderSvg so their markup is not XML-escaped; the text
+  // content inside is escaped individually.
+  const bodyLines = wrapBody(resolved.subtext, 34);
+  const subtextTspans = bodyLines
+    .map((ln, i) => `<tspan x="110" dy="${i === 0 ? 0 : 58}">${escapeXml(ln)}</tspan>`)
+    .join('');
+
+  let iconImage = '';
+  if (resolved.icon_url) {
+    try {
+      const iconRes = await fetch(resolved.icon_url);
+      if (iconRes.ok) {
+        const iconPng = await sharp(Buffer.from(await iconRes.arrayBuffer()))
+          .resize(72, 72, { fit: 'cover', position: 'centre' })
+          .png()
+          .toBuffer();
+        iconImage = `<image href="data:image/png;base64,${iconPng.toString('base64')}" x="80" y="975" width="72" height="72" clip-path="url(#iconClip)" preserveAspectRatio="xMidYMid slice" />`;
+      }
+    } catch { /* footer icon is decorative — skip on fetch/decode failure */ }
+  }
+
+  const svgStr = svg
+    .replaceAll('{{subtext_tspans}}', subtextTspans)
+    .replaceAll('{{icon_image}}', iconImage);
+
+  const svgBuf = Buffer.from(renderSvg(svgStr, resolved));
 
   let image;
   if (resolved.bg_image_url) {

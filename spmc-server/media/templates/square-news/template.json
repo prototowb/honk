@@ -1,0 +1,16 @@
+{
+  "id": "square-news",
+  "name": "Square News",
+  "description": "1080×1080 branded news/carousel slide: headline, word-wrapped body, and a footer with circular account icon + handle. Instagram carousel / feed.",
+  "dimensions": { "width": 1080, "height": 1080 },
+  "platforms": ["instagram", "facebook"],
+  "variables": [
+    { "id": "headline",    "label": "Headline",    "type": "text", "required": true,  "default": "" },
+    { "id": "subtext",     "label": "Body",         "type": "text", "required": false, "default": "" },
+    { "id": "bg_color",    "label": "Background",   "type": "color","required": false, "default": "#05091e" },
+    { "id": "accent",      "label": "Accent color", "type": "color","required": false, "default": "#1df7ed" },
+    { "id": "bg_image_url","label": "Backdrop image URL", "type": "url", "required": false, "default": "" },
+    { "id": "handle",      "label": "Footer handle","type": "text", "required": false, "default": "" },
+    { "id": "icon_url",    "label": "Footer icon URL", "type": "url", "required": false, "default": "" }
+  ]
+}
