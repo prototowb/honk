@@ -31,7 +31,8 @@ _No triggers — install capabilities to enable trigger routing._
 
 ## 🚨 Critical Rules
 
-- NEVER commit directly to `main` or `development` — always branch from `development`
+- NEVER commit directly to `main` or `development` — always branch from `development` (the default branch)
+- NEVER push to `main` or merge feature branches into `main` directly — `development` → `main` via PR only
 - Run `pg status` before starting work to see active tickets and current sprint
 - Use `pg ticket create "title" --type feature` to register new work
 - Use `pg ticket update ID --status IN_PROGRESS` when starting a ticket

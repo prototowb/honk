@@ -6,7 +6,7 @@
 
 **BETA-010 (live credential testing) is DONE, and the BETA-012 feature bundle that made it possible shipped with it — `v0.3.0-alpha`.** A real, researched 6-slide Instagram **carousel** (US government pulling Anthropic's Fable 5 / Mythos 5, three days after launch) was published to **`@protocode_`**, plus a **Facebook Page** post, end-to-end through the spine (tool → dispatch → adapter → live API), with audit + analytics verified. Both posts are **live and public** (no un-publish tool — manual delete only).
 
-**This work is committed on branch `feature/BETA-010-carousel-live`, NOT merged to `main` and NOT pushed.** `main` is unchanged. Deciding whether to push / open a PR / merge is the first open item.
+**This work is merged into `development` (`--no-ff`) and pushed; PR `development` → `main` is open ([#1](https://github.com/prototowb/honk/pull/1)) and awaiting review/merge.** `development` is now the repo's **default branch**. The git workflow was formalized this session (see *Conventions*): `development` is the integration/default branch — branch off it, merge into it, push it; `main` is reached only via PR from `development`, never directly. `BRANCHING.md` / `AGENTS.md` / `AGENT_CONTEXT.md` were reconciled to this (on branch `docs/branching-development-flow` → PR into `development`).
 
 ## What Shipped This Session
 
@@ -30,7 +30,7 @@ New product surface (all single-origin: edit `lib/*` / `capabilities/` / templat
 - Note: `config_doctor` reports presence, not validity — it green-lit the expired FB token and the invalid imgbb key. `account_info` is now the live read-path check.
 
 ## NEXT — open items
-- **Push / PR / merge decision** for `feature/BETA-010-carousel-live` (currently local-only). Project pattern is `--no-ff` merge to `main` + push, but that's a user call.
+- **Review + merge PR [#1](https://github.com/prototowb/honk/pull/1)** (`development` → `main`) to ship `v0.3.0-alpha` to `main`. Also merge `docs/branching-development-flow` → `development`.
 - **BETA-013** — refresh/verify the remaining creds (Bluesky/Threads/TikTok) and add X credits, if those platforms are wanted.
 - **BETA-011** — UI implementation **planning** (analytics dashboard + content calendar) remains the intentional stop-line; not started.
 
@@ -39,3 +39,4 @@ New product surface (all single-origin: edit `lib/*` / `capabilities/` / templat
 - Server `spmc`; `run.js` = MCP only (loads `~/.claude/spmc.env`); `start.js` = MCP + scheduler. One dispatcher (`lib/dispatch.js`); every real publish goes through `publishAudited`.
 - Credentials: `~/.claude/spmc.env`; multi-account `KEY__ACCOUNT`. Always confirm post content with the user before publishing (there is no un-publish).
 - Keep `npm test` + `build:check` green at every commit. Runtime deps still 2; build tooling adds zero.
+- **Git flow (`BRANCHING.md`):** `development` is the default/integration branch — branch off it, merge into it, push it. Never commit to `main`/`development` directly; never push to or merge features into `main`. `development` → `main` via PR only.
