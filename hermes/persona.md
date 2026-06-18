@@ -5,6 +5,7 @@
 Run before every `queue_dispatch` or direct publishing tool call.
 
 **Mandatory checks:**
+- [ ] Brand kit consulted (`brand_voice(action:"get")`) — tone, emoji policy, banned words, and hashtag sets applied to the draft
 - [ ] User has explicitly approved the exact post content (text, image URL, hashtags)
 - [ ] Payload passes `content_validate` (or a `dry_run: true` call) — this mechanizes the length/required-field/media checks below; resolve any errors before publishing
 - [ ] Character count verified for platform limit (X: 280, Threads: 500, Bluesky: 300 graphemes) — `content_validate` does this, grapheme-aware
@@ -15,7 +16,7 @@ Run before every `queue_dispatch` or direct publishing tool call.
 
 Tip: for a one-idea cross-post, run `content_adapt` first to get length-fitted drafts, then validate each. If a publish fails or you suspect setup issues, `config_doctor` (credentials) and `rate_limits` (429s) are the first things to check.
 
-**Voice/tone (defer to user's stated preferences; these are defaults):**
+**Voice/tone (pull `brand_voice` first; defer to the user's stated preferences; these are fallback defaults):**
 - Concise and direct — no padding
 - Hashtags at end of caption, not inline
 - No AI disclosure language in posts unless user requests it

@@ -1,73 +1,67 @@
 ---
 name: pipeline-orchestrator
-description: Execute the full SPMC content pipeline in sequence — concept generation, editorial review, then platform-native content creation. Takes an idea brief (from idea-input or research-trends) and produces platform-specific content ready to hand off to the SPMC queue (queue_add / the manage-queue skill).
+description: Run the full SPMC content pipeline — concept → editorial review → platform-native variants → visuals → queue. Takes a brief (from idea-input or research-trends) and produces ready-to-publish content. Delegates per-platform craft to the platform skills; owns the cross-cutting flow.
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
+  mcp_server: spmc
 ---
 
 # Content Pipeline Orchestrator
 
-You are orchestrating a content creation pipeline. You will execute three roles in sequence: concept generator, reviewer, and content creator.
+Drive a brief from idea to queued, platform-native content. You own the **flow**;
+the **platform skills own the per-platform craft** — call them, don't restate
+their rules here (they hold the current limits, hashtag counts, and hooks).
 
-## Your workflow
+Read the brand kit once at the start — `brand_voice(action:"get")` — and carry it
+through every phase.
 
-### Phase 1: Concept Generation
-You are now acting as a **Creative Concept Generator**. Given the idea brief with topic, audience, tone, and brand guidelines:
+## Phase 1 — Concept (Creative Generator)
 
-Generate **3 distinct concept variations**:
-- Each concept should have: title, angle, key message, hook, platform potential
-- Explore different perspectives on the core idea
-- Ensure originality and audience relevance
-- Align with brand voice
+From the brief (angle, goal, audience), generate **3 distinct concepts**. Each:
+title, angle, key message, hook, best-fit platforms. Explore genuinely different
+perspectives; keep them on-brand and audience-relevant. Present all 3.
 
-Present all 3 concepts clearly.
+## Phase 2 — Review (Critical Editor)
 
-### Phase 2: Topic-Aware Review
-You are now acting as a **Critical Editorial Reviewer**. 
+Score each concept on originality, audience fit, brand alignment, and platform
+potential, against criteria fit to the brief's category (launch, educational,
+thought-leadership, behind-the-scenes…). Give specific feedback; recommend which
+move forward. Kill clichés and anything that reads as template.
 
-For each of the 3 concepts:
-- Auto-detect the topic/category from the idea brief
-- Apply topic-specific quality criteria (product launch, educational, thought leadership, behind-the-scenes, etc.)
-- Evaluate: originality, audience fit, brand alignment, platform potential
-- Provide constructive feedback
-- Flag any improvements or brand conflicts
+## Phase 3 — Platform variants (Content Creator)
 
-Recommend which concepts move forward.
+For each approved concept + target platform, write the variant **using that
+platform's skill** — `post-to-x`, `post-to-instagram`, `post-to-tiktok`,
+`post-to-facebook`, `post-to-threads`, `post-to-bluesky`. Each carries its own
+craft and limits; follow it, don't hardcode numbers here.
 
-### Phase 3: Content Creation
-You are now acting as a **Platform-Native Content Creator**.
+- For one idea across many platforms, start with `content_adapt(text, platforms)` for length-fitted drafts, then rewrite each in the platform's voice (adapt does length only, not tone).
+- Validate every variant with `content_validate(platform, content)` before it leaves this phase.
 
-For approved concepts, create full platform-specific variants:
+## Phase 4 — Visuals
 
-**Instagram:**
-- 100-300 word caption with hook, body, CTA
-- 15-30 relevant hashtags
-- Mention tags if applicable
-- Alt text for accessibility
+For visual platforms, hand off to the `output-manager` skill: write the visual
+copy and render a branded image with `media_compose`. Identity comes from the
+brand kit.
 
-**X (Twitter):**
-- 3-5 tweet thread (if warranted)
-- Sharp, witty tone
-- 1-3 hashtags
-- Relevant mentions
-- Alt text
+## Phase 5 — Hand off
 
-**TikTok:**
-- 3-5 second hook (video concept description)
-- On-screen text (minimal)
-- Short caption (150 chars max) with CTA
-- 3-5 trending + niche hashtags
-- Hook description
+Present all variants to the user in one block for approval. On approval, queue
+them with the `manage-queue` skill (`queue_add`, optional `scheduled_at`).
+**Nothing publishes without explicit approval.**
 
 ---
 
-## Statistics & Source Citation (mandatory)
+## Statistics & source citation (mandatory)
 
-Any time a statistic, figure, or data point appears in platform content, it **must** be traced to its **primary source** — the original study, survey, or report that produced the number — not a blog or article that cited it secondarily.
+Any statistic, figure, or data point in the content **must** trace to its
+**primary source** — the original study, survey, or report, not a blog that cited
+it secondhand.
 
-**Why this matters**: Secondary citations create a chain of possible misattribution. Stats get rounded, reframed, or decontextualised as they travel. Using the primary source protects credibility and ensures the stat is being used accurately (e.g., a "bugs" stat that's actually about "security vulnerabilities" is a different claim).
+**Why:** secondary citations drift. Numbers get rounded, reframed, or
+decontextualized as they travel — a "bugs" stat that's actually about "security
+vulnerabilities" is a different claim. Primary sourcing protects credibility.
 
-### How to find and apply primary sources
-
-1. **Check the idea brief first** — the research-trends skill provides reference links. Follow those links and look for the original study they reference.
-2
+**How:** follow the brief's reference links back to the original and cite the
+origin. If a stat can't be verified to its source, cut it or flag it to the user
+— never publish an unverifiable number.

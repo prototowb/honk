@@ -19,6 +19,20 @@ const SUPPORTED = { instagram, facebook, threads };
 
 export const SUPPORTED_PLATFORMS = Object.keys(SUPPORTED);
 
+// Map a publish result's raw payload to the platform post/media ID that the
+// insights API expects. Returns null when no ID is extractable (e.g. an
+// unsupported platform or an unexpected payload shape). Mirrors the id fields
+// the dispatcher reads in its per-platform summaries.
+export function extractPostId(platform, raw) {
+  if (!raw) return null;
+  switch (platform) {
+    case 'instagram': return raw.id || null;
+    case 'facebook':  return raw.post_id || raw.id || null;
+    case 'threads':   return raw.id || null;
+    default:          return null;
+  }
+}
+
 function file() {
   return dataFile('analytics.json');
 }

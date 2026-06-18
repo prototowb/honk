@@ -4,13 +4,24 @@ description: >
   Use when the user says "post to Facebook", "publish to my Facebook Page", or asks to
   publish content to a Facebook Page feed. Uses the same Meta Graph API token as Instagram.
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
   mcp_server: spmc
 ---
 
 ## Posting to Facebook
 
 Use `{{tool:facebook_post}}` from the `spmc` MCP server.
+
+### Craft a strong post (Facebook-native)
+
+- **The first sentence is the whole post.** Page reach is limited and only the opening line shows before "See more" — make it stand alone.
+- **Native photos beat link posts.** Attach `image_url` rather than dropping a bare link; if you must link, put the URL in `message` with a line of context.
+- **Keep it to 1–2 short paragraphs.** Emoji sparingly; a wall of text kills it.
+- **Hashtags add little here** — skip them or use one.
+
+> Weak: "We are thrilled to share an update with our community." → Strong: "We rebuilt onboarding from scratch. New users hit 'aha' in 2 minutes, down from 11."
+
+Before drafting, pull the brand kit with `brand_voice(action:"get")` and match its tone, audience, and emoji policy. See the `content-intelligence` skill.
 
 ### Requirements
 

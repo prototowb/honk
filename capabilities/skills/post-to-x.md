@@ -5,13 +5,24 @@ description: >
   "publish to Twitter", or asks to schedule or publish any content to X (Twitter).
   Handles single tweets and multi-tweet threads via the spmc MCP server.
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
   mcp_server: spmc
 ---
 
 ## Posting to X (Twitter)
 
 Use tools from the `spmc` MCP server.
+
+### Craft a strong post (X-native)
+
+- **Hook first.** The first ~7 words decide whether anyone stops scrolling — front-load the payoff, don't bury it behind setup.
+- **One idea per tweet.** In a thread, tweet 1 is the hook + the promise of what follows; each reply lands one beat; the last tweet carries the CTA.
+- **Links cost reach and 23 chars.** A first-tweet link suppresses distribution — put the key link in its own/last tweet, or quote the point as text/screenshot instead.
+- **Hashtags: 0–2, at the end.** X isn't a hashtag platform; more reads as spam.
+
+> Weak: "We're excited to announce our new feature is now live!" → Strong: "Your CI has been lying to you. Here's the 3-line fix 🧵"
+
+Before drafting, pull the brand kit with `brand_voice(action:"get")` and match its tone, audience, emoji policy, and banned words; draw hashtags from its sets. See the `content-intelligence` skill.
 
 ### Single tweet
 
@@ -46,3 +57,10 @@ On success, report the first tweet URL. On error, show which tweet failed.
 ### After posting
 
 Confirm: platform, post type, URL, timestamp. Update queue item status if one exists.
+
+### Common errors
+
+- `401` / `403` — Bad or under-scoped OAuth 1.0a credentials. Re-check the four `X_*` keys; the app needs read+write.
+- `187` — Duplicate status; X rejects identical text. Vary the wording.
+- `429` — Rate limited. Back off; `rate_limits` tracks what was observed.
+- `402` — Credits depleted on the API plan. Needs a paid tier.

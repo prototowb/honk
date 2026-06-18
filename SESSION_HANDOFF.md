@@ -4,39 +4,32 @@
 
 ## Where We Are
 
-**BETA-010 (live credential testing) is DONE, and the BETA-012 feature bundle that made it possible shipped with it — `v0.3.0-alpha`.** A real, researched 6-slide Instagram **carousel** (US government pulling Anthropic's Fable 5 / Mythos 5, three days after launch) was published to **`@protocode_`**, plus a **Facebook Page** post, end-to-end through the spine (tool → dispatch → adapter → live API), with audit + analytics verified. Both posts are **live and public** (no un-publish tool — manual delete only).
+**`v0.3.0-alpha` is on `main`** — PR [#1](https://github.com/prototowb/honk/pull/1) (`development`→`main`) and PR #2 (`docs/branching-development-flow`) are both **merged**. `development` is the default/integration branch.
 
-**This work is merged into `development` (`--no-ff`) and pushed; PR `development` → `main` is open ([#1](https://github.com/prototowb/honk/pull/1)) and awaiting review/merge.** `development` is now the repo's **default branch**. The git workflow was formalized this session (see *Conventions*): `development` is the integration/default branch — branch off it, merge into it, push it; `main` is reached only via PR from `development`, never directly. `BRANCHING.md` / `AGENTS.md` / `AGENT_CONTEXT.md` were reconciled to this (on branch `docs/branching-development-flow` → PR into `development`).
+This session opened **Sprint Alpha-2 (Content Foundations)** and shipped its spine on branch **`feature/ALPHA-009-content-foundations`** (⚠️ **work is in the working tree, NOT committed yet** — awaiting go-ahead to commit). Direction came from the user: do the remaining ALPHA features, add more pre-Beta features, and **strengthen the still-PoC agent prompts up to copywriting + platform graphic-design quality** — keeping the pipeline prompts **generic** (brand specifics live in the brand kit, not the prompts) until a UI exists for per-user tuning.
 
-## What Shipped This Session
+## What Shipped This Session (uncommitted on the feature branch)
 
-New product surface (all single-origin: edit `lib/*` / `capabilities/` / templates, then `npm run build`):
-1. **IG carousel publishing** — `instagram_post` accepts `image_urls[]` (2–10); `adapters/instagram.js#postCarousel` does the multi-child → `CAROUSEL` parent → publish Graph flow; validated in `lib/specs.js`/`validate.js` (carousel rules) + routed in `lib/dispatch.js`.
-2. **`account_info` tool** (read-only) — IG/FB profile (handle, name, avatar URL) via `getProfile()` adapters. Confirms the connected account + supplies branding assets. **Tools 23 → 24.**
-3. **`square-news` template** — 1080×1080 branded news/carousel slide: headline, **word-wrapped body**, footer with **circular account icon + @handle**. `media/compose.js` gained body-wrap + icon embedding (data-URI in SVG). **Templates 3 → 4.**
-4. **`compose` empty-value fix** — `''`/missing variables now fall back to template defaults (the bug that rendered the accent bar + handle in black-on-black on the first slide pass).
-5. **FB analytics fixed** — the entire `post_impressions*` family is **deprecated** (live `(#100)`); `facebook.getMetrics` now uses live-valid engagement metrics (`post_engagements`, `post_clicks`, `post_reactions_like_total`, `post_reactions_by_type_total`) + a `total_value` fallback.
-6. **Media host = imgbb primary / Cloudinary fallback** — `upload.js` auto-selects imgbb first for images (more generous free tier), Cloudinary as fallback, Cloudinary-only for video; added **`CLOUDINARY_URL` one-liner parsing** (`config_doctor` + `.env.example` updated). Both providers verified live.
-7. **Version → `0.3.0-alpha`** (single-sourced; build propagated to plugin.json/TOOLS.md/desktop config).
+All green: **56 unit tests + 17-check smoke + `build:check`**. Tools **24 → 26**. Single-origin respected (edit `lib/*` / `capabilities/*`, then `npm run build`).
 
-**State:** working tree clean on the feature branch; `build:check` green (20 checked + 1 skipped); **41 unit tests + smoke pass**. Scratch harnesses used during the run were removed.
+1. **ALPHA-008 — auto-fetch analytics ~24h after publish.** New `lib/followups.js` store; the `publishAudited` chokepoint captures the post id (`result.raw`) and schedules a deferred job (covers direct/queue/scheduler; survives the short-lived `run.js`). The **scheduler** drains due jobs (`start.js` required) with back-off/drop on failure; errors swallowed so a tick never dies. 5 unit tests.
+2. **ALPHA-009 — `brand_voice` profile tool + `lib/brand.js`.** Per-account brand kit (tone, audience, hashtag sets, emoji/banned-words, CTA library, UTM defaults), deep-merge get/set/clear. Credential-free. 6 unit + 3 smoke.
+3. **ALPHA-010 — foundational prompt revision (the headline ask).** All 6 platform skills deepened: platform-native **Craft** section + one **weak→strong** example + **error→action** + a `brand_voice` reference. `content-intelligence` documents `brand_voice`, `link_tag`, and the auto-analytics follow-up. Hermes `persona.md` checklist consults the brand kit. **`output-manager` rebuilt** generic + on-architecture — dropped the hardcoded **protocode Pillow logo / Canva** refs in favor of `media_compose` templates + graphic-design principles. `idea-input` / `research-trends` / `pipeline-orchestrator` rewritten generic + **delegating** (orchestrator points to the platform skills instead of restating their specs — fixed the stale "15–30 hashtags / alt-text" contradiction). `manage-queue` + `upload-media` were already on-architecture; left as-is.
+4. **ALPHA-013 — `link_tag` UTM tagging.** `lib/links.js` `tagUrl` (URL-based, preserves existing query + fragment) + tool; merges brand-kit `links.utm_defaults` under overrides, substitutes `{platform}`. 4 unit + 1 smoke.
 
-## Live-cred reality (verified this session)
-- ✅ **Instagram** — token valid; publish (carousel) + analytics + profile all work.
-- ✅ **Facebook** — token refreshed mid-session (old one expired Jun 9); publish + profile work; analytics now returns (empty on a fresh post, valid metric names).
-- ✅ **Media** — imgbb key fixed to valid 32-char; Cloudinary works via the `CLOUDINARY_URL` one-liner.
-- ⛔ **X** — credit-blocked (`402 CreditsDepleted`); needs paid credits.
-- ⛔ **Bluesky** (`BLUESKY_APP_PASSWORD` empty), **Threads** (both empty), **TikTok** (token empty) — not configured.
-- Note: `config_doctor` reports presence, not validity — it green-lit the expired FB token and the invalid imgbb key. `account_info` is now the live read-path check.
+## Decisions surfaced (filed as tickets, flagged to user)
+- **ALPHA-021** — the generic `output-manager` rewrite **dropped** the corner-logo-on-arbitrary-photo capability the old Pillow code had. Identity now flows from `brand_voice` + the `square-news` handle/icon footer. Re-adding a corner-logo stamp is a `media_compose` enhancement.
+- **ALPHA-020** — Instagram's highest-reach feed ratio is **4:5 (1080×1350)**; no `media_compose` template renders it (templates are 1:1, 9:16, 1.91:1). Design guidance was constrained to existing templates.
 
 ## NEXT — open items
-- **Review + merge PR [#1](https://github.com/prototowb/honk/pull/1)** (`development` → `main`) to ship `v0.3.0-alpha` to `main`. Also merge `docs/branching-development-flow` → `development`.
-- **BETA-013** — refresh/verify the remaining creds (Bluesky/Threads/TikTok) and add X credits, if those platforms are wanted.
-- **BETA-011** — UI implementation **planning** (analytics dashboard + content calendar) remains the intentional stop-line; not started.
+- **Commit** the spine to `feature/ALPHA-009-content-foundations` (not done yet — was holding for go-ahead), then PR into `development`.
+- **Remaining credential-free features:** ALPHA-011 (drafts — `draft` queue state) · ALPHA-012 (duplicate/repost guard, reuses the audit hash).
+- **Needs user input/creds:** ALPHA-014 alt-text · ALPHA-015 first-comment · ALPHA-016 delete/unpublish · ALPHA-017 Mastodon · ALPHA-018 LinkedIn · ALPHA-019 best-time-to-post · X credits (402).
+- **BETA-011** UI planning remains the stop-line.
 
 ## Conventions In Force
-- **Build origin:** tool → `lib/tools.js`; limit → `lib/specs.js`; credential/media key → `lib/config.js` (+ document in `.env.example`); skill/Hermes prose → `capabilities/`; template → `media/templates/`; version/metadata → `spmc-server/package.json`. Then `npm run build`. **Never hand-edit generated artifacts** — `build:check` (CI + pre-commit) rejects it.
-- Server `spmc`; `run.js` = MCP only (loads `~/.claude/spmc.env`); `start.js` = MCP + scheduler. One dispatcher (`lib/dispatch.js`); every real publish goes through `publishAudited`.
-- Credentials: `~/.claude/spmc.env`; multi-account `KEY__ACCOUNT`. Always confirm post content with the user before publishing (there is no un-publish).
-- Keep `npm test` + `build:check` green at every commit. Runtime deps still 2; build tooling adds zero.
-- **Git flow (`BRANCHING.md`):** `development` is the default/integration branch — branch off it, merge into it, push it. Never commit to `main`/`development` directly; never push to or merge features into `main`. `development` → `main` via PR only.
+- **Build origin:** tool → `lib/tools.js`; limit → `lib/specs.js`; credential/media key → `lib/config.js` (+ `.env.example`); skill/Hermes prose → `capabilities/`; template → `media/templates/`; version → `spmc-server/package.json`. Then `npm run build`. **Never hand-edit generated artifacts** (`build:check` rejects it). `hermes/persona.md` is hand-authored (not generated).
+- Server `spmc`; `run.js` = MCP only; `start.js` = MCP + scheduler. One dispatcher (`lib/dispatch.js`); every real publish goes through `publishAudited` (now also the analytics-follow-up hook point).
+- Credentials in `~/.claude/spmc.env`; multi-account `KEY__ACCOUNT`. Always confirm post content with the user before publishing (no un-publish).
+- Keep `npm test` + `build:check` green at every commit. Runtime deps still 2.
+- **Git flow:** branch off `development`, merge into it, push it; `main` only via PR.

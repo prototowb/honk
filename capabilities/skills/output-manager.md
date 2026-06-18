@@ -1,118 +1,85 @@
 ---
 name: output-manager
-description: Generate platform-specific visuals for finished pipeline content before publishing — conversion-grade visual copy plus the protocode logo overlay for Instagram, Facebook, and TikTok. Use after the pipeline produces content and before handing it to the queue. For queueing, scheduling, dispatching, and publishing mechanics, use the manage-queue skill and the spmc queue tools.
+description: >
+  Generate platform-native visuals for finished content before publishing — write
+  conversion-grade visual copy, then render a branded image with the spmc
+  media_compose templates (identity pulled from the brand kit). Use after content
+  is drafted and before handing it to the queue. For queue/scheduling/dispatch
+  mechanics, use the manage-queue skill.
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
+  mcp_server: spmc
 ---
 
-# Output Manager Skill
+## Output Manager — visuals before publish
 
-Generate platform-specific visuals for finished pipeline content before it goes to the queue: conversion-grade visual copy plus the protocode logo overlay for Instagram, Facebook, and TikTok. Runs after the pipeline produces content, before hand-off.
+Turn finished copy into a platform-native visual: write tight visual copy, then
+render it with `{{tool:media_compose}}` (branded, local — no external design
+tool) and hand the returned URL to the posting tool. Runs after content is
+approved, before the queue. For queueing/scheduling/dispatch, use the
+`manage-queue` skill.
 
-For queueing, scheduling, dispatching, and publishing mechanics, use the `manage-queue` skill and the `spmc` queue tools — this skill does not manage the queue.
+Generate a visual before publishing to a visual platform (Instagram, Facebook,
+TikTok; optionally Threads) — unless the user supplies an image URL or says to skip.
 
-## Visual Content Generation (Mandatory Pre-Publish Step)
+### Step 1 — Write the visual copy (conversion-grade)
 
-**Always generate platform-specific images before publishing to any visual platform (Instagram, Facebook, TikTok) — unless the user explicitly provides an image URL or says to skip.**
+Visuals have zero tolerance for filler. Think conversion copywriter + creative director.
 
-This step runs at publish time, after the user has selected which concept(s) to post.
+- **Headline ≤ 6 words, one idea.** The eye gets one focal line — make it the payoff.
+- **No clichés.** Never "Unlock", "Revolutionize", "Elevate", "Delve", "Discover", "Transform", "Tapestry", "Game-changer", or anything template-shaped — they signal low effort and kill engagement.
+- **Concrete beats vague.** A specific number, claim, or outcome out-pulls a mood.
+- **Body (optional) is one supporting line**, not a paragraph — let the caption carry detail.
 
----
+> Weak: "Transforming the way you build software" → Strong: "Ship 3× faster. Here's the data."
 
-### Step 1: Write copy for the visual
+Pull tone, banned words, and accent identity from the brand kit first —
+`brand_voice(action:"get")`.
 
-Before touching Canva, extract and rewrite the content for visual use. Think like a conversion copywriter and creative director — visuals have zero tolerance for filler.
+### Step 2 — Render with a template
 
-**Rules (non-negotiable):**
+`media_compose` renders a branded image locally (sharp) and returns a public
+URL. Pick the template by the platform's aspect ratio:
 
-1. **No clichés.** Never write "Unlock," "Revolutionize," "Tapestry," "Elevate," "Delve," "Discover," "Transform," or anything that sounds like a template. They signal low effort and kill engagement.
-2. **Short and punchy.** Headlines ≤ 6 words.
+| Platform / placement          | Template                         | Size (ratio)      |
+|--------------------------------|----------------------------------|-------------------|
+| IG feed (single)               | `square-dark` or `square-news`   | 1080×1080 (1:1)   |
+| IG carousel slide              | `square-news` (handle+icon footer)| 1080×1080 (1:1)  |
+| IG / TikTok story / Reels cover| `story-dark`                     | 1080×1920 (9:16)  |
+| Facebook / X link image        | `banner-wide`                    | 1200×628 (1.91:1) |
+| Threads                        | `square-dark`                    | 1080×1080 (1:1)   |
 
----
-
-## Logo Overlay (Optional — runs after image generation)
-
-If `include_logo` is true (default) and the brand logo is not already in the image, composite the protocode logo onto the bottom-right corner of the generated image using the following Python/Pillow function.
-
-### Logo generation function
-
-```python
-import math
-from PIL import ImageDraw
-
-def draw_protocode_logo(draw, ox, oy, scale=1.0):
-    """
-    Draws the protocode_ pentagon-network logo.
-    ox, oy = center point of the logo.
-    scale  = size multiplier (default 1.0 ≈ 110px wide).
-
-    Design: regular pentagon (point up), dark fill, thin connector lines
-    from center to each vertex and between vertices. Six equally-sized
-    hexagonal nodes — one per vertex + center — shaded white→gray by position.
-    Small detached hexagon upper-right outside the pentagon.
-    """
-    s = scale
-    R = 50 * s  # pentagon circumradius
-
-    def solid_hex(draw, cx, cy, r, fill):
-        pts = [
-            (cx + r * math.cos(math.radians(60 * i - 30)),
-             cy + r * math.sin(math.radians(60 * i - 30)))
-            for i in range(6)
-        ]
-        draw.polygon(pts, fill=fill)
-
-    # Pentagon vertices — point at top
-    verts = [
-        (ox + R * math.cos(math.radians(72 * i - 90)),
-         oy + R * math.sin(math.radians(72 * i - 90)))
-        for i in range(5)
-    ]
-
-    # Pentagon body
-    draw.polygon(verts, fill="#1A1D24")
-
-    # Connector lines
-    line_col = "#555E6B"
-    for vx, vy in verts:
-        draw.line([(ox, oy), (vx, vy)], fill=line_col, width=max(1, int(1.5 * s)))
-    for i in range(5):
-        draw.line([verts[i], verts[(i + 1) % 5]], fill=line_col, width=max(1, int(s)))
-
-    # Vertex nodes — same size, shaded white → dark going clockwise from top
-    NR = 9 * s
-    shades = ["#DDDFE3", "#9EA4AE", "#B5BAC1", "#4E555F", "#6B7280"]
-    for i, (vx, vy) in enumerate(verts):
-        solid_hex(draw, vx, vy, NR, shades[i])
-
-    # Center node
-    solid_hex(draw, ox, oy, NR, "#8A9099")
-
-    # Small detached node — upper-right of pentagon
-    solid_hex(draw, ox + R * 0.85, oy - R * 1.08, 5 * s, "#3D444E")
-
-
-# Usage — call after image is created, before saving:
-# draw = ImageDraw.Draw(img)
-# draw_protocode_logo(draw, ox=img.width - 108, oy=img.height - 86, scale=1.15)
+```
+media_compose(template: "square-news", headline: "<≤6 words>", subtext: "<one line>",
+              handle: "@<from brand kit>", icon_url: "<brand icon URL>",
+              bg_color: "<brand bg>", accent: "<brand accent>")
 ```
 
-### Logo placement defaults
+Brand identity (handle, icon, bg/accent colors) comes from the brand kit — read
+it with `brand_voice(action:"get")` and pass those values so a series reads as one
+identity. `square-news` renders the handle + a circular icon footer; the others
+are clean text panels. Pass `bg_image_url` to composite a backdrop photo *behind*
+the text panel.
 
-| Platform  | `ox` (from right) | `oy` (from bottom) | scale |
-|-----------|-------------------|--------------------|-------|
-| Instagram | W − 108           | H − 86             | 1.15  |
-| Facebook  | W − 90            | H − 72             | 0.95  |
-| TikTok    | W − 108           | H − 100            | 1.15  |
+### Step 3 — Hand off
 
-### Override
+`media_compose` returns a public URL — use it as the posting tool's image
+(`instagram_post(image_url, caption)`, `facebook_post(message, image_url)`, …).
+For a local source image instead of a rendered template, use the `upload-media`
+skill. Then queue or publish via `manage-queue`.
 
-If the user provides a `PROTOCODE_LOGO_URL`, download the image and composite it instead:
-```python
-from PIL import Image
-import urllib.request
+### Design principles (platform graphic design)
 
-logo = Image.open(urllib.request.urlopen(PROTOCODE_LOGO_URL)).convert("RGBA")
-logo = logo.resize((110, 110))
-img.paste(logo, (img.width - 130, img.height - 130), logo)
-```
+- **One focal point.** The headline is the hero; everything else supports it.
+- **Legibility first.** High contrast between headline and background; use the brand accent for emphasis, not decoration. If `bg_image_url` is busy, the text panel must stay readable.
+- **Respect safe zones.** On 9:16 (story), keep text clear of the top ~250px and bottom ~250px where platform UI overlays sit.
+- **Brand consistency.** Reuse the same bg/accent/handle/icon across a series — all from the brand kit.
+- **Less is more.** No more than the headline + one line. Whitespace is a feature.
+
+### Known gaps — tell the user if relevant
+
+- Identity is rendered via the `square-news` footer (handle + circular icon) and
+  the bg/accent colors. There is **no corner-logo stamp onto an arbitrary
+  finished photo** yet — that would be a `media_compose` enhancement.
+- Instagram's highest-reach feed ratio is **4:5 (1080×1350)**; no template
+  produces it yet, so feed renders use 1:1 for now.

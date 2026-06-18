@@ -1,9 +1,16 @@
 import { publishAudited } from '../lib/dispatch.js';
 import * as queue          from '../queue/store.js';
+import * as followups      from '../lib/followups.js';
 
 const POLL_INTERVAL_MS = 60_000; // 1 minute
 
 async function tick() {
+  await dispatchDueQueueItems();
+  await runDueFollowups();
+}
+
+// Publish queued posts whose scheduled_at has passed.
+async function dispatchDueQueueItems() {
   const now = new Date();
   const due = queue.list({ status: 'pending' }).filter(item => {
     if (!item.scheduled_at) return false;
@@ -28,6 +35,18 @@ async function tick() {
       queue.update(item.id, { status: 'failed', error: err.message });
       log(`✗ failed ${item.id} → ${item.platform}: ${err.message}`);
     }
+  }
+}
+
+// Fetch engagement metrics for posts whose ~24h analytics follow-up is due (ALPHA-008).
+async function runDueFollowups() {
+  try {
+    const r = await followups.runDue();
+    if (r.processed) {
+      log(`analytics follow-ups: ${r.succeeded} fetched, ${r.failed} deferred (${r.dropped} dropped) of ${r.processed} due`);
+    }
+  } catch (err) {
+    log(`follow-up error: ${err.message}`);
   }
 }
 
