@@ -11,9 +11,10 @@ import * as facebook  from '../adapters/facebook.js';
 import * as threads   from '../adapters/threads.js';
 import * as bluesky   from '../adapters/bluesky.js';
 
-import { record as auditRecord } from './audit.js';
-import { noteFromError }         from './ratelimit.js';
-import { hashContent }           from './hash.js';
+import { record as auditRecord }    from './audit.js';
+import { noteFromError }            from './ratelimit.js';
+import { hashContent }             from './hash.js';
+import { schedule as scheduleFollowup } from './followups.js';
 
 // Routes to the right adapter and returns a structured result:
 //   { summary, raw }  — summary is the human-readable line shown to the agent.
@@ -79,6 +80,10 @@ export async function publishAudited(platform, content, account = '', meta = {})
   try {
     const result = await publish(platform, content, account);
     auditRecord({ ...base, status: 'published', result: result.summary });
+    // Queue a deferred analytics fetch for analytics-capable platforms (ALPHA-008).
+    // Best-effort and self-filtering — never let it break a publish.
+    try { scheduleFollowup({ platform, raw: result.raw, account }); }
+    catch { /* analytics follow-up is best-effort */ }
     return result;
   } catch (e) {
     auditRecord({ ...base, status: 'failed', error: e.message });
