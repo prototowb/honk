@@ -197,6 +197,19 @@ export const TOOLS = [
     },
   },
   {
+    name: 'duplicate_check',
+    description: 'Check whether identical content was already published to a platform recently — matches the content hash against the audit log of successful publishes. Returns the prior publish if found. Run before publishing to avoid an accidental repost (there is no un-publish).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        platform:     { type: 'string', description: 'Target platform', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] },
+        content:      { type: 'object', description: 'Platform-specific content fields (same shape as the posting tool)' },
+        within_hours: { type: 'number', description: 'Lookback window in hours. Default 168 (7 days).' },
+      },
+      required: ['platform', 'content'],
+    },
+  },
+  {
     name: 'audit_log',
     description: 'Read the publish audit trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, and result. Filter by platform/status/source.',
     inputSchema: {
@@ -262,6 +275,7 @@ export const TOOLS = [
         content:      { type: 'object', description: 'Platform-specific content fields (same as the direct posting tools)' },
         scheduled_at: { type: 'string', description: 'Optional ISO 8601 datetime to schedule publishing. Prefer an explicit timezone (e.g. ...Z or -04:00); a naive time is interpreted as server-local.' },
         account:      { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
+        draft:        { type: 'boolean', description: 'Save as a draft (status "draft") — held for review and never auto-dispatched by the scheduler. Promote later with queue_update(status:"pending") or publish directly with queue_dispatch.' },
       },
       required: ['platform', 'content'],
     },
@@ -272,7 +286,7 @@ export const TOOLS = [
     inputSchema: {
       type: 'object',
       properties: {
-        status:   { type: 'string', description: 'Filter by status: pending, dispatched, published, failed', enum: ['pending', 'dispatched', 'published', 'failed'] },
+        status:   { type: 'string', description: 'Filter by status: draft, pending, dispatched, published, failed', enum: ['draft', 'pending', 'dispatched', 'published', 'failed'] },
         platform: { type: 'string', description: 'Filter by platform', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] },
       },
     },

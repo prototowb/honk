@@ -104,6 +104,12 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('link_tag returns a tagged URL preserving existing query', !r.isError && /utm_campaign=launch/.test(text(r)) && /ref=home/.test(text(r)));
 }
 
+// duplicate_check — reads the audit log; fresh content has no match.
+{
+  const r = await client.callTool({ name: 'duplicate_check', arguments: { platform: 'x', content: { text: `unique ${Date.now()}` } } });
+  check('duplicate_check reports no duplicate for fresh content', !r.isError && /no duplicate/i.test(text(r)));
+}
+
 // queue add/list/remove round-trip.
 {
   const add = await client.callTool({ name: 'queue_add', arguments: { platform: 'bluesky', content: { text: 'queued' } } });
@@ -111,6 +117,16 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('queue_add returns an id', !!id);
   const list = await client.callTool({ name: 'queue_list', arguments: {} });
   check('queue_list shows the item', text(list).includes(id));
+  if (id) await client.callTool({ name: 'queue_remove', arguments: { id } });
+}
+
+// drafts — held with status "draft", not auto-dispatched.
+{
+  const add = await client.callTool({ name: 'queue_add', arguments: { platform: 'bluesky', content: { text: 'draft post' }, draft: true } });
+  const id  = (text(add).match(/ID:\s*(\S+)/) || [])[1];
+  check('queue_add draft saves with draft status', !add.isError && /draft/i.test(text(add)) && !!id);
+  const list = await client.callTool({ name: 'queue_list', arguments: { status: 'draft' } });
+  check('queue_list status:draft shows the draft', !!id && text(list).includes(id));
   if (id) await client.callTool({ name: 'queue_remove', arguments: { id } });
 }
 

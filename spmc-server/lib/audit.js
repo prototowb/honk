@@ -34,3 +34,17 @@ export function read({ platform, status, source, limit = 50 } = {}) {
 
   return entries.slice(-limit).reverse();
 }
+
+// The most recent *successful publish* of identical content to a platform within
+// a lookback window, or null. Backs duplicate_check (ALPHA-012) so an accidental
+// repost can be caught before it goes out. Entries are most-recent-first, so we
+// stop as soon as we pass the window.
+export function recentDuplicate({ platform, content_hash, withinMs = 7 * 24 * 60 * 60 * 1000 } = {}) {
+  if (!content_hash) return null;
+  const cutoff = Date.now() - withinMs;
+  for (const e of read({ platform, status: 'published', limit: 1000 })) {
+    if (new Date(e.ts).getTime() < cutoff) break;   // beyond the window; the rest are older
+    if (e.content_hash === content_hash) return e;
+  }
+  return null;
+}
