@@ -88,6 +88,22 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('analytics_report responds', !ar.isError);
 }
 
+// brand_voice get/set round-trip — pure, no credentials.
+{
+  const empty = await client.callTool({ name: 'brand_voice', arguments: { action: 'get' } });
+  check('brand_voice get reports no profile initially', !empty.isError && /no brand profile/i.test(text(empty)));
+  const set = await client.callTool({ name: 'brand_voice', arguments: { action: 'set', profile: { voice: { tone: 'concise' } } } });
+  check('brand_voice set stores and renders the profile', !set.isError && /voice\.tone:\s*concise/i.test(text(set)));
+  const got = await client.callTool({ name: 'brand_voice', arguments: { action: 'get' } });
+  check('brand_voice get reads it back', !got.isError && /concise/.test(text(got)));
+}
+
+// link_tag — deterministic, no credentials.
+{
+  const r = await client.callTool({ name: 'link_tag', arguments: { url: 'https://example.com/p?ref=home', params: { utm_campaign: 'launch' }, platform: 'x' } });
+  check('link_tag returns a tagged URL preserving existing query', !r.isError && /utm_campaign=launch/.test(text(r)) && /ref=home/.test(text(r)));
+}
+
 // queue add/list/remove round-trip.
 {
   const add = await client.callTool({ name: 'queue_add', arguments: { platform: 'bluesky', content: { text: 'queued' } } });

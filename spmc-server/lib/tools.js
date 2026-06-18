@@ -170,6 +170,33 @@ export const TOOLS = [
     },
   },
   {
+    name: 'brand_voice',
+    description: 'Get or set the brand voice profile — a persistent brand kit (tone, audience, hashtag sets, emoji/banned-word policy, CTA library, default UTM rules) that the content skills read so drafts match your voice without re-specifying it each time. Per account (omit account for the default). Content config, not secrets. Call with action:"get" first to see the current profile and its shape.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action:  { type: 'string', description: 'get (default) reads the profile; set writes one; clear removes it.', enum: ['get', 'set', 'clear'] },
+        profile: { type: 'object', description: 'For action:set — the fields to write, deep-merged into the stored profile (nested objects merge; arrays/scalars replace). Shape: { voice:{tone,audience,register,emoji_policy,banned_words[],do[],dont[]}, hashtags:{default[],sets{}}, cta[], links:{utm_defaults{},shortener}, platforms{}, notes }.' },
+        replace: { type: 'boolean', description: 'For action:set — overwrite the whole profile instead of deep-merging.' },
+        account: { type: 'string', description: "Named account (e.g. 'brand'). Omit for the default profile." },
+      },
+    },
+  },
+  {
+    name: 'link_tag',
+    description: 'Add UTM/campaign query params to a URL for click attribution. Merges the brand kit\'s links.utm_defaults under your overrides; a value containing {platform} is substituted with the given platform. Returns the tagged URL. Deterministic, credential-free.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        url:      { type: 'string', description: 'The URL to tag.' },
+        params:   { type: 'object', description: 'Query params to add/override, e.g. { utm_campaign: "launch", utm_medium: "social" }. Merged over the brand kit defaults.' },
+        platform: { type: 'string', description: 'Optional — substituted wherever a param value contains the literal {platform} (e.g. a utm_source default of "{platform}").' },
+        account:  { type: 'string', description: "Named account whose brand-kit UTM defaults to use (e.g. 'brand'). Omit for the default." },
+      },
+      required: ['url'],
+    },
+  },
+  {
     name: 'audit_log',
     description: 'Read the publish audit trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, and result. Filter by platform/status/source.',
     inputSchema: {

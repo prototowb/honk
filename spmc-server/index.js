@@ -18,6 +18,8 @@ import { read as auditRead, record as auditRecord } from './lib/audit.js';
 import { hashContent }                    from './lib/hash.js';
 import { status as rateLimitStatus }      from './lib/ratelimit.js';
 import { fetchMetrics, report as analyticsReport, SUPPORTED_PLATFORMS } from './lib/analytics.js';
+import * as brand from './lib/brand.js';
+import { tagUrl } from './lib/links.js';
 import { TOOLS } from './lib/tools.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -34,6 +36,31 @@ const pkg = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url))
 
 function ok(text) {
   return { content: [{ type: 'text', text }] };
+}
+
+// Render a brand profile as readable text rather than raw JSON, so the agent
+// (and the user) can scan it. Empty fields are shown as a dash.
+function formatBrandProfile(p) {
+  const v = (x) => Array.isArray(x) ? (x.length ? x.join(', ') : '—') : (x || '—');
+  const obj = (o) => { const e = Object.entries(o || {}); return e.length ? e.map(([k, val]) => `${k}=${val}`).join(', ') : '—'; };
+  const voice = p.voice || {};
+  const sets = Object.entries((p.hashtags || {}).sets || {});
+  return [
+    `voice.tone:         ${v(voice.tone)}`,
+    `voice.audience:     ${v(voice.audience)}`,
+    `voice.register:     ${v(voice.register)}`,
+    `voice.emoji_policy: ${v(voice.emoji_policy)}`,
+    `voice.banned_words: ${v(voice.banned_words)}`,
+    `voice.do:           ${v(voice.do)}`,
+    `voice.dont:         ${v(voice.dont)}`,
+    `hashtags.default:   ${v((p.hashtags || {}).default)}`,
+    `hashtags.sets:      ${sets.length ? sets.map(([k, arr]) => `${k}[${(arr || []).join(', ')}]`).join('; ') : '—'}`,
+    `cta:                ${v(p.cta)}`,
+    `links.utm_defaults: ${obj((p.links || {}).utm_defaults)}`,
+    `links.shortener:    ${v((p.links || {}).shortener)}`,
+    `platforms:          ${obj(p.platforms)}`,
+    `notes:              ${v(p.notes)}`,
+  ].join('\n');
 }
 
 function err(e) {
@@ -113,6 +140,36 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           + `  id:     ${p.id}\n`
           + `  icon:   ${p.icon_url ?? '(none)'}`
         );
+      }
+      case 'brand_voice': {
+        const account = args.account ?? '';
+        const label = account ? `'${account}'` : 'default';
+        const action = args.action ?? 'get';
+        if (action === 'clear') {
+          const existed = brand.clear(account);
+          return ok(existed ? `Cleared the ${label} brand profile.` : `No ${label} brand profile to clear.`);
+        }
+        if (action === 'set') {
+          if (!args.profile || typeof args.profile !== 'object') throw new Error('brand_voice set requires a `profile` object.');
+          const saved = brand.set(args.profile, account, { replace: !!args.replace });
+          return ok(`Saved the ${label} brand profile (${args.replace ? 'replaced' : 'merged'}).\n\n${formatBrandProfile(saved)}`);
+        }
+        const current = brand.get(account);
+        if (!current) return ok(`No brand profile set for ${label}. Set one with brand_voice(action:"set", profile:{...}). Empty shape:\n\n${formatBrandProfile(brand.emptyProfile())}`);
+        return ok(`Brand profile (${label}):\n\n${formatBrandProfile(current)}`);
+      }
+      case 'link_tag': {
+        const profile = brand.getOrEmpty(args.account ?? '');
+        const defaults = (profile.links && profile.links.utm_defaults) || {};
+        const merged = { ...defaults, ...(args.params || {}) };
+        if (args.platform) {
+          for (const k of Object.keys(merged)) {
+            if (typeof merged[k] === 'string') merged[k] = merged[k].split('{platform}').join(args.platform);
+          }
+        }
+        const tagged = tagUrl(args.url, merged);
+        const used = Object.keys(merged).filter(k => merged[k] !== '' && merged[k] != null);
+        return ok(`Tagged URL:\n${tagged}${used.length ? `\nParams: ${used.join(', ')}` : '\n(no params applied — set links.utm_defaults in brand_voice or pass params)'}`);
       }
       case 'audit_log': {
         const entries = auditRead({ platform: args.platform, status: args.status, source: args.source, limit: args.limit });
