@@ -210,6 +210,19 @@ export const TOOLS = [
     },
   },
   {
+    name: 'best_time',
+    description: 'Suggest the best times to post on a platform, ranked, in audience-local time with a short rationale per window. Credential-free. Uses research-backed engagement windows as a baseline and will blend in the account\'s own analytics history once enough accrues. Schedule a suggestion via queue_add with an explicit timezone offset.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        platform: { type: 'string', description: 'Target platform', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] },
+        count:    { type: 'number', description: 'How many ranked windows to return. Default 3.' },
+        account:  { type: 'string', description: "Named account (e.g. 'brand'). Omit for the default. Reserved for own-history refinement; does not change the baseline yet." },
+      },
+      required: ['platform'],
+    },
+  },
+  {
     name: 'audit_log',
     description: 'Read the publish audit trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, and result. Filter by platform/status/source.',
     inputSchema: {

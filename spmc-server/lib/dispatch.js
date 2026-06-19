@@ -15,6 +15,7 @@ import { record as auditRecord }    from './audit.js';
 import { noteFromError }            from './ratelimit.js';
 import { hashContent }             from './hash.js';
 import { schedule as scheduleFollowup } from './followups.js';
+import { extractPostId }            from './analytics.js';
 
 // Routes to the right adapter and returns a structured result:
 //   { summary, raw }  — summary is the human-readable line shown to the agent.
@@ -79,7 +80,11 @@ export async function publishAudited(platform, content, account = '', meta = {})
   };
   try {
     const result = await publish(platform, content, account);
-    auditRecord({ ...base, status: 'published', result: result.summary });
+    // Capture the platform post/media ID on the audit entry (when extractable) so
+    // a future best-time own-data join can map publish-time → engagement without
+    // parsing the summary string. Additive; null for platforms without an ID.
+    const postId = extractPostId(platform, result.raw);
+    auditRecord({ ...base, status: 'published', result: result.summary, ...(postId ? { post_id: postId } : {}) });
     // Queue a deferred analytics fetch for analytics-capable platforms (ALPHA-008).
     // Best-effort and self-filtering — never let it break a publish.
     try { scheduleFollowup({ platform, raw: result.raw, account }); }

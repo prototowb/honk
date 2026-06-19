@@ -4,10 +4,10 @@ description: >
   Use when the user says "validate this post", "will this fit", "dry run",
   "preview without posting", "adapt this for all platforms", "make X/Bluesky
   versions", "check my SPMC setup", "which platforms are configured", "show the
-  audit log", "what did we publish", "check this schedule time", "are we rate
-  limited", or "fetch analytics". Credential-free content prep, validation, and
-  introspection tools on the spmc MCP server — use them before and around
-  publishing.
+  audit log", "what did we publish", "check this schedule time", "when should I
+  post", "best time to post", "are we rate limited", or "fetch analytics".
+  Credential-free content prep, validation, and introspection tools on the spmc
+  MCP server — use them before and around publishing.
 metadata:
   version: "0.2.0"
   mcp_server: spmc
@@ -133,6 +133,20 @@ schedule_check(scheduled_at: "2026-06-15T09:00:00-04:00")
 Normalizes to UTC ISO 8601 and reports whether it's in the past. A timestamp with
 **no timezone** is read as the server's local time and flagged with a warning —
 include an explicit offset (`...Z` or `±HH:MM`) to be unambiguous.
+
+### Suggest when to post
+
+```
+best_time(platform, count?, account?)
+```
+
+Returns ranked posting windows for a platform — day + audience-local time, each
+with a short rationale. Use it when the user asks when to post or hands you a
+draft without a time. It's a research-backed baseline today (it will fold in the
+account's own analytics once enough history accrues), so present it as guidance,
+not gospel. To act on a suggestion, schedule it with `queue_add(scheduled_at:
+...)` using an **explicit timezone offset** (then `schedule_check` to confirm the
+instant).
 
 ### Observability (UNVERIFIED — pending live credential testing)
 
