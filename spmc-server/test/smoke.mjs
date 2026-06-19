@@ -104,6 +104,14 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('link_tag returns a tagged URL preserving existing query', !r.isError && /utm_campaign=launch/.test(text(r)) && /ref=home/.test(text(r)));
 }
 
+// best_time — deterministic research baseline, no credentials.
+{
+  const r = await client.callTool({ name: 'best_time', arguments: { platform: 'instagram', count: 3 } });
+  check('best_time returns ranked windows for a platform', !r.isError && /Best times to post on Instagram/i.test(text(r)) && /\[research\]/.test(text(r)));
+  const bad = await client.callTool({ name: 'best_time', arguments: { platform: 'nope' } });
+  check('best_time rejects an unknown platform', bad.isError && /unknown platform/i.test(text(bad)));
+}
+
 // duplicate_check — reads the audit log; fresh content has no match.
 {
   const r = await client.callTool({ name: 'duplicate_check', arguments: { platform: 'x', content: { text: `unique ${Date.now()}` } } });

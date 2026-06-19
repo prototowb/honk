@@ -39,10 +39,13 @@ Branch: `feature/ALPHA-009-content-foundations`.
 ## Active Tickets
 
 **None in progress.** The Sprint Alpha-2 build-now spine + all credential-free
-features shipped this session (ALPHA-008/009/010/011/012/013/020/021 — see
-*Completed*). Remaining work is the **needs-your-input** track (Mastodon/LinkedIn
-creds, alt-text/first-comment/delete scope, best-time) and the BETA-011 UI
-stop-line — see *Next Up*.
+features shipped (ALPHA-008/009/010/011/012/013/020/021), and **ALPHA-019
+best-time-to-post** shipped this session (see *Completed*). Remaining work is the
+**needs-your-input** track (Mastodon/LinkedIn creds, alt-text/first-comment/delete
+scope) and the BETA-011 UI stop-line — see *Next Up*. Per the user's direction
+("everything but platform adapters"), the next non-adapter items (alt-text /
+first-comment / delete) touch live publish paths — delete is destructive — and
+stay gated on a scope confirmation before build.
 
 ## Completed Tickets
 
@@ -87,6 +90,7 @@ stop-line — see *Next Up*.
 | ALPHA-012 | Duplicate/repost guard — `lib/audit.js recentDuplicate` + `duplicate_check` tool (content hash vs successful publishes, default 7d window); wired into the Hermes pre-publish checklist + content-intelligence skill. Tools 26→27. 1 unit + 1 smoke | ✅ Done |
 | ALPHA-020 | `media_compose` **`square-tall`** template (1080×1350) — Instagram's highest-reach 4:5 feed ratio. Templates 4→5. 1 unit | ✅ Done |
 | ALPHA-021 | `media_compose` **`logo_url`** corner-stamp on any template (~12% width, bottom-right). `compose.js` split into `render()` (offline-testable PNG buffer) + `compose()` (render+upload). 2 unit (incl. data-URL logo composite) | ✅ Done |
+| ALPHA-019 | **Best-time-to-post** — `lib/besttime.js` + `best_time` tool (ranked posting windows per platform, audience-local, with rationale). Research-backed baseline now, with an `observedWindows` seam for own-history refinement once analytics accrue; dispatcher captures `post_id` on the `published` audit entry so the future join needs no summary-parsing. Credential-free, touches no adapter. Tools 27→28. 5 unit + 2 smoke | ✅ Done |
 
 ## Next Up
 
@@ -98,7 +102,6 @@ stop-line — see *Next Up*.
 | ALPHA-016 | **Delete / unpublish** a published post | Destructive — confirm scope + which platforms |
 | ALPHA-017 | **Mastodon** adapter (new platform — easy AT-style API) | Needs your instance + app token |
 | ALPHA-018 | **LinkedIn** adapter (new platform — strategic, the Taplio space) | Needs creds + API access-tier decision |
-| ALPHA-019 | **Best-time-to-post** suggestions (25–40% engagement lift per research) | Needs analytics history + algorithm choice |
 
 ### Deferred stop-lines (unchanged)
 | ID | Title | Priority |
@@ -111,15 +114,16 @@ stop-line — see *Next Up*.
 | Metric | Value |
 |--------|-------|
 | Platforms supported | 6 (X, Instagram, TikTok, Facebook, Threads, Bluesky) |
-| MCP tools | 27 (7 publishing + 1 tiktok-status + 6 content-intelligence + 1 brand_voice + 1 link_tag + 5 queue + 3 observability + 1 account_info + 2 media) |
+| MCP tools | 28 (7 publishing + 1 tiktok-status + 7 content-intelligence + 1 brand_voice + 1 link_tag + 5 queue + 3 observability + 1 account_info + 2 media) |
 | Claude Code skills | 13 (9 publishing: 6 platform + manage-queue + upload-media + content-intelligence · 4 pipeline: idea-input + research-trends + pipeline-orchestrator + output-manager) |
-| Tests | 60 unit (`node:test`) + 19-check MCP smoke test |
+| Tests | 65 unit (`node:test`) + 22-check MCP smoke test |
 | npm package | `spmc` v0.3.0-alpha |
 | Dependencies | 2 (`@modelcontextprotocol/sdk`, `sharp`) — unchanged |
 | Agent surfaces | 5 (Claude Code, Claude Desktop, Hermes, OpenClaw/generic, CLI/npm) |
 
 ## Recent Updates
 
+- 2026-06-19: **ALPHA-019 best-time-to-post shipped** (`feature/ALPHA-019-best-time`). New `lib/besttime.js` + `best_time` tool returns ranked posting windows per platform in audience-local time with a short rationale each. Per the advisor + the no-live-history reality, v1 is a **research-backed baseline** (the only thing that can ship with effectively zero analytics history — not a product call over a data-driven design); an `observedWindows` seam is in place for own-history refinement later, and the dispatcher now records `post_id` on the `published` audit entry so that future join needs no summary-string parsing. The DST-risky timezone→ISO convenience was deliberately deferred (vanilla JS, 2-dep rule) — the tool tells you to schedule via `queue_add` with an explicit offset. Credential-free, touches no adapter. **Tools 27→28, 65 unit + 22-check smoke + `build:check` green.** Direction from the user: "everything but platform adapters" — Mastodon/LinkedIn paused; the remaining non-adapter items (alt-text / first-comment / delete) touch live publish paths (delete is destructive) and stay gated on a scope confirmation.
 - 2026-06-18: **Sprint Alpha-2 (Content Foundations) opened; shipped on `feature/ALPHA-009-content-foundations`.** PRs #1 (`development`→`main`) and #2 merged — `v0.3.0-alpha` is on `main`. Research-driven ticket set written (ALPHA-008..021; competitor scan: brand-voice profiles are the top AI differentiator). Shipped: **ALPHA-008** (auto-fetch analytics ~24h after publish — `lib/followups.js` + `publishAudited` chokepoint, drained by the scheduler), **ALPHA-009** (`brand_voice` profile + `lib/brand.js`), **ALPHA-010** (foundational prompt revision — 6 platform skills deepened with Craft + weak→strong example + error→action + brand-voice; `output-manager` rebuilt generic/on-architecture off the protocode Pillow logo → `media_compose` templates + graphic-design principles; `idea-input`/`research-trends`/`pipeline-orchestrator` rewritten generic + delegating; persona consults the brand kit), and **ALPHA-013** (`link_tag` UTM tagging, brand-kit defaults). Then the credential-free + media batch: **ALPHA-011** (drafts), **ALPHA-012** (`duplicate_check` guard), **ALPHA-020** (`square-tall` 4:5 template), **ALPHA-021** (`logo_url` corner stamp; `compose.js` split into `render()`+`compose()`). **Tools 24→27, templates 4→5, 60 unit + 19-check smoke + `build:check` green.** Committed in logical per-ticket commits; the spine merged into `development` (`--no-ff`) and pushed (PR only dev→main, per the git flow). **Paused for input** on the needs-input track: Mastodon (ALPHA-017) / LinkedIn (ALPHA-018) creds, alt-text (014) / first-comment (015) / delete (016) scope, best-time (019), X credits.
 - 2026-06-17: **BETA-010 live test executed + BETA-012 features shipped (`v0.3.0-alpha`).** Published a real, researched 6-slide Instagram carousel (US gov pulling Anthropic's Fable 5 / Mythos 5) to `@protocode_` + a Facebook Page post, end-to-end through the spine. New product surface: IG carousel publishing (`instagram_post` `image_urls[]`), `account_info` read tool, `square-news` branded slide template (handle + circular-icon footer, body word-wrap), imgbb-primary/Cloudinary-fallback selection with `CLOUDINARY_URL` one-liner parsing. Live testing surfaced + fixed real issues: **FB analytics metrics were all-deprecated** (`post_impressions*` → engagement metrics, verified valid live), a `compose` empty-value bug that blanked the accent/handle, an expired FB token, an invalid imgbb key, and the unparsed Cloudinary one-liner (last three resolved by user-supplied creds). Verified live: IG+FB publish, IG analytics, audit, rate-limits, profile reads. 41 unit tests + smoke + `build:check` green. **Merged into `development` + pushed; PR #1 (`development` → `main`) open.** Git flow formalized this session: `development` is now the default/integration branch (branch off it, merge into it, push it; `main` only via PR) — `BRANCHING.md`/`AGENTS.md`/`AGENT_CONTEXT.md` reconciled.
 - 2026-06-16: BUILD-001 single-origin — **SHIPPED + MERGED to `main` (v0.2.0-alpha), pushed, CI green.** Wire-up + merge-back closed it out: CI workflow (`.github/workflows/ci.yml`) + opt-in pre-commit hook (`.githooks/pre-commit`, no husky) both run `build:check`; `hermes/mcp-config.json` excluded from `--check` (machine-local absolute path = environment, shape still template-checked); `.env.example` single-origined as a `credentialEnvKeys()` completeness assertion; design folded into `PROJECT_ARCHITECTURE.md`, `BUILD_CONCEPT.md` reduced to a pointer; version single-sourced + bumped to `0.2.0-alpha`. Merged `--no-ff` (`f401b44`) and pushed `main` to `origin/honk`. First CI run caught a latent test-glob bug (quoted `node --test` glob needs Node ≥21; CI's Node 20 couldn't expand it) — unquoted so the shell expands it; next run green (`build:check` 20 checked + 1 skipped, 38 tests, smoke). **No active tickets; next = the deferred stop-lines (live cred testing / UI planning), awaiting user go-ahead.**

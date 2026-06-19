@@ -20,6 +20,7 @@ import { status as rateLimitStatus }      from './lib/ratelimit.js';
 import { fetchMetrics, report as analyticsReport, SUPPORTED_PLATFORMS } from './lib/analytics.js';
 import * as brand from './lib/brand.js';
 import { tagUrl } from './lib/links.js';
+import { bestTimes, formatBestTimes } from './lib/besttime.js';
 import { TOOLS } from './lib/tools.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -183,11 +184,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           + `\nConfirm with the user before reposting.`,
         );
       }
+      case 'best_time': {
+        const result = bestTimes({ platform: args.platform, count: args.count, account: args.account ?? '' });
+        return ok(formatBestTimes(result));
+      }
       case 'audit_log': {
         const entries = auditRead({ platform: args.platform, status: args.status, source: args.source, limit: args.limit });
         if (entries.length === 0) return ok('No audit entries yet.');
         const lines = entries.map(e =>
           `${e.ts} | ${e.status.padEnd(9)} | ${e.platform}${e.account ? `/${e.account}` : ''} | ${e.source} | #${e.content_hash}`
+          + (e.post_id ? ` | post ${e.post_id}` : '')
           + (e.error ? `\n    error: ${e.error}` : '')
         );
         return ok(`${entries.length} entr${entries.length === 1 ? 'y' : 'ies'} (most recent first):\n${lines.join('\n')}`);
