@@ -20,14 +20,14 @@ function uid() {
   return `q_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
-export function add(platform, content, scheduledAt = null, account = '') {
+export function add(platform, content, scheduledAt = null, account = '', status = 'pending') {
   const items = load();
   const item = {
     id:           uid(),
     platform,
     content,
     account,
-    status:       'pending',
+    status,
     scheduled_at: scheduledAt,
     created_at:   new Date().toISOString(),
     published_at: null,

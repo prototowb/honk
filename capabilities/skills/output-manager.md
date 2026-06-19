@@ -44,6 +44,7 @@ URL. Pick the template by the platform's aspect ratio:
 | Platform / placement          | Template                         | Size (ratio)      |
 |--------------------------------|----------------------------------|-------------------|
 | IG feed (single)               | `square-dark` or `square-news`   | 1080×1080 (1:1)   |
+| IG feed (max reach)            | `square-tall`                    | 1080×1350 (4:5)   |
 | IG carousel slide              | `square-news` (handle+icon footer)| 1080×1080 (1:1)  |
 | IG / TikTok story / Reels cover| `story-dark`                     | 1080×1920 (9:16)  |
 | Facebook / X link image        | `banner-wide`                    | 1200×628 (1.91:1) |
@@ -59,7 +60,8 @@ Brand identity (handle, icon, bg/accent colors) comes from the brand kit — rea
 it with `brand_voice(action:"get")` and pass those values so a series reads as one
 identity. `square-news` renders the handle + a circular icon footer; the others
 are clean text panels. Pass `bg_image_url` to composite a backdrop photo *behind*
-the text panel.
+the text panel, and `logo_url` to stamp a brand logo in the bottom-right corner of
+**any** template.
 
 ### Step 3 — Hand off
 
@@ -76,10 +78,9 @@ skill. Then queue or publish via `manage-queue`.
 - **Brand consistency.** Reuse the same bg/accent/handle/icon across a series — all from the brand kit.
 - **Less is more.** No more than the headline + one line. Whitespace is a feature.
 
-### Known gaps — tell the user if relevant
+### Notes
 
-- Identity is rendered via the `square-news` footer (handle + circular icon) and
-  the bg/accent colors. There is **no corner-logo stamp onto an arbitrary
-  finished photo** yet — that would be a `media_compose` enhancement.
-- Instagram's highest-reach feed ratio is **4:5 (1080×1350)**; no template
-  produces it yet, so feed renders use 1:1 for now.
+- For Instagram feed, prefer **`square-tall` (4:5)** — it's the highest-reach feed
+  ratio. Use 1:1 (`square-dark`/`square-news`) for carousels and cross-posting.
+- `logo_url` stamps the brand logo bottom-right on any template; `square-news` also
+  carries the handle + circular icon footer. Both pull from the brand kit.

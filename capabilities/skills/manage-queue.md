@@ -44,6 +44,23 @@ Examples by platform:
 - Bluesky: `content: { text: "text" }`
 - TikTok: `content: { video_url: "https://...", caption: "caption", privacy_level?: "SELF_ONLY" }`
 
+### Drafts
+
+Save a post without committing to publish it — held for review, **never
+auto-dispatched** (the scheduler only touches `pending`):
+
+```
+queue_add(platform, content, draft: true)     // status: "draft"
+queue_list(status: "draft")                    // review your drafts
+```
+
+When a draft is ready, promote it:
+
+- `queue_update(id, updates: { status: "pending", scheduled_at: "..." })` — schedule it, or
+- `queue_dispatch(id)` — publish it now.
+
+Drafts are the safe staging area for pipeline output before the user signs off.
+
 ### Viewing the queue
 
 ```
@@ -52,7 +69,7 @@ queue_list(status: "pending")           // filter by status
 queue_list(platform: "x")              // filter by platform
 ```
 
-Statuses: `pending` → `dispatched` → `published` | `failed`
+Statuses: `draft` (held) · `pending` → `dispatched` → `published` | `failed`
 
 ### Updating a queued item
 

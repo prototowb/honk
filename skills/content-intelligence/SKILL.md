@@ -68,6 +68,17 @@ Returns blocking **errors** (over length, missing required field, bad media URL)
 and non-blocking **warnings** (near the limit). Run this before `queue_add` or any
 publish tool. Length checks are grapheme-aware for Bluesky.
 
+### Guard against accidental reposts
+
+```
+duplicate_check(platform, content, within_hours?)
+```
+
+Matches the content hash against the audit log of **successful** publishes and
+reports any identical recent post (default lookback 168h / 7 days). There is no
+un-publish — run this before publishing, and if it flags a match, confirm with
+the user that a repost is intended.
+
 ### Dry run — rehearse a real post
 
 Every publishing tool (and `queue_dispatch`) takes `dry_run: true`:

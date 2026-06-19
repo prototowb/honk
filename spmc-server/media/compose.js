@@ -73,7 +73,10 @@ function renderSvg(template, vars) {
 
 // ─── Compose ─────────────────────────────────────────────────────────────
 
-export async function compose(templateId, variables = {}, uploadOpts = {}) {
+// Render the composed PNG to a buffer (no upload). Split out from compose() so
+// the render path is testable offline — only bg_image_url / icon_url / logo_url
+// need the network, and those are optional.
+export async function render(templateId, variables = {}) {
   const { meta, svg } = getTemplate(templateId);
   const { width, height } = meta.dimensions;
 
@@ -121,6 +124,24 @@ export async function compose(templateId, variables = {}, uploadOpts = {}) {
 
   const svgBuf = Buffer.from(renderSvg(svgStr, resolved));
 
+  // Composite layers: the SVG, then an optional corner-logo stamp. logo_url is a
+  // cross-template option (not a per-template variable) — stamped bottom-right
+  // with padding, scaled to ~12% of canvas width. Decorative: skip on failure.
+  const layers = [{ input: svgBuf, top: 0, left: 0 }];
+  if (variables.logo_url) {
+    try {
+      const logoRes = await fetch(variables.logo_url);
+      if (logoRes.ok) {
+        const { data, info } = await sharp(Buffer.from(await logoRes.arrayBuffer()))
+          .resize({ width: Math.round(width * 0.12), withoutEnlargement: true })
+          .png()
+          .toBuffer({ resolveWithObject: true });
+        const pad = Math.round(width * 0.04);
+        layers.push({ input: data, top: height - info.height - pad, left: width - info.width - pad });
+      }
+    } catch { /* corner logo is decorative — skip on fetch/decode failure */ }
+  }
+
   let image;
   if (resolved.bg_image_url) {
     const imgRes = await fetch(resolved.bg_image_url);
@@ -128,16 +149,19 @@ export async function compose(templateId, variables = {}, uploadOpts = {}) {
     const imgBuf = Buffer.from(await imgRes.arrayBuffer());
     image = sharp(imgBuf)
       .resize(width, height, { fit: 'cover', position: 'centre' })
-      .composite([{ input: svgBuf, top: 0, left: 0 }]);
+      .composite(layers);
   } else {
     image = sharp({ create: { width, height, channels: 4, background: resolved.bg_color || '#05091e' } })
-      .composite([{ input: svgBuf, top: 0, left: 0 }]);
+      .composite(layers);
   }
 
   const pngBuf = await image.png({ compressionLevel: 8 }).toBuffer();
+  return { pngBuf, width, height, template: templateId };
+}
 
+export async function compose(templateId, variables = {}, uploadOpts = {}) {
+  const { pngBuf, width, height } = await render(templateId, variables);
   const filename = `${templateId}-${Date.now()}.png`;
   const result   = await upload(null, uploadOpts.provider ?? null, uploadOpts.account ?? '', pngBuf, filename);
-
   return { ...result, template: templateId, dimensions: { width, height } };
 }

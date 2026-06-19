@@ -266,7 +266,7 @@ Or use `start.js` as the entry point:
 ## MCP Tools
 
 <!-- gen:tools:start -->
-_26 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit between these markers; run `npm run build`._
+_27 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit between these markers; run `npm run build`._
 
 ### Publishing & status
 
@@ -291,6 +291,7 @@ _26 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 | `account_info` | `platform` (string) | `account` (string) | — | Fetch the connected account profile (handle, display name, avatar URL) for a platform. Read-only — confirms which account is wired up and supplies branding assets. Supported: instagram, facebook (Graph API). |
 | `brand_voice` | — | `action` (string), `profile` (object), `replace` (boolean), `account` (string) | — | Get or set the brand voice profile — a persistent brand kit (tone, audience, hashtag sets, emoji/banned-word policy, CTA library, default UTM rules) that the content skills read so drafts match your voice without re-specifying it each time. Per account (omit account for the default). Content config, not secrets. Call with action:"get" first to see the current profile and its shape. |
 | `link_tag` | `url` (string) | `params` (object), `platform` (string), `account` (string) | — | Add UTM/campaign query params to a URL for click attribution. Merges the brand kit's links.utm_defaults under your overrides; a value containing {platform} is substituted with the given platform. Returns the tagged URL. Deterministic, credential-free. |
+| `duplicate_check` | `platform` (string), `content` (object) | `within_hours` (number) | — | Check whether identical content was already published to a platform recently — matches the content hash against the audit log of successful publishes. Returns the prior publish if found. Run before publishing to avoid an accidental repost (there is no un-publish). |
 | `audit_log` | — | `platform` (string), `status` (string), `source` (string), `limit` (number) | — | Read the publish audit trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, and result. Filter by platform/status/source. |
 | `schedule_check` | `scheduled_at` (string) | — | — | Validate and normalize a scheduled_at timestamp to canonical UTC ISO 8601. A timestamp without an explicit timezone is interpreted as the server's local time and flagged with a warning (it becomes ambiguous under hosted/multi-user deployment). Returns the normalized value and whether it is in the past. |
 
@@ -306,7 +307,7 @@ _26 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 
 | Tool | Required | Optional | Platform limit | Description |
 |------|----------|----------|----------------|-------------|
-| `queue_add` | `platform` (string), `content` (object) | `scheduled_at` (string), `account` (string) | — | Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing. |
+| `queue_add` | `platform` (string), `content` (object) | `scheduled_at` (string), `account` (string), `draft` (boolean) | — | Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing. |
 | `queue_list` | — | `status` (string), `platform` (string) | — | List queued posts. Optionally filter by status or platform. |
 | `queue_update` | `id` (string), `updates` (object) | — | — | Update a queue item — change its content, scheduled_at, or status. |
 | `queue_remove` | `id` (string) | — | — | Remove a post from the queue. |
@@ -316,7 +317,7 @@ _26 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 
 | Tool | Required | Optional | Platform limit | Description |
 |------|----------|----------|----------------|-------------|
-| `media_compose` | `template` (string), `headline` (string) | `subtext` (string), `bg_color` (string), `accent` (string), `bg_image_url` (string), `handle` (string), `icon_url` (string), `provider` (string), `account` (string) | — | Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), story-dark (1080×1920), banner-wide (1200×628), square-news (1080×1080 branded carousel slide with wrapped body + handle/icon footer). |
+| `media_compose` | `template` (string), `headline` (string) | `subtext` (string), `bg_color` (string), `accent` (string), `bg_image_url` (string), `handle` (string), `icon_url` (string), `logo_url` (string), `provider` (string), `account` (string) | — | Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), square-tall (1080×1350, IG 4:5 feed), story-dark (1080×1920), banner-wide (1200×628), square-news (1080×1080 branded carousel slide with wrapped body + handle/icon footer). |
 | `media_upload` | `file_path` (string) | `provider` (string), `account` (string) | — | Upload a local image or video file to a CDN and get back a public URL. Use this before posting to Instagram (requires image URL) or TikTok (requires video URL). Supported providers: cloudinary (images + videos), imgbb (images only). Provider is auto-selected from available credentials. |
 
 <!-- gen:tools:end -->

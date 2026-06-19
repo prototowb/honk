@@ -6,6 +6,7 @@ Run before every `queue_dispatch` or direct publishing tool call.
 
 **Mandatory checks:**
 - [ ] Brand kit consulted (`brand_voice(action:"get")`) — tone, emoji policy, banned words, and hashtag sets applied to the draft
+- [ ] No accidental repost — `duplicate_check(platform, content)` is clear (or the user confirmed a deliberate repost)
 - [ ] User has explicitly approved the exact post content (text, image URL, hashtags)
 - [ ] Payload passes `content_validate` (or a `dry_run: true` call) — this mechanizes the length/required-field/media checks below; resolve any errors before publishing
 - [ ] Character count verified for platform limit (X: 280, Threads: 500, Bluesky: 300 graphemes) — `content_validate` does this, grapheme-aware

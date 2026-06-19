@@ -14,7 +14,7 @@ import { validate, formatValidation }     from './lib/validate.js';
 import { adapt, formatAdaptation }        from './lib/adapt.js';
 import { report as configReport, formatReport } from './lib/config.js';
 import { normalizeScheduledAt, isPast, timezoneWarning } from './lib/schedule.js';
-import { read as auditRead, record as auditRecord } from './lib/audit.js';
+import { read as auditRead, record as auditRecord, recentDuplicate } from './lib/audit.js';
 import { hashContent }                    from './lib/hash.js';
 import { status as rateLimitStatus }      from './lib/ratelimit.js';
 import { fetchMetrics, report as analyticsReport, SUPPORTED_PLATFORMS } from './lib/analytics.js';
@@ -171,6 +171,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const used = Object.keys(merged).filter(k => merged[k] !== '' && merged[k] != null);
         return ok(`Tagged URL:\n${tagged}${used.length ? `\nParams: ${used.join(', ')}` : '\n(no params applied — set links.utm_defaults in brand_voice or pass params)'}`);
       }
+      case 'duplicate_check': {
+        const hours = args.within_hours ?? 168;
+        const hash = hashContent(args.content);
+        const dup = recentDuplicate({ platform: args.platform, content_hash: hash, withinMs: hours * 3600 * 1000 });
+        if (!dup) return ok(`No duplicate — no identical ${args.platform} publish in the last ${hours}h (content hash #${hash}).`);
+        return ok(
+          `⚠ Possible duplicate — identical content (hash #${hash}) was published to `
+          + `${dup.platform}${dup.account ? `/${dup.account}` : ''} at ${dup.ts}.`
+          + (dup.result ? `\n  ${dup.result.split('\n')[0]}` : '')
+          + `\nConfirm with the user before reposting.`,
+        );
+      }
       case 'audit_log': {
         const entries = auditRead({ platform: args.platform, status: args.status, source: args.source, limit: args.limit });
         if (entries.length === 0) return ok('No audit entries yet.');
@@ -217,13 +229,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'queue_add': {
         const scheduledAt = normalizeScheduledAt(args.scheduled_at ?? null);
         const v = validate(args.platform, args.content);
-        const item = queue.add(args.platform, args.content, scheduledAt, args.account ?? '');
+        const item = queue.add(args.platform, args.content, scheduledAt, args.account ?? '', args.draft ? 'draft' : 'pending');
         const warn = v.ok
           ? (v.warnings.length ? `\n⚠ ${v.warnings.join('; ')}` : '')
-          : `\n⚠ Content has validation errors (queued anyway):\n` + v.errors.map(e => `  - ${e}`).join('\n');
-        const past = scheduledAt && isPast(scheduledAt) ? `\n⚠ scheduled_at is in the past — will dispatch on next scheduler tick.` : '';
+          : `\n⚠ Content has validation errors (saved anyway):\n` + v.errors.map(e => `  - ${e}`).join('\n');
+        // Drafts are never auto-dispatched, so the past-time/dispatch warning doesn't apply.
+        const past = (!args.draft && scheduledAt && isPast(scheduledAt)) ? `\n⚠ scheduled_at is in the past — will dispatch on next scheduler tick.` : '';
         const tzWarn = scheduledAt ? timezoneWarning(args.scheduled_at) : '';
-        return ok(`Queued! ID: ${item.id}\nPlatform: ${item.platform}\nStatus: ${item.status}${item.account ? `\nAccount: ${item.account}` : ''}${item.scheduled_at ? `\nScheduled: ${item.scheduled_at}` : ''}${past}${tzWarn ? `\n⚠ ${tzWarn}` : ''}${warn}`);
+        const draftNote = args.draft ? `\nDraft — held for review; won't publish until promoted (queue_update status:"pending" or queue_dispatch).` : '';
+        return ok(`${args.draft ? 'Draft saved' : 'Queued'}! ID: ${item.id}\nPlatform: ${item.platform}\nStatus: ${item.status}${item.account ? `\nAccount: ${item.account}` : ''}${item.scheduled_at ? `\nScheduled: ${item.scheduled_at}` : ''}${draftNote}${past}${tzWarn ? `\n⚠ ${tzWarn}` : ''}${warn}`);
       }
       case 'queue_list': {
         const items = queue.list({ status: args.status, platform: args.platform });
@@ -269,6 +283,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           bg_image_url: args.bg_image_url ?? '',
           handle:       args.handle       ?? '',
           icon_url:     args.icon_url      ?? '',
+          logo_url:     args.logo_url      ?? '',
         }, { provider: args.provider ?? null, account: args.account ?? '' });
         return ok(
           `Composed ${result.template} (${result.dimensions.width}×${result.dimensions.height})\n`
