@@ -283,6 +283,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           bg_image_url: args.bg_image_url ?? '',
           handle:       args.handle       ?? '',
           icon_url:     args.icon_url      ?? '',
+          logo_url:     args.logo_url      ?? '',
         }, { provider: args.provider ?? null, account: args.account ?? '' });
         return ok(
           `Composed ${result.template} (${result.dimensions.width}×${result.dimensions.height})\n`

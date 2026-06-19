@@ -327,11 +327,11 @@ export const TOOLS = [
   // ── Media ─────────────────────────────────────────────────────────────────
   {
     name: 'media_compose',
-    description: 'Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), story-dark (1080×1920), banner-wide (1200×628), square-news (1080×1080 branded carousel slide with wrapped body + handle/icon footer).',
+    description: 'Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), square-tall (1080×1350, IG 4:5 feed), story-dark (1080×1920), banner-wide (1200×628), square-news (1080×1080 branded carousel slide with wrapped body + handle/icon footer).',
     inputSchema: {
       type: 'object',
       properties: {
-        template:    { type: 'string', description: 'Template ID. One of: square-dark, story-dark, banner-wide, square-news.', enum: ['square-dark', 'story-dark', 'banner-wide', 'square-news'] },
+        template:    { type: 'string', description: 'Template ID. One of: square-dark, square-tall, story-dark, banner-wide, square-news.', enum: ['square-dark', 'square-tall', 'story-dark', 'banner-wide', 'square-news'] },
         headline:    { type: 'string', description: 'Main headline text. Auto-wrapped to two lines.' },
         subtext:     { type: 'string', description: 'Secondary/body text below the headline. Word-wrapped to multiple lines on square-news.' },
         bg_color:    { type: 'string', description: 'Background hex color. Default: #05091e' },
@@ -339,6 +339,7 @@ export const TOOLS = [
         bg_image_url:{ type: 'string', description: 'Optional public URL of a backdrop image. Composited behind the text panel.' },
         handle:      { type: 'string', description: 'Account handle for the footer (e.g. @brand). square-news only.' },
         icon_url:    { type: 'string', description: 'Public URL of an avatar/logo image rendered as a circular footer icon. square-news only.' },
+        logo_url:    { type: 'string', description: 'Optional public URL of a logo stamped in the bottom-right corner of any template (scaled to ~12% width). Works across all templates — use the brand kit logo.' },
         provider:    { type: 'string', description: 'CDN provider for the upload. Auto-selected if omitted.', enum: ['cloudinary', 'imgbb'] },
         account:     { type: 'string', description: "Named account for CDN credentials (e.g. 'brand')." },
       },

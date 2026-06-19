@@ -79,7 +79,7 @@ _27 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 
 | Tool | Required | Optional | Platform limit | Description |
 |------|----------|----------|----------------|-------------|
-| `media_compose` | `template` (string), `headline` (string) | `subtext` (string), `bg_color` (string), `accent` (string), `bg_image_url` (string), `handle` (string), `icon_url` (string), `provider` (string), `account` (string) | — | Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), story-dark (1080×1920), banner-wide (1200×628), square-news (1080×1080 branded carousel slide with wrapped body + handle/icon footer). |
+| `media_compose` | `template` (string), `headline` (string) | `subtext` (string), `bg_color` (string), `accent` (string), `bg_image_url` (string), `handle` (string), `icon_url` (string), `logo_url` (string), `provider` (string), `account` (string) | — | Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), square-tall (1080×1350, IG 4:5 feed), story-dark (1080×1920), banner-wide (1200×628), square-news (1080×1080 branded carousel slide with wrapped body + handle/icon footer). |
 | `media_upload` | `file_path` (string) | `provider` (string), `account` (string) | — | Upload a local image or video file to a CDN and get back a public URL. Use this before posting to Instagram (requires image URL) or TikTok (requires video URL). Supported providers: cloudinary (images + videos), imgbb (images only). Provider is auto-selected from available credentials. |
 
 <!-- gen:tools:end -->
