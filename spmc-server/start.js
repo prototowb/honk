@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * Starts the SPMC scheduler in a detached child process, then
  * hands off to run.js (MCP server via stdio). Claude Desktop only
