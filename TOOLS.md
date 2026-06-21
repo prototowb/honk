@@ -4,7 +4,7 @@
 
 # SPMC Tool Reference
 
-**28 tools** · generated from `spmc-server/lib/tools.js` + `lib/specs.js` · server v0.3.0-alpha
+**29 tools** · generated from `spmc-server/lib/tools.js` + `lib/specs.js` · server v0.3.0-alpha
 
 ## Publishing & status
 
@@ -31,6 +31,7 @@
 | `link_tag` | `url` (string) | `params` (object), `platform` (string), `account` (string) | — | Add UTM/campaign query params to a URL for click attribution. Merges the brand kit's links.utm_defaults under your overrides; a value containing {platform} is substituted with the given platform. Returns the tagged URL. Deterministic, credential-free. |
 | `duplicate_check` | `platform` (string), `content` (object) | `within_hours` (number) | — | Check whether identical content was already published to a platform recently — matches the content hash against the audit log of successful publishes. Returns the prior publish if found. Run before publishing to avoid an accidental repost (there is no un-publish). |
 | `best_time` | `platform` (string) | `count` (number), `account` (string) | — | Suggest the best times to post on a platform, ranked, in audience-local time with a short rationale per window. Credential-free. Uses research-backed engagement windows as a baseline and will blend in the account's own analytics history once enough accrues. Schedule a suggestion via queue_add with an explicit timezone offset. |
+| `brief_schema` | — | `account` (string) | — | Return the per-run content-brief field schema — the single source for guided-mode intake and the future web-UI form. The brief is the per-run delta on top of the persistent brand kit (voice/audience/hashtags); this lists only what a run needs (angle, goal, platforms, schedule, references, constraints) with each field's type, required-ness, options, and which fields the brand kit pre-fills. Pass an account to annotate its brand-kit pre-fills. Use it to drive an optional guided intake instead of asking for everything at once. |
 | `audit_log` | — | `platform` (string), `status` (string), `source` (string), `limit` (number) | — | Read the publish audit trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, and result. Filter by platform/status/source. |
 | `schedule_check` | `scheduled_at` (string) | — | — | Validate and normalize a scheduled_at timestamp to canonical UTC ISO 8601. A timestamp without an explicit timezone is interpreted as the server's local time and flagged with a warning (it becomes ambiguous under hosted/multi-user deployment). Returns the normalized value and whether it is in the past. |
 

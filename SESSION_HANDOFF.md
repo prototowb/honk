@@ -39,16 +39,24 @@ chunks, **not yet merged**. The full review with statuses lives in
 8. **Release hygiene** — `CHANGELOG.md` (Keep a Changelog, 0.1→0.3-alpha +
    `[Unreleased]`), `RELEASING.md`, and an `npm version` hook that regenerates the
    version-stamped artifacts (`TOOLS.md`, `plugin.json`, `claude_desktop_config.json`).
+9. **Optional guided pipeline intake (interactivity Layer 1)** — `lib/brief.js`
+   defines the per-run content-brief field schema (angle, goal, platforms, schedule,
+   references, constraints) as a single source, exposed via a `brief_schema` tool
+   that annotates which fields the brand kit pre-fills. `idea-input` /
+   `research-trends` gained an opt-in **guided mode** that walks the schema one field
+   at a time (skipping brand-kit pre-fills) instead of one big command — the same
+   spec a future web-UI form renders. Default one-shot flow unchanged. 5 unit + 1 smoke.
 
-**State:** all green — **65 unit + 22-check smoke + `build:check` + `pack:smoke` +
-the `prepublishOnly` chain**. Tools still **28**; templates 5; runtime deps 2.
+**State:** all green — **70 unit + 23-check smoke + `build:check` + `pack:smoke` +
+the `prepublishOnly` chain**. Tools **29**; templates 5; runtime deps 2.
 
 ## NEXT — open items
 
-- **Interactivity (the user's next ask, NOT started):** design how a user starts a
-  content pipeline **interactively** — clarifying back-and-forth — instead of
-  cramming everything into one upfront command. Explore the `idea-input` /
-  `pipeline-orchestrator` skills + an MCP-prompts / elicitation approach.
+- **Interactivity — Layer 1 SHIPPED (guided mode, see #9 above).** Deferred:
+  **Layer 2** (persist in-progress briefs by extending the drafts/queue store so a
+  guided session resumes and a UI can load/save partial briefs) and **Layer 3**
+  (web-UI form / MCP elicitation — both render the same `brief_schema` spec). Both
+  belong with the BETA-011 UI phase; elicitation's client support needs verifying.
 - **#4 publish story (deferred by the user):** `spmc` npm name is unclaimed and the
   `npx` surface is advertised but not live. Settle the name (publish `spmc` vs a
   scoped `@owner/spmc`), then publish — already gated by `prepublishOnly`; consider

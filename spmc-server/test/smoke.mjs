@@ -112,6 +112,12 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('best_time rejects an unknown platform', bad.isError && /unknown platform/i.test(text(bad)));
 }
 
+// brief_schema — the guided-mode / web-UI field spec, no credentials.
+{
+  const r = await client.callTool({ name: 'brief_schema', arguments: {} });
+  check('brief_schema returns the per-run brief fields', !r.isError && /`angle`/.test(text(r)) && /`platforms`/.test(text(r)));
+}
+
 // duplicate_check — reads the audit log; fresh content has no match.
 {
   const r = await client.callTool({ name: 'duplicate_check', arguments: { platform: 'x', content: { text: `unique ${Date.now()}` } } });

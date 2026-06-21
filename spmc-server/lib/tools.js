@@ -223,6 +223,16 @@ export const TOOLS = [
     },
   },
   {
+    name: 'brief_schema',
+    description: 'Return the per-run content-brief field schema — the single source for guided-mode intake and the future web-UI form. The brief is the per-run delta on top of the persistent brand kit (voice/audience/hashtags); this lists only what a run needs (angle, goal, platforms, schedule, references, constraints) with each field\'s type, required-ness, options, and which fields the brand kit pre-fills. Pass an account to annotate its brand-kit pre-fills. Use it to drive an optional guided intake instead of asking for everything at once.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        account: { type: 'string', description: 'Brand-kit account to resolve pre-filled defaults from (optional; omit for the default account).' },
+      },
+    },
+  },
+  {
     name: 'audit_log',
     description: 'Read the publish audit trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, and result. Filter by platform/status/source.',
     inputSchema: {

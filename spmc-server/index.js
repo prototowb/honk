@@ -21,6 +21,7 @@ import { fetchMetrics, report as analyticsReport, SUPPORTED_PLATFORMS } from './
 import * as brand from './lib/brand.js';
 import { tagUrl } from './lib/links.js';
 import { bestTimes, formatBestTimes } from './lib/besttime.js';
+import { briefSchema, formatBriefSchema } from './lib/brief.js';
 import { TOOLS } from './lib/tools.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -187,6 +188,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'best_time': {
         const result = bestTimes({ platform: args.platform, count: args.count, account: args.account ?? '' });
         return ok(formatBestTimes(result));
+      }
+      case 'brief_schema': {
+        const profile = brand.get(args.account ?? '');
+        return ok(formatBriefSchema(briefSchema(profile)));
       }
       case 'audit_log': {
         const entries = auditRead({ platform: args.platform, status: args.status, source: args.source, limit: args.limit });

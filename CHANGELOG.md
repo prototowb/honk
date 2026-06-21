@@ -17,6 +17,12 @@ in `spmc-server/package.json` and flows into every generated artifact via
   but it broke every npm/`npx` surface on first publish. Now shipped and guarded.
 
 ### Added
+- **Optional guided pipeline intake.** A `brief_schema` tool exposes the per-run
+  content-brief field spec (angle, goal, platforms, schedule, references,
+  constraints) — the single source for chat-guided intake and a future web-UI form
+  — annotating which fields the brand kit pre-fills. `idea-input` / `research-trends`
+  gain an opt-in "guided mode" that walks it one field at a time instead of asking
+  for everything in one command; the default one-shot flow is unchanged. Tools 28 → 29.
 - **`spmc-start` bin** — launches the MCP server **and** the scheduler daemon, so
   npm-installed users get scheduled-post auto-dispatch and the ~24h auto-analytics
   follow-up. The `spmc` bin stays MCP-only.
