@@ -6,7 +6,9 @@ name: CI
 # file, a tool/limit/credential added without rebuilding, or a stray prose token.
 on:
   push:
-    branches: [main]
+    # `development` is the integration branch — feature branches merge into it by
+    # direct push (no PR), so it must be gated here or those merges run no CI.
+    branches: [main, development, 'feature/**']
   pull_request:
 
 jobs:
@@ -26,7 +28,7 @@ jobs:
 
       # Verifies generated artifacts are in sync with the origin and that
       # .env.example documents every credential the server reads. The machine-
-      # local hermes/mcp-config.json is skipped by --check (absolute install path
+      # local agent/mcp-config.json is skipped by --check (absolute install path
       # = environment, not origin); its shape is still covered via the shared
       # mcpConfig() template that .mcp.json/claude_desktop_config.json keep checked.
       - name: Verify generated artifacts match the single origin
@@ -37,3 +39,10 @@ jobs:
 
       - name: MCP smoke test
         run: npm --prefix spmc-server run test:smoke
+
+      # Packs the tarball exactly as `npm publish` would, installs it into a
+      # throwaway project, and boots the bin — catches a `files`-array omission
+      # (e.g. a missing lib/) that build:check and the unit/smoke tests can't see,
+      # because they run against the source tree, not the packaged artifact.
+      - name: Package smoke (tarball installs and boots)
+        run: npm --prefix spmc-server run pack:smoke

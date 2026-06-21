@@ -4,7 +4,7 @@
 // Origin (two halves):
 //   • Machine facts — spmc-server/lib/tools.js (tool schemas) + lib/specs.js
 //     (platform limits) + lib/config.js (media providers) + package.json.
-//   • Prose — capabilities/ (hand-authored skill/Hermes copy) carrying tokens
+//   • Prose — capabilities/ (hand-authored skill/agent copy) carrying tokens
 //     ({{limit:…}}, {{unit:…}}, {{tool:…}}) resolved against the machine facts,
 //     so limits and tool names in prose can't drift from what the server serves.
 // See BUILD_CONCEPT.md.
@@ -13,8 +13,8 @@
 //   node build/generate.mjs --check   fail (exit 1) if any artifact is stale
 //
 // Emits: TOOLS.md, .claude-plugin/plugin.json, the gen:tools regions in
-// README.md + hermes/CONTEXT.md, the three MCP configs, every skills/*/SKILL.md
-// (from capabilities/skills/), and hermes/SKILLS.md (from capabilities/hermes/).
+// README.md + agent/CONTEXT.md, the three MCP configs, every skills/*/SKILL.md
+// (from capabilities/skills/), and agent/SKILLS.md (from capabilities/agent/).
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from 'fs';
 import { dirname, join, relative }                 from 'path';
@@ -81,7 +81,7 @@ function toolsByCategory() {
 }
 
 // The categorized tool tables — shared verbatim by TOOLS.md and the injected
-// README / Hermes regions. `heading` is the markdown prefix per category: `##`
+// README / agent regions. `heading` is the markdown prefix per category: `##`
 // under the TOOLS.md H1, `###` under a host doc's existing H2 section.
 function renderToolTables(heading = '##') {
   const { byCat, cats } = toolsByCategory();
@@ -126,7 +126,7 @@ function renderPluginManifest() {
   return JSON.stringify(manifest, null, 2) + '\n';
 }
 
-// ─── Artifact: MCP server configs (.mcp.json + hermes + Claude Desktop) ───────
+// ─── Artifact: MCP server configs (.mcp.json + agent + Claude Desktop) ────────
 // One server, three surfaces. All render from the same shape so they can't drift
 // (the "same server, three shapes, one a live defect" problem). The differences
 // are intentional: launch path (plugin var vs absolute vs npx) and whether an
@@ -171,7 +171,7 @@ function renderMcpJson() {
   });
 }
 
-// Hermes: outside the Claude plugin ecosystem, so no ${CLAUDE_PLUGIN_ROOT} — it
+// Agent (bring-your-own): outside the Claude plugin ecosystem, so no ${CLAUDE_PLUGIN_ROOT} — it
 // needs an absolute path to run.js (machine-specific by nature). No env block:
 // run.js self-loads creds from ~/.claude/spmc.env.
 //
@@ -182,7 +182,7 @@ function renderMcpJson() {
 // Windows clone's path). Its *shape* is still origin-checked: it renders from the
 // same mcpConfig() template as .mcp.json and claude_desktop_config.json, which
 // stay checked, so the template can't drift. `npm run build` still regenerates it.
-function renderHermesMcpConfig() {
+function renderAgentMcpConfig() {
   return mcpConfig({
     command: 'node',
     args: [join(ROOT, 'spmc-server', 'run.js')],
@@ -219,7 +219,7 @@ function renderClaudeDesktopConfig() {
 // (and the written output) is consistently LF.
 const norm = (s) => (s == null ? s : s.replace(/\r\n/g, '\n'));
 
-// ─── Artifact: injected tool tables (README.md + hermes/CONTEXT.md) ───────────
+// ─── Artifact: injected tool tables (README.md + agent/CONTEXT.md) ────────────
 
 const TOOLS_MARKER = 'gen:tools';
 
@@ -338,10 +338,10 @@ function renderSkill(name) {
   return resolveTokens(frontmatter + SOURCE_HEADER(srcRel) + body, srcRel);
 }
 
-// hermes/SKILLS.md — whole-file prose (no frontmatter), so the header goes at
+// agent/SKILLS.md — whole-file prose (no frontmatter), so the header goes at
 // the very top. Same token resolution as skills.
-function renderHermesSkills() {
-  const srcRel = 'capabilities/hermes/SKILLS.md';
+function renderAgentSkills() {
+  const srcRel = 'capabilities/agent/SKILLS.md';
   const raw    = norm(readFileSync(join(ROOT, srcRel), 'utf8'));
   return resolveTokens(SOURCE_HEADER(srcRel) + '\n' + raw, srcRel);
 }
@@ -363,13 +363,13 @@ const SKILL_ARTIFACTS = SKILL_NAMES.map(name => ({
 const ARTIFACTS = [
   { path: 'TOOLS.md',                    render: renderToolCatalog },
   { path: '.claude-plugin/plugin.json',  render: renderPluginManifest },
-  { path: 'README.md',                   render: injectArtifact('README.md',        TOOLS_MARKER, renderInjectedTools) },
-  { path: 'hermes/CONTEXT.md',           render: injectArtifact('hermes/CONTEXT.md', TOOLS_MARKER, renderInjectedTools) },
+  { path: 'README.md',                   render: injectArtifact('README.md',       TOOLS_MARKER, renderInjectedTools) },
+  { path: 'agent/CONTEXT.md',            render: injectArtifact('agent/CONTEXT.md', TOOLS_MARKER, renderInjectedTools) },
   { path: '.mcp.json',                   render: renderMcpJson },
-  { path: 'hermes/mcp-config.json',      render: renderHermesMcpConfig, localOnly: true },
+  { path: 'agent/mcp-config.json',       render: renderAgentMcpConfig, localOnly: true },
   { path: 'claude_desktop_config.json',  render: renderClaudeDesktopConfig },
   ...SKILL_ARTIFACTS,
-  { path: 'hermes/SKILLS.md',            render: renderHermesSkills },
+  { path: 'agent/SKILLS.md',             render: renderAgentSkills },
 ];
 
 // Invariant: every credential the server actually reads must be documented in

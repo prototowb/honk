@@ -2,7 +2,7 @@
 //
 // Consumed by index.js (served over ListTools at runtime) AND by the build
 // generator (build/generate.mjs) to emit skill docs, README tables, and the
-// Hermes pack. Adding or changing a tool here is the one edit; downstream docs
+// agent pack. Adding or changing a tool here is the one edit; downstream docs
 // are generated from this array + lib/specs.js — never hand-maintained.
 
 const DRY_RUN_PROP = { type: 'boolean', description: 'If true, validate and preview the post without publishing. Records a dry_run audit entry.' };
@@ -220,6 +220,16 @@ export const TOOLS = [
         account:  { type: 'string', description: "Named account (e.g. 'brand'). Omit for the default. Reserved for own-history refinement; does not change the baseline yet." },
       },
       required: ['platform'],
+    },
+  },
+  {
+    name: 'brief_schema',
+    description: 'Return the per-run content-brief field schema — the single source for guided-mode intake and the future web-UI form. The brief is the per-run delta on top of the persistent brand kit (voice/audience/hashtags); this lists only what a run needs (angle, goal, platforms, schedule, references, constraints) with each field\'s type, required-ness, options, and which fields the brand kit pre-fills. Pass an account to annotate its brand-kit pre-fills. Use it to drive an optional guided intake instead of asking for everything at once.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        account: { type: 'string', description: 'Brand-kit account to resolve pre-filled defaults from (optional; omit for the default account).' },
+      },
     },
   },
   {

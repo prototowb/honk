@@ -1,4 +1,4 @@
-# SPMC Skill Triggers — Hermes
+# SPMC Skill Triggers — Agent
 
 > Trigger → tool mapping. One section per platform. All tools are on the `spmc` MCP server.
 

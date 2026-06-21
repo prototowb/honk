@@ -5,7 +5,8 @@ description: >
   "preview without posting", "adapt this for all platforms", "make X/Bluesky
   versions", "check my SPMC setup", "which platforms are configured", "show the
   audit log", "what did we publish", "check this schedule time", "when should I
-  post", "best time to post", "are we rate limited", or "fetch analytics".
+  post", "best time to post", "start a brief", "walk me through a post", "are we
+  rate limited", or "fetch analytics".
   Credential-free content prep, validation, and introspection tools on the spmc
   MCP server — use them before and around publishing.
 metadata:
@@ -44,6 +45,20 @@ brand_voice(action: "set", profile: { voice: { tone: "concise, dry", banned_word
 
 This is content config, not secrets — it never holds tokens. If no profile is
 set, `get` returns the empty shape so you know which fields to fill.
+
+### Start a brief (optional guided intake)
+
+```
+brief_schema(account?)
+```
+
+Returns the per-run **content brief** field spec — angle, goal, platforms,
+schedule, references, constraints — with each field's type, whether it's required,
+its options, and which fields the brand kit already pre-fills. It's the per-run
+delta on top of `brand_voice`. Use it to **walk the user through a pipeline one
+field at a time** instead of asking for everything in one command (the
+`idea-input` / `research-trends` skills do this in "guided mode"); it's the same
+schema a future web UI renders as a form. Opt-in — skip it for a quick one-shot brief.
 
 ### Tag links for attribution
 

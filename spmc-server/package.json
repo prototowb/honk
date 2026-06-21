@@ -6,10 +6,12 @@
   "type": "module",
   "main": "index.js",
   "bin": {
-    "spmc": "./run.js"
+    "spmc": "./run.js",
+    "spmc-start": "./start.js"
   },
   "files": [
     "adapters/",
+    "lib/",
     "media/",
     "queue/store.js",
     "scheduler/",
@@ -23,15 +25,18 @@
     "dev": "node --watch index.js",
     "scheduler": "node scheduler/index.js",
     "scheduler:dev": "node --watch scheduler/index.js",
-    "test": "node --test test/*.test.mjs",
-    "test:smoke": "node test/smoke.mjs"
+    "test": "node --test \"test/*.test.mjs\"",
+    "test:smoke": "node test/smoke.mjs",
+    "pack:smoke": "node test/pack-smoke.mjs",
+    "prepublishOnly": "npm test && npm --prefix .. run build:check && npm run pack:smoke",
+    "version": "npm --prefix .. run build && git -C .. add -u"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
     "sharp": "^0.35.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.9.0"
   },
   "keywords": [
     "mcp", "social-media", "publishing", "x", "twitter", "instagram",
