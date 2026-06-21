@@ -34,9 +34,9 @@ spmc-server/              ← stdio MCP server (Node.js ESM)
 
 # ── single origin: hand-authored sources (edit here) ─────────────────────
 build/generate.mjs        ← the generator (zero deps); emits every artifact below
-capabilities/             ← hand-authored skill + Hermes prose — the ONLY place
+capabilities/             ← hand-authored skill + agent prose — the ONLY place
   skills/<name>.md          humans edit skill copy; carries {{limit|unit|tool}}
-  hermes/SKILLS.md          tokens resolved against the machine facts at build
+  agent/SKILLS.md           tokens resolved against the machine facts at build
 spmc-server/lib/{tools,specs,config}.js + package.json  ← machine facts (see above)
 
 # ── generated: DO NOT EDIT — run `npm run build` ─────────────────────────
@@ -44,9 +44,9 @@ TOOLS.md                  ← tool catalog
 .claude-plugin/plugin.json ← plugin manifest (version ← spmc-server/package.json)
 skills/<name>/SKILL.md    ← 13 Claude Code skills (tokens resolved)
 .mcp.json                 ← Claude Code plugin MCP declaration (${CLAUDE_PLUGIN_ROOT})
-hermes/CONTEXT.md         ← tool table injected between <!-- gen:tools --> markers
-hermes/SKILLS.md          ← Hermes skill triggers
-hermes/mcp-config.json    ← machine-local absolute path; built, NOT --check'd (see below)
+agent/CONTEXT.md          ← tool table injected between <!-- gen:tools --> markers
+agent/SKILLS.md           ← agent skill triggers
+agent/mcp-config.json     ← machine-local absolute path; built, NOT --check'd (see below)
 claude_desktop_config.json ← Claude Desktop manual-fallback config (npx)
 README.md                 ← tool tables injected between <!-- gen:tools --> markers
 
@@ -86,11 +86,11 @@ All secrets are env vars. The MCP server reads `process.env.*` at call time. Nev
 ### Single origin + generated distribution (BUILD-001)
 The runtime already had one origin (one dispatcher, one specs file). The *distribution surface* did not — the same tool names, limits, credential keys, and version were re-typed by hand into ~11 files and drifted (MCP configs in three divergent shapes, limit values copied not referenced, the version string disagreeing across three files). BUILD-001 gives every fact **one home** and *generates* everything downstream.
 
-- **Two source halves.** Machine facts live in runtime code — `spmc-server/lib/tools.js` (tool schemas), `lib/specs.js` (`PLATFORM_SPECS` limits), `lib/config.js` (`MEDIA_PROVIDERS`), and `package.json` (name/version/metadata). Prose lives once in `capabilities/` (skill copy + Hermes triggers). `build/generate.mjs` imports the runtime modules directly, so generated docs **cannot drift from what the server actually serves over MCP**.
+- **Two source halves.** Machine facts live in runtime code — `spmc-server/lib/tools.js` (tool schemas), `lib/specs.js` (`PLATFORM_SPECS` limits), `lib/config.js` (`MEDIA_PROVIDERS`), and `package.json` (name/version/metadata). Prose lives once in `capabilities/` (skill copy + agent triggers). `build/generate.mjs` imports the runtime modules directly, so generated docs **cannot drift from what the server actually serves over MCP**.
 - **Tokens bind prose to facts.** `capabilities/*.md` carry `{{limit:bluesky.text.max}}` → `300`, `{{unit:bluesky.text}}` → `graphemes`, `{{tool:bluesky_post}}` → validated tool name. Resolution is a 1:1 `PLATFORM_SPECS` object-path lookup with no aliases; any bad path / unknown tool / stray `{{` **fails the build**.
 - **The generator is the choke point**, so it enforces invariants for free: Agent-Skills name rules (≤64 chars, lowercase/digits/hyphens, no `claude`/`anthropic`), one version origin (`package.json` → `plugin.json` + the runtime `Server({ version })`, retiring the old `0.1.0` vs `0.1.0-alpha.1` split), and MCP-config uniformity (all three render from one `mcpConfig()` template, so the "same server, three shapes" defect can't recur).
 - **`build:check` is the authority.** It regenerates in memory and **fails on any difference** — a hand-edited generated file, or a tool/limit/credential added without rebuilding. Wired into CI (`.github/workflows/ci.yml`) and an opt-in pre-commit hook (`.githooks/pre-commit`, enable with `git config core.hooksPath .githooks`). Generated artifacts are committed (a fresh clone works without building) and pinned `eol=lf` via `.gitattributes` so CRLF conversion never reports spurious drift. The build adds **zero** dependencies.
-- **Two deliberate exceptions.** (1) `hermes/mcp-config.json` is built but **not** `--check`'d (`localOnly`): its only variable part is the machine's absolute install path — environment, not origin — so it can't be byte-stable across checkouts; its *shape* is still verified through the shared `mcpConfig()` template. (2) `.env.example` is hand-authored (its where-to-get-each-token onboarding prose lives in no origin) but build-checked for **completeness** — every key the server reads must be documented, else the build fails.
+- **Two deliberate exceptions.** (1) `agent/mcp-config.json` is built but **not** `--check`'d (`localOnly`): its only variable part is the machine's absolute install path — environment, not origin — so it can't be byte-stable across checkouts; its *shape* is still verified through the shared `mcpConfig()` template. (2) `.env.example` is hand-authored (its where-to-get-each-token onboarding prose lives in no origin) but build-checked for **completeness** — every key the server reads must be documented, else the build fails.
 
 Net effect on "adding a platform": one adapter + one `lib/specs.js` entry + one dispatcher case + one `capabilities/skills/<name>.md` — then `npm run build` regenerates the skill, tool tables, configs, and `.env.example` completeness check; nothing is hand-copied.
 

@@ -131,20 +131,23 @@ Restart Claude Desktop after editing the config. The `spmc` server appears in th
 
 ---
 
-## Hermes
+## Bring-Your-Own Agent (Hermes, OpenClaw, CLI agents)
 
-Hermes has its own self-contained integration pack in `hermes/`:
+Any LLM agent outside the Claude plugin ecosystem gets a self-contained,
+**generic** integration pack in `agent/` — an operating briefing, a skill-trigger
+map, and a default persona. Hermes is the reference instance; the same pack drives
+any BYO agent (point your own at these files).
 
 | File | Purpose |
 |------|---------|
-| `hermes/mcp-config.json` | Drop-in MCP server connection block |
-| `hermes/CONTEXT.md` | Full operational briefing: the full tool catalog (publishing, content-intelligence, queue, observability, media — generator-injected), return values, platform gotchas, credential loading |
-| `hermes/SKILLS.md` | Trigger → tool reference for every platform + queue management + multi-platform campaigns |
-| `hermes/persona.md` | Pre-publish checklist, voice/tone defaults, confirmation vs. autonomous behavior rules |
+| `agent/mcp-config.json` | Drop-in MCP server connection block |
+| `agent/CONTEXT.md` | Full operational briefing: the full tool catalog (publishing, content-intelligence, queue, observability, media — generator-injected), return values, platform gotchas, credential loading |
+| `agent/SKILLS.md` | Trigger → tool reference for every platform + queue management + multi-platform campaigns |
+| `agent/persona.md` | Pre-publish checklist, voice/tone defaults, confirmation vs. autonomous behavior rules (the default persona; override per agent) |
 
 **Connect:**
 
-Drop this into your Hermes MCP config (update the path to match your clone):
+Drop this into your agent's MCP config (update the path to match your clone):
 
 ```json
 {
@@ -157,12 +160,12 @@ Drop this into your Hermes MCP config (update the path to match your clone):
 }
 ```
 
-Or reference `hermes/mcp-config.json` directly if your Hermes setup supports file-based MCP configs.
+Or reference `agent/mcp-config.json` directly if your agent supports file-based MCP configs.
 
 **Onboarding:**  
-On first contact, point Hermes at `hermes/CONTEXT.md`. It's written to be read once and then operated from — no external files required during a session. `hermes/SKILLS.md` gives Hermes its trigger mappings; `hermes/persona.md` defines the publishing persona and what requires user confirmation.
+On first contact, point the agent at `agent/CONTEXT.md`. It's written to be read once and then operated from — no external files required during a session. `agent/SKILLS.md` gives the agent its trigger mappings; `agent/persona.md` defines the publishing persona and what requires user confirmation.
 
-**What Hermes operates autonomously (no confirmation needed):**
+**What the agent operates autonomously (no confirmation needed):**
 - Reading the queue (`queue_list`)
 - Checking TikTok publish status
 - Adding to queue without dispatching
@@ -191,6 +194,8 @@ Any MCP client supporting stdio transport connects with a standard config block:
 
 Server name: `spmc`. All SPMC tools are listed on `tools/list` with full JSON Schema definitions.
 
+If your client is itself an **agent** (not just a raw tool caller), give it the same briefing as any BYO agent — `agent/CONTEXT.md` + `agent/SKILLS.md` — so it knows the platform gotchas, return shapes, and trigger phrases, not just the raw tool list.
+
 **Credentials:** three options in priority order:
 1. `~/.claude/spmc.env` — file-based, auto-loaded on startup
 2. `spmc-server/.env` — local dev fallback
@@ -218,10 +223,11 @@ npm install -g .           # install from local clone
 npm install -g spmc
 ```
 
-**Run:**
+**Run** (two bins):
 ```bash
-spmc                       # MCP server (stdio)
-npx -y spmc                # without global install
+spmc                       # MCP server only (stdio)
+spmc-start                 # MCP server + scheduler daemon (auto-dispatch + auto-analytics)
+npx -y spmc                # MCP server, without a global install
 ```
 
 **Config block (any client):**
@@ -234,17 +240,14 @@ npx -y spmc                # without global install
 
 Credentials load from `~/.claude/spmc.env` automatically. No path hardcoding needed.
 
-**Scheduler** is not started by the npm bin (`run.js`). Run it separately if needed:
-```bash
-node $(npm root -g)/spmc/scheduler/index.js
-```
-Or use `start.js` as the entry point:
+**Scheduler:** the `spmc` bin runs the MCP server only. For auto-dispatch of
+scheduled posts **and** the ~24h auto-analytics follow-up to fire, use the
+**`spmc-start`** bin (MCP server + scheduler daemon) as the entry point instead:
 ```json
-{
-  "command": "node",
-  "args": ["$(npm root -g)/spmc/start.js"]
-}
+{ "command": "spmc-start" }
 ```
+Without a global install: `{ "command": "npx", "args": ["-y", "-p", "spmc", "spmc-start"] }`.
+The scheduler logs to `~/.claude/spmc-scheduler.log` (that directory must exist).
 
 ---
 
@@ -254,12 +257,12 @@ Or use `start.js` as the entry point:
 |---------|------------|--------|-------------|
 | Claude Code plugin | `.mcp.json` → `run.js` | `skills/` (auto-loaded) | `.mcp.json` `${VAR}` → env |
 | Claude Desktop | `claude_desktop_config.json` | — | `~/.claude/spmc.env` |
-| Hermes | `hermes/mcp-config.json` | `hermes/SKILLS.md` | `~/.claude/spmc.env` or env |
-| OpenClaw / other | stdio `node run.js` | — | `~/.claude/spmc.env` or env |
+| BYO agent (Hermes, etc.) | `agent/mcp-config.json` | `agent/SKILLS.md` | `~/.claude/spmc.env` or env |
+| OpenClaw / other | stdio `node run.js` | `agent/SKILLS.md` (if agent) | `~/.claude/spmc.env` or env |
 | CLI / npm | `npx spmc` | — | `~/.claude/spmc.env` or env |
 
-**`run.js`** — MCP server only  
-**`start.js`** — MCP server + scheduler daemon (use this for always-on surfaces like Claude Desktop)
+**`run.js`** (bin: `spmc`) — MCP server only  
+**`start.js`** (bin: `spmc-start`) — MCP server + scheduler daemon (use this for always-on surfaces like Claude Desktop)
 
 ---
 
@@ -373,7 +376,7 @@ claude_desktop_config.json  Drop-in Claude Desktop config
 .env.example              All credential keys + multi-account examples
 
 skills/                   Claude Code SKILL.md files (13 total: 9 publishing + 4 pipeline)
-hermes/                   Hermes integration pack
+agent/                    Bring-your-own-agent integration pack (Hermes, OpenClaw, …)
   mcp-config.json
   CONTEXT.md
   SKILLS.md

@@ -2,7 +2,7 @@
 //
 // Consumed by index.js (served over ListTools at runtime) AND by the build
 // generator (build/generate.mjs) to emit skill docs, README tables, and the
-// Hermes pack. Adding or changing a tool here is the one edit; downstream docs
+// agent pack. Adding or changing a tool here is the one edit; downstream docs
 // are generated from this array + lib/specs.js — never hand-maintained.
 
 const DRY_RUN_PROP = { type: 'boolean', description: 'If true, validate and preview the post without publishing. Records a dry_run audit entry.' };

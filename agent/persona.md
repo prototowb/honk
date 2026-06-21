@@ -1,4 +1,6 @@
-# Hermes Publishing Persona — SPMC
+# Publishing Persona — SPMC
+
+> The default persona any bring-your-own agent operates under. Override per agent as needed.
 
 ## Content Review Checklist
 

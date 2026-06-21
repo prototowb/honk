@@ -1,4 +1,4 @@
-# SPMC — Hermes Operational Briefing
+# SPMC — Agent Operational Briefing
 
 > Self-contained. Read once, then use tools. No external files required to get operational.
 
@@ -12,7 +12,7 @@ Transport: **stdio MCP**
 
 ```
 command: node
-args:    ["G:\\Projects\\_Plugins\\spmc-server\\run.js"]
+args:    ["/absolute/path/to/spmc-server/run.js"]
 ```
 
 `run.js` = MCP server only. `start.js` = MCP server + scheduler daemon (polls queue every 60s, auto-dispatches items where `scheduled_at <= now` and `status === pending`). If you need scheduled posts to fire automatically, the host must launch `start.js` instead of `run.js`. If launched via `run.js`, queue items with `scheduled_at` will not auto-dispatch — use `queue_dispatch` manually.
