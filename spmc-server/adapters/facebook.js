@@ -4,13 +4,14 @@ function env(key, account = '') {
   return account ? process.env[`${key}__${account.toUpperCase()}`] : process.env[key];
 }
 
-export async function post(message, imageUrl = null, account = '') {
+export async function post(message, imageUrl = null, account = '', opts = {}) {
   const pageId      = env('FACEBOOK_PAGE_ID', account);
   const accessToken = env('FACEBOOK_ACCESS_TOKEN', account);
 
   const endpoint = imageUrl ? `${BASE}/${pageId}/photos` : `${BASE}/${pageId}/feed`;
+  // alt_text_custom is a photo field, so it only applies to the /photos path.
   const body     = imageUrl
-    ? { url: imageUrl, caption: message, access_token: accessToken }
+    ? { url: imageUrl, caption: message, ...(opts.alt_text ? { alt_text_custom: opts.alt_text } : {}), access_token: accessToken }
     : { message, access_token: accessToken };
 
   const res = await fetch(endpoint, {
@@ -20,6 +21,20 @@ export async function post(message, imageUrl = null, account = '') {
   });
 
   if (!res.ok) throw new Error(`Facebook post ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+// Post a comment on a published Page post (ALPHA-015 first-comment). Called
+// best-effort AFTER the post is live, so a failure is reported but never marks
+// the publish itself failed.
+export async function comment(postId, message, account = '') {
+  const accessToken = env('FACEBOOK_ACCESS_TOKEN', account);
+  const res = await fetch(`${BASE}/${postId}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, access_token: accessToken }),
+  });
+  if (!res.ok) throw new Error(`Facebook comment ${res.status}: ${await res.text()}`);
   return res.json();
 }
 

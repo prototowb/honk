@@ -15,6 +15,10 @@ export const PLATFORM_SPECS = {
     label: 'Instagram',
     text:  { field: 'caption', max: 2200, unit: 'chars', required: true },
     media: { field: 'image_url', kind: 'image', required: true, carousel: { field: 'image_urls', min: 2, max: 10 } },
+    // Image alt text (ALPHA-014) via the /media container `alt_text` field; a
+    // first comment (ALPHA-015) via the /{media}/comments edge after publish.
+    altText: true,
+    firstComment: true,
     credentials: ['INSTAGRAM_USER_ID', 'INSTAGRAM_ACCESS_TOKEN'],
   },
   tiktok: {
@@ -27,12 +31,19 @@ export const PLATFORM_SPECS = {
     label: 'Facebook',
     text:  { field: 'message', max: 63206, unit: 'chars', required: true },
     media: { field: 'image_url', kind: 'image', required: false },
+    // Photo alt text (ALPHA-014) via the /photos `alt_text_custom` field; a first
+    // comment (ALPHA-015) via the /{post}/comments edge after publish.
+    altText: true,
+    firstComment: true,
     credentials: ['FACEBOOK_PAGE_ID', 'FACEBOOK_ACCESS_TOKEN'],
   },
   threads: {
     label: 'Threads',
     text:  { field: 'text', max: 500, unit: 'chars', required: true },
     media: { field: 'image_url', kind: 'image', required: false },
+    // Image alt text (ALPHA-014) via the IMAGE container `alt_text` param.
+    // Unverified against the live API (no Threads credentials yet).
+    altText: true,
     credentials: ['THREADS_USER_ID', 'THREADS_ACCESS_TOKEN'],
   },
   bluesky: {

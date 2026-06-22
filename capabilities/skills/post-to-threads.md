@@ -40,7 +40,11 @@ Image post:
 threads_post(text: "<post text>", image_url: "<public image URL>")
 ```
 
-Max {{limit:threads.text.max}} characters for text.
+Max {{limit:threads.text.max}} characters for text. On image posts, add **`alt_text`** — an accessibility description of the image — by default.
+
+```
+threads_post(text, image_url, alt_text: "<description>")
+```
 
 ### Preview before posting (optional)
 

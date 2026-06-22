@@ -4,14 +4,19 @@ function env(key, account = '') {
   return account ? process.env[`${key}__${account.toUpperCase()}`] : process.env[key];
 }
 
-export async function post(imageUrl, caption, account = '') {
+export async function post(imageUrl, caption, account = '', opts = {}) {
   const igUserId    = env('INSTAGRAM_USER_ID', account);
   const accessToken = env('INSTAGRAM_ACCESS_TOKEN', account);
 
   const containerRes = await fetch(`${BASE}/${igUserId}/media`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image_url: imageUrl, caption, access_token: accessToken }),
+    body: JSON.stringify({
+      image_url: imageUrl,
+      caption,
+      ...(opts.alt_text ? { alt_text: opts.alt_text } : {}),
+      access_token: accessToken,
+    }),
   });
   if (!containerRes.ok)
     throw new Error(`IG container ${containerRes.status}: ${await containerRes.text()}`);
@@ -32,16 +37,23 @@ export async function post(imageUrl, caption, account = '') {
 // Carousel (2–10 images) via the Graph API three-step flow: create one child
 // container per image (is_carousel_item), then a CAROUSEL parent container
 // holding the children + caption, then publish the parent.
-export async function postCarousel(imageUrls, caption, account = '') {
+export async function postCarousel(imageUrls, caption, account = '', opts = {}) {
   const igUserId    = env('INSTAGRAM_USER_ID', account);
   const accessToken = env('INSTAGRAM_ACCESS_TOKEN', account);
+  const altTexts    = Array.isArray(opts.alt_texts) ? opts.alt_texts : [];
 
   const children = [];
-  for (const imageUrl of imageUrls) {
+  for (let i = 0; i < imageUrls.length; i++) {
+    const imageUrl = imageUrls[i];
     const childRes = await fetch(`${BASE}/${igUserId}/media`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image_url: imageUrl, is_carousel_item: true, access_token: accessToken }),
+      body: JSON.stringify({
+        image_url: imageUrl,
+        is_carousel_item: true,
+        ...(altTexts[i] ? { alt_text: altTexts[i] } : {}),
+        access_token: accessToken,
+      }),
     });
     if (!childRes.ok)
       throw new Error(`IG carousel child ${childRes.status}: ${await childRes.text()}`);
@@ -67,6 +79,21 @@ export async function postCarousel(imageUrls, caption, account = '') {
     throw new Error(`IG carousel publish ${publishRes.status}: ${await publishRes.text()}`);
 
   return { ...(await publishRes.json()), children: children.length };
+}
+
+// Post a comment on a published media item (ALPHA-015 first-comment) — e.g. to
+// keep hashtags or a link out of the caption. Needs the instagram_manage_comments
+// permission. Called best-effort AFTER the media is live, so a failure here is
+// reported but never marks the publish itself failed.
+export async function comment(mediaId, message, account = '') {
+  const accessToken = env('INSTAGRAM_ACCESS_TOKEN', account);
+  const res = await fetch(`${BASE}/${mediaId}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, access_token: accessToken }),
+  });
+  if (!res.ok) throw new Error(`IG comment ${res.status}: ${await res.text()}`);
+  return res.json();
 }
 
 // Account profile: handle + display name + avatar URL. Read-only; used for

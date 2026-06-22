@@ -36,11 +36,11 @@ _29 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 |------|----------|----------|----------------|-------------|
 | `x_post_tweet` | `text` (string) | `account` (string), `dry_run` (boolean) | 280 chars | Post a single tweet to X (Twitter). Max 280 characters. |
 | `x_post_thread` | `tweets` (array) | `account` (string), `dry_run` (boolean) | — | Post a thread of tweets to X. Each array item is one tweet, chained as replies. |
-| `instagram_post` | `caption` (string) | `image_url` (string), `image_urls` (array), `account` (string), `dry_run` (boolean) | 2200 chars | Post to Instagram. Provide image_url for a single image, OR image_urls (2–10 public URLs) for a carousel. Requires publicly accessible image URL(s). |
+| `instagram_post` | `caption` (string) | `image_url` (string), `image_urls` (array), `alt_text` (string), `alt_texts` (array), `first_comment` (string), `account` (string), `dry_run` (boolean) | 2200 chars | Post to Instagram. Provide image_url for a single image, OR image_urls (2–10 public URLs) for a carousel. Requires publicly accessible image URL(s). |
 | `tiktok_post_video` | `video_url` (string), `caption` (string) | `privacy_level` (string), `account` (string), `dry_run` (boolean) | 2200 chars | Post a video to TikTok (PULL_FROM_URL). Until your app passes audit, posts land as private/self-only regardless of privacy_level. |
 | `tiktok_check_publish_status` | `publish_id` (string) | `account` (string) | — | Check the async publish status of a TikTok video post. |
-| `facebook_post` | `message` (string) | `image_url` (string), `account` (string), `dry_run` (boolean) | 63206 chars | Post to a Facebook Page feed. Optionally attach a public image URL to post as a photo. |
-| `threads_post` | `text` (string) | `image_url` (string), `account` (string), `dry_run` (boolean) | 500 chars | Post text (optionally with an image) to Threads. |
+| `facebook_post` | `message` (string) | `image_url` (string), `alt_text` (string), `first_comment` (string), `account` (string), `dry_run` (boolean) | 63206 chars | Post to a Facebook Page feed. Optionally attach a public image URL to post as a photo. |
+| `threads_post` | `text` (string) | `image_url` (string), `alt_text` (string), `account` (string), `dry_run` (boolean) | 500 chars | Post text (optionally with an image) to Threads. |
 | `bluesky_post` | `text` (string) | `account` (string), `dry_run` (boolean) | 300 graphemes | Post text to Bluesky via the AT Protocol. No OAuth — just an app password. |
 
 ### Content intelligence

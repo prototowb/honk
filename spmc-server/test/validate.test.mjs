@@ -68,3 +68,52 @@ test('missing required text is an error', () => {
 test('unknown platform is rejected', () => {
   assert.equal(validate('myspace', { text: 'hi' }).ok, false);
 });
+
+// ── alt text (ALPHA-014) ────────────────────────────────────────────────────
+
+test('alt_text is accepted on a supported platform with an image', () => {
+  assert.equal(validate('instagram', { caption: 'hi', image_url: 'https://x/y.jpg', alt_text: 'a cat' }).ok, true);
+  assert.equal(validate('facebook',  { message: 'hi', image_url: 'https://x/y.jpg', alt_text: 'a cat' }).ok, true);
+  assert.equal(validate('threads',   { text: 'hi', image_url: 'https://x/y.jpg', alt_text: 'a cat' }).ok, true);
+});
+
+test('alt_text needs an image to attach to', () => {
+  const v = validate('facebook', { message: 'hi', alt_text: 'a cat' });
+  assert.equal(v.ok, false);
+  assert.match(v.errors.join(), /alt_text needs an image/);
+});
+
+test('alt_text is rejected on a platform that does not support it', () => {
+  const v = validate('bluesky', { text: 'hi', alt_text: 'a cat' });
+  assert.equal(v.ok, false);
+  assert.match(v.errors.join(), /does not support image alt text/);
+});
+
+test('single alt_text on a carousel is rejected in favor of alt_texts', () => {
+  const v = validate('instagram', { caption: 'hi', image_urls: ['https://x/1.jpg', 'https://x/2.jpg'], alt_text: 'one' });
+  assert.equal(v.ok, false);
+  assert.match(v.errors.join(), /use "alt_texts"/);
+});
+
+test('alt_texts must match the number of carousel images 1:1', () => {
+  const ok = validate('instagram', { caption: 'hi', image_urls: ['https://x/1.jpg', 'https://x/2.jpg'], alt_texts: ['a', 'b'] });
+  assert.equal(ok.ok, true);
+  const bad = validate('instagram', { caption: 'hi', image_urls: ['https://x/1.jpg', 'https://x/2.jpg'], alt_texts: ['a'] });
+  assert.equal(bad.ok, false);
+  assert.match(bad.errors.join(), /match 1:1/);
+});
+
+// ── first comment (ALPHA-015) ───────────────────────────────────────────────
+
+test('first_comment is accepted on instagram and facebook', () => {
+  assert.equal(validate('instagram', { caption: 'hi', image_url: 'https://x/y.jpg', first_comment: '#tags' }).ok, true);
+  assert.equal(validate('facebook',  { message: 'hi', first_comment: 'see link' }).ok, true);
+});
+
+test('first_comment is rejected where there is no comments edge', () => {
+  for (const p of [['threads', { text: 'hi' }], ['bluesky', { text: 'hi' }], ['x', { text: 'hi' }]]) {
+    const v = validate(p[0], { ...p[1], first_comment: 'x' });
+    assert.equal(v.ok, false, `${p[0]} should reject first_comment`);
+    assert.match(v.errors.join(), /does not support a first comment/);
+  }
+});

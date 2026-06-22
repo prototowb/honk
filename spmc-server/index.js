@@ -80,7 +80,13 @@ async function doPublish(platform, content, account, dryRun) {
 
   if (dryRun) {
     auditRecord({ platform, account: account || null, source: 'direct', status: 'dry_run', content_hash: hashContent(content) });
-    return `DRY RUN — ${v.label} payload is valid; nothing was published.${warn}`;
+    const clip = (s) => { const t = String(s); return t.length > 60 ? t.slice(0, 57) + '…' : t; };
+    const extras = [];
+    if (content.alt_text)  extras.push(`alt text: "${clip(content.alt_text)}"`);
+    if (Array.isArray(content.alt_texts) && content.alt_texts.length) extras.push(`${content.alt_texts.length} per-slide alt texts`);
+    if (content.first_comment) extras.push(`first comment: "${clip(content.first_comment)}"`);
+    const extraNote = extras.length ? `\nWould also set — ${extras.join('; ')}.` : '';
+    return `DRY RUN — ${v.label} payload is valid; nothing was published.${extraNote}${warn}`;
   }
 
   const { summary } = await publishAudited(platform, content, account, { source: 'direct' });
@@ -109,6 +115,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const igContent = { caption: args.caption };
         if (Array.isArray(args.image_urls) && args.image_urls.length) igContent.image_urls = args.image_urls;
         else igContent.image_url = args.image_url;
+        if (args.alt_text)      igContent.alt_text = args.alt_text;
+        if (Array.isArray(args.alt_texts)) igContent.alt_texts = args.alt_texts;
+        if (args.first_comment) igContent.first_comment = args.first_comment;
         return ok(await doPublish('instagram', igContent, args.account ?? '', args.dry_run));
       }
       case 'tiktok_post_video':
@@ -117,10 +126,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const r = await tiktok.checkStatus(args.publish_id, args.account ?? '');
         return ok(`TikTok publish status: ${r.status}${r.fail_reason ? ` (reason: ${r.fail_reason})` : ''}`);
       }
-      case 'facebook_post':
-        return ok(await doPublish('facebook', { message: args.message, image_url: args.image_url }, args.account ?? '', args.dry_run));
-      case 'threads_post':
-        return ok(await doPublish('threads', { text: args.text, image_url: args.image_url }, args.account ?? '', args.dry_run));
+      case 'facebook_post': {
+        const fbContent = { message: args.message, image_url: args.image_url };
+        if (args.alt_text)      fbContent.alt_text = args.alt_text;
+        if (args.first_comment) fbContent.first_comment = args.first_comment;
+        return ok(await doPublish('facebook', fbContent, args.account ?? '', args.dry_run));
+      }
+      case 'threads_post': {
+        const thContent = { text: args.text, image_url: args.image_url };
+        if (args.alt_text) thContent.alt_text = args.alt_text;
+        return ok(await doPublish('threads', thContent, args.account ?? '', args.dry_run));
+      }
       case 'bluesky_post':
         return ok(await doPublish('bluesky', { text: args.text }, args.account ?? '', args.dry_run));
 

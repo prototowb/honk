@@ -4,14 +4,14 @@ function env(key, account = '') {
   return account ? process.env[`${key}__${account.toUpperCase()}`] : process.env[key];
 }
 
-export async function post(text, imageUrl = null, account = '') {
+export async function post(text, imageUrl = null, account = '', opts = {}) {
   const userId      = env('THREADS_USER_ID', account);
   const accessToken = env('THREADS_ACCESS_TOKEN', account);
 
   const containerParams = new URLSearchParams({
     access_token: accessToken,
     ...(imageUrl
-      ? { media_type: 'IMAGE', image_url: imageUrl, text }
+      ? { media_type: 'IMAGE', image_url: imageUrl, text, ...(opts.alt_text ? { alt_text: opts.alt_text } : {}) }
       : { media_type: 'TEXT', text }),
   });
 
