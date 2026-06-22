@@ -5,10 +5,18 @@
 ## Where We Are
 
 **`v0.3.0-alpha` is on `main`.** `development` is the default/integration branch.
-This session opened **`feature/PIPELINE-hardening`** off `development` — a
-build / install / distribution pipeline hardening pass, committed there in logical
-chunks, **not yet merged**. The full review with statuses lives in
-**`PIPELINE_REVIEW.md`** (10 findings).
+
+**Merged into `development` (pushed, CI green):** the **PIPELINE-hardening** pass
+(see `PIPELINE_REVIEW.md`, 10 findings) + **guided mode** + a one-line **audit
+flake fix** (`recentDuplicate` window made exclusive — the new development CI gate
+caught a same-millisecond race on its first run).
+
+**Current branch — `feature/ALPHA-014-015-alt-text-first-comment`** (off
+`development`, committed, **not yet merged):** image alt-text + first-comment (see
+"What Shipped"). Plus **`INBOX_FEATURE_PLAN.md`** drafted (INBOX-001, plan only).
+
+The pipeline-hardening details below are retained for reference (item 1–9); the
+alt-text/first-comment work is item 10.
 
 ## What Shipped This Session (`feature/PIPELINE-hardening`)
 
@@ -47,11 +55,32 @@ chunks, **not yet merged**. The full review with statuses lives in
    at a time (skipping brand-kit pre-fills) instead of one big command — the same
    spec a future web-UI form renders. Default one-shot flow unchanged. 5 unit + 1 smoke.
 
-**State:** all green — **70 unit + 23-check smoke + `build:check` + `pack:smoke` +
+10. **Image alt-text (ALPHA-014) + first-comment (ALPHA-015)** — *current branch,
+    not merged.* API fields confirmed against the Meta/Threads docs first.
+    **alt_text** (+ `alt_texts[]` per carousel slide) on IG (`/media`), FB
+    (`alt_text_custom`), Threads (container param, unverified live) — threaded into
+    the publish payload, validated, previewed in `dry_run`. **first_comment** on
+    IG/FB via new `instagram.comment`/`facebook.comment` — **best-effort AFTER** a
+    confirmed+audited publish, so a comment failure never marks the live post
+    failed or blinds `duplicate_check`. X/Bluesky alt-text deferred (text-only
+    adapters — no media path). **Live-unverified — pending a user-approved IG/FB
+    test.**
+
+**State:** all green — **77 unit + 25-check smoke + `build:check` + `pack:smoke` +
 the `prepublishOnly` chain**. Tools **29**; templates 5; runtime deps 2.
 
 ## NEXT — open items
 
+- **Live-verify alt-text + first-comment (IG/FB)** — built + dry-run-verified but
+  **not yet live-tested** (no unilateral publishing — needs the user's go-ahead, à
+  la BETA-010). Confirm: IG `alt_text` accepted on a real `/media` create; FB
+  `alt_text_custom` on a photo; an IG `first_comment` posts (needs
+  `instagram_manage_comments`). Then merge the branch into `development`.
+- **INBOX-001 (comment-keyword → file/link)** — **plan drafted**
+  (`INBOX_FEATURE_PLAN.md`), not built. Decide: start at **Phase 0** (public reply,
+  ships on current architecture, no Meta App Review) vs hold for **DM** (Phase 1,
+  needs App Review + `*_manage_messages`); IG-only or IG+FB; file = hosted link
+  (reuse `media_upload`) vs true attachment.
 - **Interactivity — Layer 1 SHIPPED (guided mode, see #9 above).** Deferred:
   **Layer 2** (persist in-progress briefs by extending the drafts/queue store so a
   guided session resumes and a UI can load/save partial briefs) and **Layer 3**
@@ -61,9 +90,9 @@ the `prepublishOnly` chain**. Tools **29**; templates 5; runtime deps 2.
   `npx` surface is advertised but not live. Settle the name (publish `spmc` vs a
   scoped `@owner/spmc`), then publish — already gated by `prepublishOnly`; consider
   a tag-triggered publish job.
-- **Pre-existing paused tracks:** ALPHA-014 alt-text / 015 first-comment / 016
-  delete (touch live adapters — delete is destructive, gated on scope confirm);
-  Mastodon (017) / LinkedIn (018) creds; X 402 credits; BETA-011 UI-planning stop-line.
+- **Pre-existing paused tracks:** ALPHA-016 delete/unpublish (destructive — gated
+  on scope confirm); Mastodon (017) / LinkedIn (018) creds; X 402 credits;
+  BETA-011 UI-planning stop-line.
 
 ## Conventions In Force
 
