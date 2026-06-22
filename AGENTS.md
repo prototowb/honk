@@ -83,6 +83,7 @@ Before starting ANY development task, verify:
 4. **ALWAYS follow branch naming**: `feature/TICKET-XXX-description` or `bugfix/TICKET-XXX-description`
 5. **ALWAYS follow commit format**: `type(scope): subject` (see BRANCHING.md)
 6. **ALWAYS read existing files before modifying** - use Read tool first
+7. **ALWAYS document a feature's permission/scope requirements for user setup** - any feature that depends on a platform/API permission (OAuth scope, app-review item, account tier) must list what the user's token/app needs, where they configure it. Put the scopes in `.env.example` next to the relevant credential **and** in the feature's skill. Credential *presence* (a key is set) is not the same as the right *scopes* - a token can publish but lack, say, comment permission, so the feature fails at runtime. Document the dependency so setup is self-serve.
 
 ### Agent Self-Configuration Protocol
 

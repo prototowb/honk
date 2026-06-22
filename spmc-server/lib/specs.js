@@ -31,8 +31,11 @@ export const PLATFORM_SPECS = {
     label: 'Facebook',
     text:  { field: 'message', max: 63206, unit: 'chars', required: true },
     media: { field: 'image_url', kind: 'image', required: false },
-    // Photo alt text (ALPHA-014) via the /photos `alt_text_custom` field; a first
-    // comment (ALPHA-015) via the /{post}/comments edge after publish.
+    // Photo alt text (ALPHA-014) via the /photos `alt_text_custom` field —
+    // UNVERIFIED live (it did not read back off the photo in testing; may need a
+    // fuller-scoped token or a two-step set). First comment (ALPHA-015) via the
+    // /{post}/comments edge after publish — needs the `pages_manage_engagement`
+    // scope (a token without it fails the comment soft; the post stays live).
     altText: true,
     firstComment: true,
     credentials: ['FACEBOOK_PAGE_ID', 'FACEBOOK_ACCESS_TOKEN'],

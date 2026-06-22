@@ -11,9 +11,9 @@
 flake fix** (`recentDuplicate` window made exclusive — the new development CI gate
 caught a same-millisecond race on its first run).
 
-**Current branch — `feature/ALPHA-014-015-alt-text-first-comment`** (off
-`development`, committed, **not yet merged):** image alt-text + first-comment (see
-"What Shipped"). Plus **`INBOX_FEATURE_PLAN.md`** drafted (INBOX-001, plan only).
+**Also merged this session:** **alt-text + first-comment** (ALPHA-014/015) —
+live-tested on the brand, IG verified, FB caveats flagged (item 10). Plus
+**`INBOX_FEATURE_PLAN.md`** drafted (INBOX-001, plan only, not built).
 
 The pipeline-hardening details below are retained for reference (item 1–9); the
 alt-text/first-comment work is item 10.
@@ -63,19 +63,24 @@ alt-text/first-comment work is item 10.
     IG/FB via new `instagram.comment`/`facebook.comment` — **best-effort AFTER** a
     confirmed+audited publish, so a comment failure never marks the live post
     failed or blinds `duplicate_check`. X/Bluesky alt-text deferred (text-only
-    adapters — no media path). **Live-unverified — pending a user-approved IG/FB
-    test.**
+    adapters — no media path). **Live-tested on @protocode_ / protocode:** IG
+    alt-text + first-comment **verified**; the **best-effort design proven** (an FB
+    comment-permission failure left the post live). **FB alt-text UNVERIFIED**
+    (didn't read back — flagged like Threads); **FB first-comment needs the
+    `pages_manage_engagement` scope** (IG needs `instagram_manage_comments`). New
+    convention: features document their permission scopes (AGENTS.md rule #7 +
+    `.env.example`).
 
 **State:** all green — **77 unit + 25-check smoke + `build:check` + `pack:smoke` +
 the `prepublishOnly` chain**. Tools **29**; templates 5; runtime deps 2.
 
 ## NEXT — open items
 
-- **Live-verify alt-text + first-comment (IG/FB)** — built + dry-run-verified but
-  **not yet live-tested** (no unilateral publishing — needs the user's go-ahead, à
-  la BETA-010). Confirm: IG `alt_text` accepted on a real `/media` create; FB
-  `alt_text_custom` on a photo; an IG `first_comment` posts (needs
-  `instagram_manage_comments`). Then merge the branch into `development`.
+- **FB re-verify pending a modified token (user will provide):** the current Page
+  token lacks `pages_manage_engagement` (first comment failed soft) and FB alt-text
+  (`alt_text_custom`) didn't read back. With a fuller-scoped token, re-test FB
+  first-comment + alt-text; if alt-text still doesn't persist, try a two-step set
+  (create photo → POST `alt_text_custom` to the photo node).
 - **INBOX-001 (comment-keyword → file/link)** — **plan drafted**
   (`INBOX_FEATURE_PLAN.md`), not built. Decide: start at **Phase 0** (public reply,
   ships on current architecture, no Meta App Review) vs hold for **DM** (Phase 1,

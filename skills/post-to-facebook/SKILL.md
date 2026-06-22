@@ -44,8 +44,8 @@ facebook_post(message: "<caption>", image_url: "<public image URL>")
 
 ### Accessibility & first comment
 
-- **`alt_text`** — accessibility description for an attached photo (only applies when `image_url` is set; it's a photo field). Offer it by default on photo posts.
-- **`first_comment`** — text auto-posted as the first comment right after publishing (e.g. a link or context kept out of the post body). **Best-effort**: if it fails, the post stays live and you'll see a `⚠ First comment failed` note — never repost because of it.
+- **`alt_text`** — accessibility description for an attached photo (only when `image_url` is set; it's a photo field). **Unverified live** — it didn't read back off the photo in testing; send it, but don't promise it stuck.
+- **`first_comment`** — text auto-posted as the first comment right after publishing (e.g. a link or context kept out of the post body). **Needs the `pages_manage_engagement` scope** on the Page token. **Best-effort**: if the scope is missing (or it otherwise fails), the post stays live and you'll see a `⚠ First comment failed` note — never repost because of it.
 
 ```
 facebook_post(message, image_url, alt_text: "<description>", first_comment: "<link or note>")

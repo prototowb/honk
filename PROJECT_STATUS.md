@@ -100,7 +100,7 @@ stay gated on a scope confirmation before build.
 | ALPHA-016 | **Delete / unpublish** a published post | Destructive — confirm scope + which platforms |
 | INBOX-001 | **Comment-keyword → DM file/link** (ManyChat-style automation) | Plan drafted (`INBOX_FEATURE_PLAN.md`); gated on DM-API app-review + comment-ingestion decision |
 
-**ALPHA-014 alt-text + ALPHA-015 first-comment — built** on `feature/ALPHA-014-015-alt-text-first-comment` (dry-run-verified; live-unverified pending a user-approved IG/FB test). Scope landed: alt-text on IG/FB/Threads (X/Bluesky are text-only — no media path — a separate lift); first-comment on IG/FB.
+**ALPHA-014 alt-text + ALPHA-015 first-comment — shipped + merged** to `development` (live-tested on @protocode_ / protocode). IG alt-text + first-comment **verified**; best-effort design **proven** (FB comment-permission failure left the post live). **FB alt-text UNVERIFIED** (no read-back — flagged like Threads); **FB first-comment needs `pages_manage_engagement`** (IG needs `instagram_manage_comments`) — re-verify pending a user-supplied modified token. Scope: X/Bluesky alt-text deferred (text-only adapters). New convention: features document permission scopes (AGENTS.md rule #7 + `.env.example`).
 | ALPHA-017 | **Mastodon** adapter (new platform — easy AT-style API) | Needs your instance + app token |
 | ALPHA-018 | **LinkedIn** adapter (new platform — strategic, the Taplio space) | Needs creds + API access-tier decision |
 

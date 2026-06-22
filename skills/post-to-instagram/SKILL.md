@@ -42,7 +42,7 @@ instagram_post(image_url: "<public URL>", caption: "<caption>")
 ### Accessibility & first comment
 
 - **`alt_text`** — describe the image for screen readers (and reach). One sentence on what's in the image and any text it contains. For a **carousel**, pass `alt_texts` instead: one entry per `image_urls` slide, in order. Offer alt text by default; it's an accessibility win and costs nothing.
-- **`first_comment`** — text auto-posted as the first comment right after publishing, to keep hashtags or a link out of a clean caption. It's **best-effort**: if it fails (e.g. the token lacks the comments permission), the post stays live and you'll see a `⚠ First comment failed` note — never repost because of it.
+- **`first_comment`** — text auto-posted as the first comment right after publishing, to keep hashtags or a link out of a clean caption. **Needs the `instagram_manage_comments` scope** on the token. It's **best-effort**: if the scope is missing (or it otherwise fails), the post stays live and you'll see a `⚠ First comment failed` note — never repost because of it.
 
 ```
 instagram_post(image_url, caption, alt_text: "<description>", first_comment: "#tag1 #tag2")
