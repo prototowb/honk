@@ -5,10 +5,18 @@
 ## Where We Are
 
 **`v0.3.0-alpha` is on `main`.** `development` is the default/integration branch.
-This session opened **`feature/PIPELINE-hardening`** off `development` — a
-build / install / distribution pipeline hardening pass, committed there in logical
-chunks, **not yet merged**. The full review with statuses lives in
-**`PIPELINE_REVIEW.md`** (10 findings).
+
+**Merged into `development` (pushed, CI green):** the **PIPELINE-hardening** pass
+(see `PIPELINE_REVIEW.md`, 10 findings) + **guided mode** + a one-line **audit
+flake fix** (`recentDuplicate` window made exclusive — the new development CI gate
+caught a same-millisecond race on its first run).
+
+**Also merged this session:** **alt-text + first-comment** (ALPHA-014/015) —
+live-tested on the brand, IG verified, FB caveats flagged (item 10). Plus
+**`INBOX_FEATURE_PLAN.md`** drafted (INBOX-001, plan only, not built).
+
+The pipeline-hardening details below are retained for reference (item 1–9); the
+alt-text/first-comment work is item 10.
 
 ## What Shipped This Session (`feature/PIPELINE-hardening`)
 
@@ -47,11 +55,37 @@ chunks, **not yet merged**. The full review with statuses lives in
    at a time (skipping brand-kit pre-fills) instead of one big command — the same
    spec a future web-UI form renders. Default one-shot flow unchanged. 5 unit + 1 smoke.
 
-**State:** all green — **70 unit + 23-check smoke + `build:check` + `pack:smoke` +
+10. **Image alt-text (ALPHA-014) + first-comment (ALPHA-015)** — *current branch,
+    not merged.* API fields confirmed against the Meta/Threads docs first.
+    **alt_text** (+ `alt_texts[]` per carousel slide) on IG (`/media`), FB
+    (`alt_text_custom`), Threads (container param, unverified live) — threaded into
+    the publish payload, validated, previewed in `dry_run`. **first_comment** on
+    IG/FB via new `instagram.comment`/`facebook.comment` — **best-effort AFTER** a
+    confirmed+audited publish, so a comment failure never marks the live post
+    failed or blinds `duplicate_check`. X/Bluesky alt-text deferred (text-only
+    adapters — no media path). **Live-tested on @protocode_ / protocode:** IG
+    alt-text + first-comment **verified**; the **best-effort design proven** (an FB
+    comment-permission failure left the post live). **FB alt-text UNVERIFIED**
+    (didn't read back — flagged like Threads); **FB first-comment needs the
+    `pages_manage_engagement` scope** (IG needs `instagram_manage_comments`). New
+    convention: features document their permission scopes (AGENTS.md rule #7 +
+    `.env.example`).
+
+**State:** all green — **77 unit + 25-check smoke + `build:check` + `pack:smoke` +
 the `prepublishOnly` chain**. Tools **29**; templates 5; runtime deps 2.
 
 ## NEXT — open items
 
+- **FB re-verify pending a modified token (user will provide):** the current Page
+  token lacks `pages_manage_engagement` (first comment failed soft) and FB alt-text
+  (`alt_text_custom`) didn't read back. With a fuller-scoped token, re-test FB
+  first-comment + alt-text; if alt-text still doesn't persist, try a two-step set
+  (create photo → POST `alt_text_custom` to the photo node).
+- **INBOX-001 (comment-keyword → file/link)** — **plan drafted**
+  (`INBOX_FEATURE_PLAN.md`), not built. Decide: start at **Phase 0** (public reply,
+  ships on current architecture, no Meta App Review) vs hold for **DM** (Phase 1,
+  needs App Review + `*_manage_messages`); IG-only or IG+FB; file = hosted link
+  (reuse `media_upload`) vs true attachment.
 - **Interactivity — Layer 1 SHIPPED (guided mode, see #9 above).** Deferred:
   **Layer 2** (persist in-progress briefs by extending the drafts/queue store so a
   guided session resumes and a UI can load/save partial briefs) and **Layer 3**
@@ -61,9 +95,9 @@ the `prepublishOnly` chain**. Tools **29**; templates 5; runtime deps 2.
   `npx` surface is advertised but not live. Settle the name (publish `spmc` vs a
   scoped `@owner/spmc`), then publish — already gated by `prepublishOnly`; consider
   a tag-triggered publish job.
-- **Pre-existing paused tracks:** ALPHA-014 alt-text / 015 first-comment / 016
-  delete (touch live adapters — delete is destructive, gated on scope confirm);
-  Mastodon (017) / LinkedIn (018) creds; X 402 credits; BETA-011 UI-planning stop-line.
+- **Pre-existing paused tracks:** ALPHA-016 delete/unpublish (destructive — gated
+  on scope confirm); Mastodon (017) / LinkedIn (018) creds; X 402 credits;
+  BETA-011 UI-planning stop-line.
 
 ## Conventions In Force
 

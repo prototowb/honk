@@ -71,6 +71,42 @@ export function validate(platform, content) {
     }
   }
 
+  // Whether this payload carries at least one image (single or carousel) for the
+  // platform — alt text needs an image to attach to.
+  const carouselField = spec.media?.carousel?.field;
+  const carouselUrls  = carouselField && Array.isArray(c[carouselField]) ? c[carouselField] : null;
+  const hasSingle     = spec.media && typeof c[spec.media.field] === 'string' && c[spec.media.field].trim() !== '';
+  const hasImage      = !!(carouselUrls?.length || hasSingle);
+
+  // Alt text (ALPHA-014): only on platforms whose API supports it, and only with
+  // an image present. `alt_texts[]` is the per-slide form for a carousel.
+  const altText = c.alt_text;
+  if (altText != null && String(altText).trim() !== '') {
+    if (!spec.altText) {
+      errors.push(`${spec.label} does not support image alt text via the API.`);
+    } else if (!hasImage) {
+      errors.push(`alt_text needs an image — add "${spec.media.field}".`);
+    } else if (carouselUrls?.length) {
+      errors.push(`For a carousel, use "alt_texts" (one per image), not "alt_text".`);
+    }
+  }
+  if (Array.isArray(c.alt_texts) && c.alt_texts.length) {
+    if (!spec.altText || !carouselField) {
+      errors.push(`"alt_texts" is only for ${spec.label} carousels.`);
+    } else if (!carouselUrls?.length) {
+      errors.push(`"alt_texts" needs carousel images in "${carouselField}".`);
+    } else if (c.alt_texts.length !== carouselUrls.length) {
+      errors.push(`"alt_texts" has ${c.alt_texts.length} entries but there are ${carouselUrls.length} images — they must match 1:1.`);
+    }
+  }
+
+  // First comment (ALPHA-015): posted after a confirmed publish, only on
+  // platforms whose API exposes a comments edge.
+  const firstComment = c.first_comment;
+  if (firstComment != null && String(firstComment).trim() !== '' && !spec.firstComment) {
+    errors.push(`${spec.label} does not support a first comment via the API.`);
+  }
+
   return { ok: errors.length === 0, platform, label: spec.label, errors, warnings };
 }
 

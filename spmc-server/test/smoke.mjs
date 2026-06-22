@@ -64,6 +64,23 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('bluesky_post dry_run previews without publishing', !r.isError && /dry run/i.test(text(r)));
 }
 
+// alt_text + first_comment surface in the dry-run preview (no network).
+{
+  const r = await client.callTool({ name: 'instagram_post', arguments: {
+    caption: 'hi', image_url: 'https://example.com/p.jpg',
+    alt_text: 'a labrador on a beach', first_comment: '#dogs #beach', dry_run: true,
+  } });
+  check('instagram_post dry_run shows alt_text + first_comment',
+    !r.isError && /alt text/i.test(text(r)) && /first comment/i.test(text(r)));
+}
+
+// first_comment is rejected on a platform with no comments edge (via content_validate,
+// which takes an arbitrary content object — the direct tools don't expose the field).
+{
+  const r = await client.callTool({ name: 'content_validate', arguments: { platform: 'bluesky', content: { text: 'hi', first_comment: 'x' } } });
+  check('content_validate rejects first_comment on bluesky', !r.isError && /does not support a first comment/i.test(text(r)));
+}
+
 // audit_log — the dry-run above should be recorded.
 {
   const r = await client.callTool({ name: 'audit_log', arguments: { status: 'dry_run' } });

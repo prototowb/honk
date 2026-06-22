@@ -31,10 +31,10 @@ export async function publish(platform, content, account = '') {
     }
     case 'instagram': {
       if (Array.isArray(content.image_urls) && content.image_urls.length) {
-        const r = await instagram.postCarousel(content.image_urls, content.caption, account);
+        const r = await instagram.postCarousel(content.image_urls, content.caption, account, { alt_texts: content.alt_texts });
         return { summary: `Instagram carousel published! Media ID: ${r.id} (${r.children} slides)`, raw: r };
       }
-      const r = await instagram.post(content.image_url, content.caption, account);
+      const r = await instagram.post(content.image_url, content.caption, account, { alt_text: content.alt_text });
       return { summary: `Instagram post published! Media ID: ${r.id}`, raw: r };
     }
     case 'tiktok': {
@@ -47,11 +47,11 @@ export async function publish(platform, content, account = '') {
       };
     }
     case 'facebook': {
-      const r = await facebook.post(content.message, content.image_url, account);
+      const r = await facebook.post(content.message, content.image_url, account, { alt_text: content.alt_text });
       return { summary: `Facebook post published! ID: ${r.post_id || r.id}`, raw: r };
     }
     case 'threads': {
-      const r = await threads.post(content.text, content.image_url, account);
+      const r = await threads.post(content.text, content.image_url, account, { alt_text: content.alt_text });
       return { summary: `Threads post published! ID: ${r.id}`, raw: r };
     }
     case 'bluesky': {
@@ -66,6 +66,17 @@ export async function publish(platform, content, account = '') {
     default:
       throw new Error(`Unknown platform: ${platform}`);
   }
+}
+
+// First comment (ALPHA-015): post a comment on an already-published item. Only
+// the platforms with a comments edge support it. The caller runs this AFTER the
+// publish is confirmed and audited, and swallows any failure into the summary —
+// a comment that fails must never turn a live post into a `failed` audit entry.
+async function postFirstComment(platform, postId, message, account = '') {
+  if (!postId) throw new Error('no post id to comment on');
+  if (platform === 'instagram') return instagram.comment(postId, message, account);
+  if (platform === 'facebook')  return facebook.comment(postId, message, account);
+  throw new Error(`first comment is not supported for ${platform}`);
 }
 
 // publish() wrapped with audit + rate-limit recording. Every real publish path
@@ -85,6 +96,18 @@ export async function publishAudited(platform, content, account = '', meta = {})
     // parsing the summary string. Additive; null for platforms without an ID.
     const postId = extractPostId(platform, result.raw);
     auditRecord({ ...base, status: 'published', result: result.summary, ...(postId ? { post_id: postId } : {}) });
+    // First comment (ALPHA-015): best-effort, AFTER the publish is confirmed and
+    // audited `published`. A comment failure (e.g. a missing permission) must not
+    // fail the live post — that would prompt a repost and blind duplicate_check —
+    // so we fold the outcome into the summary instead of throwing.
+    if (content.first_comment) {
+      try {
+        await postFirstComment(platform, postId, content.first_comment, account);
+        result.summary += `\n✓ First comment posted.`;
+      } catch (e) {
+        result.summary += `\n⚠ First comment failed (the post is live): ${e.message}`;
+      }
+    }
     // Queue a deferred analytics fetch for analytics-capable platforms (ALPHA-008).
     // Best-effort and self-filtering — never let it break a publish.
     try { scheduleFollowup({ platform, raw: result.raw, account }); }

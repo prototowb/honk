@@ -17,7 +17,7 @@ Use `instagram_post` from the `spmc` MCP server.
 ### Craft a strong post (Instagram-native)
 
 - **The first 125 chars are the visible preview** (before "...more") — put the hook there.
-- **Hashtags: 3–8 relevant tags** at the end of the caption (a first-comment option is planned). Mix reach + niche; avoid banned/overused tags.
+- **Hashtags: 3–8 relevant tags** — either at the end of the caption or kept out of it via `first_comment` (see below). Mix reach + niche; avoid banned/overused tags.
 - **Caption voice carries it** — a story, POV, or specific claim beats a flat description.
 - **Carousels:** slide 1 must earn the swipe (make a clear promise); strong save/share driver. Pass `image_urls` (2–10) for a carousel, `image_url` for a single image.
 
@@ -37,6 +37,15 @@ If the user provides a local file or no image, tell them:
 
 ```
 instagram_post(image_url: "<public URL>", caption: "<caption>")
+```
+
+### Accessibility & first comment
+
+- **`alt_text`** — describe the image for screen readers (and reach). One sentence on what's in the image and any text it contains. For a **carousel**, pass `alt_texts` instead: one entry per `image_urls` slide, in order. Offer alt text by default; it's an accessibility win and costs nothing.
+- **`first_comment`** — text auto-posted as the first comment right after publishing, to keep hashtags or a link out of a clean caption. **Needs the `instagram_manage_comments` scope** on the token. It's **best-effort**: if the scope is missing (or it otherwise fails), the post stays live and you'll see a `⚠ First comment failed` note — never repost because of it.
+
+```
+instagram_post(image_url, caption, alt_text: "<description>", first_comment: "#tag1 #tag2")
 ```
 
 ### Preview before posting (optional)

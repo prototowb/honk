@@ -17,6 +17,19 @@ in `spmc-server/package.json` and flows into every generated artifact via
   but it broke every npm/`npx` surface on first publish. Now shipped and guarded.
 
 ### Added
+- **Image alt text** (ALPHA-014) on posts that carry an image — `alt_text` on
+  `instagram_post` / `facebook_post` / `threads_post`, and `alt_texts[]` (one per
+  slide) on Instagram carousels. Validated, previewed in `dry_run`, and flows
+  through the queue. **IG verified live** (`/media` `alt_text`). **FB
+  (`alt_text_custom`) and Threads (container `alt_text`) are UNVERIFIED** — FB did
+  not read back off the photo in live testing; Threads has no credentials yet.
+- **First comment** (ALPHA-015) on Instagram and Facebook — `first_comment` posts a
+  comment (e.g. hashtags or a link kept out of the caption) right after publishing.
+  **Best-effort by design** — and **verified live:** it runs *after* the publish is
+  confirmed and audited, so a comment failure never marks the live post failed or
+  blinds `duplicate_check` (the outcome is folded into the summary). IG verified
+  end-to-end; the FB path is correct but needs the **`pages_manage_engagement`**
+  scope (IG needs **`instagram_manage_comments`**). See `.env.example` for scopes.
 - **Optional guided pipeline intake.** A `brief_schema` tool exposes the per-run
   content-brief field spec (angle, goal, platforms, schedule, references,
   constraints) — the single source for chat-guided intake and a future web-UI form
