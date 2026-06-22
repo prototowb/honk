@@ -197,3 +197,37 @@ Any agent (Claude, Hermes, future) MUST:
 | Team workspaces | Phase 3 | ✅ | ✅ | Partial |
 
 The moat is the MCP layer + agent-native workflow. Blotato can add AI to a dashboard; they cannot become an agent plugin without a rewrite.
+
+## Individualization (planned — next-session seed)
+
+**Goal:** every output reflects the specific brand/account *without re-specifying it
+each time.* The brand kit (`brand_voice` / `lib/brand.js`) is individualization v1 —
+the **voice** layer (tone, audience, hashtags, banned words, CTA, UTM). Extend it to
+the other dimensions an output varies on.
+
+**Architecture through-line — schema symmetry.** Mirror the guided-mode work:
+`brief_schema` is the *per-run delta*; a new **`brand_schema`** is the *persistent
+layer*. The kit's `emptyProfile()` already *is* the schema — expose its shape as a
+field spec so **one source** drives both a guided "set up your brand" flow (reusing
+guided mode) and the future web-UI settings form (BETA-011).
+
+### Phase 1 — Visual identity in the kit (concrete; ship-ready next session)
+The kit holds **zero** visual identity today, so `media_compose` needs colors/logo
+passed on every call (observed friction — today's live test had no kit at all). Add a
+`visual` block to `emptyProfile()` — `accent`, `bg_color`, `logo_url`, `default_template`
+— and have `media_compose` + the `output-manager`/platform skills **default from it**.
+Self-contained; wires the kit ↔ media pipeline; highest concrete value.
+
+### Phase 2 — `brand_schema` + guided brand setup (the adoption gate)
+Individualization is worthless if the kit stays empty — so onboarding is the **gate,
+not a nice-to-have.** Add `brand_schema` (the kit's field spec) + a guided intake that
+populates the kit; the web UI later renders the same spec as a settings form.
+
+### Backlog (enumerate, don't elaborate yet)
+- **Per-platform / per-audience tailoring** — flesh out the kit's `platforms` block
+  (per-platform hashtags/CTA/tone deltas); optional audience segments.
+- **Content policies / guardrails** — banned *topics* (beyond words), required
+  disclosures (e.g. `#ad`), per-brand auto-publish vs confirm rules.
+- **Learned / adaptive** — store high-performing / user-approved posts as voice
+  few-shot examples; per-brand observed best-times via `best_time` `observedWindows`.
+- **Multi-brand management** — list / switch / clone kits (converges with the UI).
