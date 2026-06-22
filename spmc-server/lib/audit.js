@@ -43,7 +43,11 @@ export function recentDuplicate({ platform, content_hash, withinMs = 7 * 24 * 60
   if (!content_hash) return null;
   const cutoff = Date.now() - withinMs;
   for (const e of read({ platform, status: 'published', limit: 1000 })) {
-    if (new Date(e.ts).getTime() < cutoff) break;   // beyond the window; the rest are older
+    // `<=` (not `<`) so the window is the *open* interval (cutoff, now]: a record
+    // exactly at the cutoff is outside. This also makes withinMs:0 deterministic —
+    // a record written in the same millisecond as the check (ts === now === cutoff)
+    // must not match, regardless of sub-millisecond timing (a CI-vs-local flake).
+    if (new Date(e.ts).getTime() <= cutoff) break;   // beyond the window; the rest are older
     if (e.content_hash === content_hash) return e;
   }
   return null;
