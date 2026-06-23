@@ -233,8 +233,11 @@ not a nice-to-have.** Add `brand_schema` (the kit's field spec) + a guided intak
 populates the kit; the web UI later renders the same spec as a settings form.
 
 ### Backlog (enumerate, don't elaborate yet)
-- **Per-platform / per-audience tailoring** — flesh out the kit's `platforms` block
-  (per-platform hashtags/CTA/tone deltas); optional audience segments.
+- ✅ **Per-platform voice tailoring** (INDIV-003, shipped on branch) — the kit's
+  `platforms` block now resolves: `brand.resolveVoice` merges per-platform deltas
+  (tone/register/emoji_policy/audience/hashtags/cta) over the base with replace
+  semantics, read via `brand_voice(action:"get", platform:…)`. *Remaining here:*
+  optional **audience segments** (a second axis beyond platform).
 - **Content policies / guardrails** — banned *topics* (beyond words), required
   disclosures (e.g. `#ad`), per-brand auto-publish vs confirm rules.
 - **Learned / adaptive** — store high-performing / user-approved posts as voice
