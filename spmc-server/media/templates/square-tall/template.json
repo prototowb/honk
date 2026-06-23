@@ -1,14 +1,23 @@
 {
   "id": "square-tall",
   "name": "Square Tall (4:5)",
-  "description": "1080×1350 portrait dark background with headline and optional subtext. Instagram feed's highest-reach ratio (4:5).",
+  "description": "1080×1350 portrait (Instagram's highest-reach 4:5 feed ratio). Editorial card: brand row, hero headline on a layered surface, body, accent footer.",
   "dimensions": { "width": 1080, "height": 1350 },
-  "platforms": ["instagram"],
+  "platforms": ["instagram", "facebook", "threads"],
+  "layout": {
+    "headline": { "x": 124, "y": 466, "lineHeight": 100, "wrap": 17, "maxLines": 3 },
+    "body":     { "x": 124, "gap": 72, "lineHeight": 54,  "wrap": 40, "maxLines": 4 }
+  },
   "variables": [
-    { "id": "headline",    "label": "Headline",    "type": "text", "required": true,  "default": "" },
-    { "id": "subtext",     "label": "Subtext",     "type": "text", "required": false, "default": "" },
-    { "id": "bg_color",    "label": "Background",  "type": "color","required": false, "default": "#05091e" },
-    { "id": "accent",      "label": "Accent color","type": "color","required": false, "default": "#1df7ed" },
-    { "id": "bg_image_url","label": "Backdrop image URL", "type": "url", "required": false, "default": "" }
+    { "id": "headline",      "label": "Headline",       "type": "text",  "required": true,  "default": "" },
+    { "id": "subtext",       "label": "Body",           "type": "text",  "required": false, "default": "" },
+    { "id": "kicker",        "label": "Kicker/eyebrow",  "type": "text", "required": false, "default": "" },
+    { "id": "handle",        "label": "Handle",         "type": "text",  "required": false, "default": "" },
+    { "id": "bg_color",      "label": "Background (dark)", "type": "color", "required": false, "default": "#05091e" },
+    { "id": "surface",       "label": "Surface (panel)",  "type": "color", "required": false, "default": "#121b33" },
+    { "id": "accent",        "label": "Accent",         "type": "color", "required": false, "default": "#1df7ed" },
+    { "id": "heading_color", "label": "Heading text",   "type": "color", "required": false, "default": "#f4f8ff" },
+    { "id": "body_color",    "label": "Body text",      "type": "color", "required": false, "default": "#8ac0dd" },
+    { "id": "bg_image_url",  "label": "Backdrop image URL", "type": "url", "required": false, "default": "" }
   ]
 }

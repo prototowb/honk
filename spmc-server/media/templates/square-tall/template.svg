@@ -1,43 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
-  <!-- panel overlay: lighter bg strip at bottom third -->
+  <defs>
+    <radialGradient id="glow" cx="90%" cy="8%" r="80%">
+      <stop offset="0%"  stop-color="{{accent}}" stop-opacity="0.16" />
+      <stop offset="55%" stop-color="{{accent}}" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- dark base + subtle brand-colored glow -->
   <rect width="1080" height="1350" fill="{{bg_color}}" />
-  <rect x="0" y="990" width="1080" height="360" fill="#121b33" opacity="0.85" />
+  <rect width="1080" height="1350" fill="url(#glow)" />
 
-  <!-- accent bar -->
-  <rect x="80" y="970" width="6" height="220" fill="{{accent}}" />
+  <!-- brand row: accent mark + handle wordmark -->
+  <rect x="124" y="150" width="22" height="22" rx="5" fill="{{accent}}" />
+  <text x="162" y="150" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+        font-size="30" font-weight="600" fill="{{body_color}}" dominant-baseline="hanging"
+        xml:space="preserve">{{handle}}</text>
 
-  <!-- headline -->
-  <text
-    x="110"
-    y="1060"
-    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
-    font-size="64"
-    font-weight="700"
-    fill="#8ac0dd"
-    dominant-baseline="hanging"
-    xml:space="preserve"
-  >{{headline_line1}}</text>
-  <text
-    x="110"
-    y="1140"
-    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
-    font-size="64"
-    font-weight="700"
-    fill="#8ac0dd"
-    dominant-baseline="hanging"
-    xml:space="preserve"
-  >{{headline_line2}}</text>
+  <!-- layered content surface (the lighter brand background, for depth) -->
+  <rect x="64" y="300" width="952" height="860" rx="36" fill="{{surface}}" />
 
-  <!-- subtext -->
-  <text
-    x="110"
-    y="1230"
-    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
-    font-size="32"
-    font-weight="400"
-    fill="{{accent}}"
-    opacity="0.85"
-    dominant-baseline="hanging"
-    xml:space="preserve"
-  >{{subtext}}</text>
+  <!-- hero: accent bar + optional eyebrow + headline -->
+  <rect x="124" y="372" width="84" height="8" rx="4" fill="{{accent}}" />
+  <text x="124" y="406" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+        font-size="27" font-weight="700" fill="{{accent}}" letter-spacing="4"
+        dominant-baseline="hanging" xml:space="preserve">{{kicker}}</text>
+  <text y="{{headline_y}}" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+        font-size="88" font-weight="800" fill="{{heading_color}}" letter-spacing="-1"
+        dominant-baseline="hanging" xml:space="preserve">{{headline_tspans}}</text>
+
+  <!-- body (y flows from the headline's line count) -->
+  <text y="{{body_y}}" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+        font-size="38" font-weight="400" fill="{{body_color}}"
+        dominant-baseline="hanging" xml:space="preserve">{{body_tspans}}</text>
+
+  <!-- finishing accent rule inside the surface -->
+  <rect x="124" y="1070" width="420" height="5" rx="2.5" fill="{{accent}}" opacity="0.5" />
 </svg>

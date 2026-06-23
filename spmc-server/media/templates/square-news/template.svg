@@ -1,27 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
   <defs>
+    <radialGradient id="glow" cx="90%" cy="8%" r="80%">
+      <stop offset="0%"  stop-color="{{accent}}" stop-opacity="0.16" />
+      <stop offset="55%" stop-color="{{accent}}" stop-opacity="0" />
+    </radialGradient>
     <clipPath id="iconClip"><circle cx="116" cy="1011" r="36" /></clipPath>
   </defs>
 
-  <!-- background -->
+  <!-- dark base + subtle brand-colored glow -->
   <rect width="1080" height="1080" fill="{{bg_color}}" />
+  <rect width="1080" height="1080" fill="url(#glow)" />
 
-  <!-- accent bar beside the headline -->
-  <rect x="80" y="150" width="8" height="200" fill="{{accent}}" />
+  <!-- layered content surface -->
+  <rect x="64" y="104" width="952" height="764" rx="36" fill="{{surface}}" />
 
-  <!-- headline (auto-split to two lines) -->
-  <text x="110" y="160" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
-        font-size="76" font-weight="700" fill="#f4f8ff" dominant-baseline="hanging" xml:space="preserve">{{headline_line1}}</text>
-  <text x="110" y="250" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
-        font-size="76" font-weight="700" fill="#f4f8ff" dominant-baseline="hanging" xml:space="preserve">{{headline_line2}}</text>
+  <!-- hero: accent bar + optional eyebrow + headline -->
+  <rect x="124" y="170" width="80" height="8" rx="4" fill="{{accent}}" />
+  <text x="124" y="202" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+        font-size="26" font-weight="700" fill="{{accent}}" letter-spacing="4"
+        dominant-baseline="hanging" xml:space="preserve">{{kicker}}</text>
+  <text y="{{headline_y}}" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+        font-size="72" font-weight="800" fill="{{heading_color}}" letter-spacing="-1"
+        dominant-baseline="hanging" xml:space="preserve">{{headline_tspans}}</text>
 
-  <!-- body (word-wrapped tspans injected by compose) -->
-  <text x="110" y="400" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
-        font-size="42" font-weight="400" fill="#c7d2e6" dominant-baseline="hanging" xml:space="preserve">{{subtext_tspans}}</text>
+  <!-- body (y flows from the headline's line count) -->
+  <text y="{{body_y}}" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+        font-size="40" font-weight="400" fill="{{body_color}}"
+        dominant-baseline="hanging" xml:space="preserve">{{body_tspans}}</text>
 
-  <!-- footer -->
-  <line x1="80" y1="945" x2="1000" y2="945" stroke="{{accent}}" stroke-width="2" opacity="0.35" />
+  <!-- footer: circular account icon + handle -->
   {{icon_image}}
-  <text x="176" y="996" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
-        font-size="36" font-weight="600" fill="{{accent}}" dominant-baseline="hanging" xml:space="preserve">{{handle}}</text>
+  <text x="176" y="996" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+        font-size="36" font-weight="600" fill="{{accent}}" dominant-baseline="hanging"
+        xml:space="preserve">{{handle}}</text>
 </svg>
