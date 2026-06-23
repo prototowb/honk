@@ -97,6 +97,16 @@ stay gated on a scope confirmation before build.
 
 ## Next Up
 
+### Individualization backlog — planned, ready to build (next session)
+Full plans (shape · logic · surface · tests · open decisions) in
+`PROJECT_SPECIFICATIONS.md` → *Individualization → Backlog — planned*. Build order:
+| ID | Title | Notes |
+|----|-------|-------|
+| INDIV-004 | **Content policies / guardrails** — `policy` block (banned_topics, disclosures, auto_publish); required-disclosure check in `content_validate`/`dry_run` + a `sponsored` flag | Build **first** — highest value, safety. Touches the validate path; one open decision (warn-vs-error, how `sponsored` is signaled) |
+| INDIV-005 | **Audience segments** — `audiences{}` second axis; generalize `PLATFORM_OVERRIDE_FIELDS`→`OVERRIDE_FIELDS`; `resolveVoice(profile,{platform,audience})`; `audience` brief field | Clean extension of INDIV-003. Confirm precedence (base ▸ audience ▸ platform) |
+| INDIV-006 | **Multi-brand management** — `brand_voice` `action:"list"` + `action:"clone"`; decide active-account pointer vs agent-carried | Small; converges with UI |
+| INDIV-007 | **Learned / adaptive** — voice few-shot examples + observed best-times (`best_time` `observedWindows`) | **Data-gated** — needs accrued analytics history (still unverified). Likely defer |
+
 ### Needs your input before I build (scoped, paused)
 | ID | Title | Why it needs your call |
 |----|-------|------------------------|

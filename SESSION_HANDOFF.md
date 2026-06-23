@@ -55,14 +55,23 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
 ## NEXT
 
-1. **Individualization backlog** (`PROJECT_SPECIFICATIONS.md` → *Individualization →
-   Backlog*) — per-platform voice tailoring **shipped (INDIV-003, on branch)**; what
-   remains: optional **audience segments** (a second axis), content policies/guardrails
-   (banned topics, required disclosures, per-brand auto-publish vs confirm),
-   learned/adaptive voice few-shots + per-brand observed best-times, and multi-brand
-   management (list/switch/clone). Plus the deferred UI **export** (folder-copy works
-   today). Optional polish: a real live `media_compose` upload via the `spmc` bin to
-   confirm the kit-driven image end-to-end on the CDN.
+1. **Individualization backlog — planned, ready to build.** Full plans (shape ·
+   logic · surface · tests · open decisions) in `PROJECT_SPECIFICATIONS.md` →
+   *Individualization → Backlog — planned*; build order also in `PROJECT_STATUS.md`
+   → *Next Up*. **Recommended order:**
+   1. **INDIV-004 Content policies / guardrails** (build first — value + safety):
+      `policy` block (banned_topics, disclosures, auto_publish); required-disclosure
+      check in `content_validate`/`dry_run` + a `sponsored` flag. *Open: warn-vs-error,
+      how `sponsored` is signaled.*
+   2. **INDIV-005 Audience segments**: `audiences{}` second axis; generalize
+      `PLATFORM_OVERRIDE_FIELDS`→`OVERRIDE_FIELDS`; `resolveVoice(profile,{platform,
+      audience})`; `audience` brief field. *Open: precedence (base ▸ audience ▸ platform).*
+   3. **INDIV-006 Multi-brand**: `brand_voice` `action:"list"`+`"clone"`. *Open:
+      active-account pointer vs agent-carried.*
+   4. **INDIV-007 Learned/adaptive**: few-shot examples + observed best-times —
+      **data-gated** (needs accrued analytics; likely defer).
+   Plus deferred UI **export** (folder-copy works today) and optional polish: a real
+   live `media_compose` upload via the `spmc` bin to confirm the kit-driven image on the CDN.
 2. **FB re-verify** (user is providing a modified token): `pages_manage_engagement` for
    the FB first-comment; re-test FB alt-text — if `alt_text_custom` still doesn't read
    back, try the two-step set (create photo → POST `alt_text_custom` to the photo node).
