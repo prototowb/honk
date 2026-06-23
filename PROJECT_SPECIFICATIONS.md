@@ -198,7 +198,16 @@ Any agent (Claude, Hermes, future) MUST:
 
 The moat is the MCP layer + agent-native workflow. Blotato can add AI to a dashboard; they cannot become an agent plugin without a rewrite.
 
-## Individualization (planned — next-session seed)
+## Individualization (Phases 1 & 2 shipped — backlog remains)
+
+> **Status (2026-06-23):** Phase 1 (visual identity in the kit) and Phase 2
+> (`brand_schema` + guided `brand-setup`) are **built + merged-ready** on
+> `feature/INDIV-visual-brand-kit`. The five `media_compose` templates were
+> rebuilt on one editorial design system (brand row · hero headline on a layered
+> surface · body · accent footer), colors derived from the brand palette with a
+> background-luminance legibility fallback, and now default every visual field
+> from the kit's `visual` block. The **Backlog** below is what's left.
+
 
 **Goal:** every output reflects the specific brand/account *without re-specifying it
 each time.* The brand kit (`brand_voice` / `lib/brand.js`) is individualization v1 —
@@ -211,14 +220,14 @@ layer*. The kit's `emptyProfile()` already *is* the schema — expose its shape 
 field spec so **one source** drives both a guided "set up your brand" flow (reusing
 guided mode) and the future web-UI settings form (BETA-011).
 
-### Phase 1 — Visual identity in the kit (concrete; ship-ready next session)
+### Phase 1 — Visual identity in the kit ✅ shipped
 The kit holds **zero** visual identity today, so `media_compose` needs colors/logo
 passed on every call (observed friction — today's live test had no kit at all). Add a
 `visual` block to `emptyProfile()` — `accent`, `bg_color`, `logo_url`, `default_template`
 — and have `media_compose` + the `output-manager`/platform skills **default from it**.
 Self-contained; wires the kit ↔ media pipeline; highest concrete value.
 
-### Phase 2 — `brand_schema` + guided brand setup (the adoption gate)
+### Phase 2 — `brand_schema` + guided brand setup (the adoption gate) ✅ shipped
 Individualization is worthless if the kit stays empty — so onboarding is the **gate,
 not a nice-to-have.** Add `brand_schema` (the kit's field spec) + a guided intake that
 populates the kit; the web UI later renders the same spec as a settings form.
