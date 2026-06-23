@@ -23,7 +23,7 @@ Use `instagram_post` from the `spmc` MCP server.
 
 > Weak: "Excited to share our journey and what we've learned along the way!" → Strong: "We almost shut down in month 3. Swipe for the email that saved us →"
 
-Before drafting, pull the brand kit with `brand_voice(action:"get")` and match its tone, audience, emoji policy, and banned words; draw hashtags from its sets. See the `content-intelligence` skill.
+Before drafting, pull the brand kit with `brand_voice(action:"get", platform:"instagram")` — the voice resolved for Instagram, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words; draw hashtags from its sets. See the `content-intelligence` skill.
 
 ### Requirements
 

@@ -60,6 +60,24 @@ For a non-default account, pass `account`. Show the saved kit back
 with `media_compose(template:"square-tall", headline:"…")` — it should pick up
 the brand colors and handle automatically (the result notes "brand kit applied").
 
+## Per-platform deltas (optional, advanced)
+
+Once the core kit is set, a brand can tune its voice per channel — punchier and
+near-zero hashtags on X, more hashtags on Instagram. This is optional; skip it
+unless the user asks or clearly varies by platform. Store deltas under the
+`platforms` block (overridable: `tone`, `register`, `emoji_policy`, `audience`,
+`hashtags`, `cta`); a set value **replaces** the base for that platform:
+
+```
+brand_voice(action:"set", profile:{ platforms:{
+  x:         { tone:"punchier", hashtags:["#buildinpublic"] },
+  instagram: { hashtags:["#startup","#indiehackers","#buildinpublic"] }
+}})
+```
+
+Check the resolved result with `brand_voice(action:"get", platform:"x")`. The
+platform skills read this automatically when drafting for a channel.
+
 ## Portability
 
 The kit is **user data**, stored outside the repo (the server's data directory),

@@ -115,6 +115,18 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('brand_voice get reads it back', !got.isError && /concise/.test(text(got)));
 }
 
+// brand_voice per-platform resolution — base merged with a platform delta, and
+// the resolved view is a superset that still carries the global voice fields.
+{
+  await client.callTool({ name: 'brand_voice', arguments: { action: 'set', profile: { voice: { tone: 'concise', banned_words: ['synergy'] }, hashtags: { sets: { launch: ['#go'] } }, platforms: { x: { tone: 'punchier' } } } } });
+  const r = await client.callTool({ name: 'brand_voice', arguments: { action: 'get', platform: 'x' } });
+  const t = text(r);
+  check('brand_voice get platform:x resolves the per-platform override',
+    !r.isError && /Effective voice for x/i.test(t) && /punchier/.test(t) && /platform override/i.test(t));
+  check('brand_voice get platform:x still surfaces global banned words + hashtag sets',
+    /synergy/.test(t) && /launch/.test(t));
+}
+
 // link_tag — deterministic, no credentials.
 {
   const r = await client.callTool({ name: 'link_tag', arguments: { url: 'https://example.com/p?ref=home', params: { utm_campaign: 'launch' }, platform: 'x' } });

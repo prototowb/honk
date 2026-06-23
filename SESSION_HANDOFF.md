@@ -42,18 +42,29 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 - **Plans (not built):** `INBOX_FEATURE_PLAN.md` (comment-keyword → file/link) and
   **Individualization** (`PROJECT_SPECIFICATIONS.md` → *Individualization*).
 
-**State:** 30 tools · 5 templates · 2 runtime deps · **93 unit + 26-check smoke +
-`build:check` + `pack:smoke`** all green. (Pushed to `origin/development`.)
+**State:** 30 tools · 5 templates · 2 runtime deps · **100 unit + 28-check smoke +
+`build:check` + `pack:smoke`** all green. (`development` pushed to origin; INDIV-003
+on a feature branch, not yet merged — see *Pending branch*.)
+
+## Pending branch (not yet merged)
+
+- **`feature/INDIV-per-platform-tailoring`** (off `development`) — INDIV-003
+  per-platform voice tailoring. `brand.resolveVoice` + `PLATFORM_OVERRIDE_FIELDS`
+  resolve the kit's `platforms` deltas over the base voice (replace semantics);
+  exposed via `brand_voice(action:"get", platform:…)`; the 6 platform skills consult
+  it. Tools stay 30; **100 unit + 28-check smoke + `build:check` + `pack:smoke` green.**
+  Awaiting the merge decision (`--no-ff` into `development`).
 
 ## NEXT
 
 1. **Individualization backlog** (`PROJECT_SPECIFICATIONS.md` → *Individualization →
-   Backlog*) — per-platform/audience tailoring (flesh out the kit's `platforms` block),
-   content policies/guardrails (banned topics, required disclosures, per-brand
-   auto-publish vs confirm), learned/adaptive voice few-shots + per-brand observed
-   best-times, and multi-brand management (list/switch/clone). Plus the deferred UI
-   **export** (folder-copy works today). Optional polish: a real live `media_compose`
-   upload via the `spmc` bin to confirm the kit-driven image end-to-end on the CDN.
+   Backlog*) — per-platform voice tailoring **shipped (INDIV-003, on branch)**; what
+   remains: optional **audience segments** (a second axis), content policies/guardrails
+   (banned topics, required disclosures, per-brand auto-publish vs confirm),
+   learned/adaptive voice few-shots + per-brand observed best-times, and multi-brand
+   management (list/switch/clone). Plus the deferred UI **export** (folder-copy works
+   today). Optional polish: a real live `media_compose` upload via the `spmc` bin to
+   confirm the kit-driven image end-to-end on the CDN.
 2. **FB re-verify** (user is providing a modified token): `pages_manage_engagement` for
    the FB first-comment; re-test FB alt-text — if `alt_text_custom` still doesn't read
    back, try the two-step set (create photo → POST `alt_text_custom` to the photo node).

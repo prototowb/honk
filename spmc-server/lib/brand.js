@@ -41,9 +41,63 @@ export function emptyProfile() {
       utm_defaults: {},   // e.g. { utm_source: "{platform}", utm_medium: "social" }
       shortener:    null, // optional short-link domain/service note
     },
-    platforms: {},        // optional per-platform overrides, e.g. { x: { tone: "punchier" } }
+    platforms: {},        // optional per-platform voice deltas, flat per platform,
+                          // e.g. { x: { tone: "punchier", hashtags: ["#dev"] } }.
+                          // Overridable keys: tone, register, emoji_policy, audience,
+                          // hashtags, cta (see PLATFORM_OVERRIDE_FIELDS). A set value
+                          // replaces the base for that platform; resolveVoice() merges.
     notes:     '',        // freeform brand notes for the agent
   };
+}
+
+// The voice fields a per-platform override can set, each mapped to where the
+// base value lives in the profile. This is the single source for per-platform
+// tailoring: resolveVoice() reads it, and a future per-platform UI panel /
+// brand_schema extension renders from it (schema symmetry — same ethos as
+// BRAND_FIELDS). `key` is the flat key under profile.platforms[platform];
+// `basePath` is the dotted base fallback; `type` drives empty-value defaulting.
+export const PLATFORM_OVERRIDE_FIELDS = [
+  { key: 'tone',         basePath: 'voice.tone',         label: 'Tone',         type: 'text' },
+  { key: 'register',     basePath: 'voice.register',     label: 'Register',     type: 'text' },
+  { key: 'emoji_policy', basePath: 'voice.emoji_policy', label: 'Emoji policy', type: 'enum' },
+  { key: 'audience',     basePath: 'voice.audience',     label: 'Audience',     type: 'text' },
+  { key: 'hashtags',     basePath: 'hashtags.default',   label: 'Hashtags',     type: 'list' },
+  { key: 'cta',          basePath: 'cta',                label: 'CTAs',         type: 'list' },
+];
+
+function at(obj, path) {
+  return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
+}
+
+function isSet(v) {
+  if (v == null) return false;
+  if (Array.isArray(v)) return v.length > 0;
+  return String(v).trim() !== '';
+}
+
+// Resolve the effective voice for a platform: for each overridable field, take
+// the per-platform value (profile.platforms[platform][key]) when set, else fall
+// back to the base value. Replace semantics throughout — a set override wins
+// wholesale, arrays included (a per-platform hashtag list replaces the default
+// list, it does not extend it), matching the kit's deep-merge contract. Pure and
+// null-safe: a missing profile/override yields the base (or an empty value).
+// `overridden` names the fields the platform layer actually changed (provenance,
+// like media's appliedFromKit).
+export function resolveVoice(profile, platform) {
+  const base = profile || {};
+  const override = (base.platforms && base.platforms[platform]) || {};
+  const effective = {};
+  const overridden = [];
+  for (const f of PLATFORM_OVERRIDE_FIELDS) {
+    if (isSet(override[f.key])) {
+      effective[f.key] = override[f.key];
+      overridden.push(f.key);
+    } else {
+      const baseVal = at(base, f.basePath);
+      effective[f.key] = isSet(baseVal) ? baseVal : (f.type === 'list' ? [] : '');
+    }
+  }
+  return { platform, effective, overridden };
 }
 
 function load() {

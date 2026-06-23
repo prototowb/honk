@@ -21,7 +21,7 @@ Use `{{tool:threads_post}}` from the `spmc` MCP server.
 
 > Weak: "New episode is out now, go listen!" → Strong: "Most 'productivity' advice is procrastination with extra steps. What actually moved the needle for you?"
 
-Before drafting, pull the brand kit with `brand_voice(action:"get")` and match its tone, audience, emoji policy, and banned words. See the `content-intelligence` skill.
+Before drafting, pull the brand kit with `brand_voice(action:"get", platform:"threads")` — the voice resolved for Threads, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words. See the `content-intelligence` skill.
 
 ### Requirements
 
