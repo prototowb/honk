@@ -44,6 +44,27 @@ brand_voice(action: "set", profile: { voice: { tone: "concise, dry", banned_word
 This is content config, not secrets — it never holds tokens. If no profile is
 set, `get` returns the empty shape so you know which fields to fill.
 
+**Per-platform voice.** A brand often speaks a little differently per channel
+(punchier on X, more hashtags on Instagram). Store those deltas in the kit's
+`platforms` block and read the merged result for a channel with:
+
+```
+brand_voice(action: "get", platform: "x")
+```
+
+It returns the **effective voice** for that platform — base merged with the
+overrides, marking which fields the platform layer changed. Overridable fields:
+`tone`, `register`, `emoji_policy`, `audience`, `hashtags`, `cta`. A set override
+**replaces** the base for that platform (a per-platform hashtag list replaces the
+default list — it doesn't add to it). Set deltas with:
+
+```
+brand_voice(action: "set", profile: { platforms: { x: { tone: "punchier", hashtags: ["#dev"] } } })
+```
+
+When you're about to write for a specific platform, prefer the platform-resolved
+get over the raw profile so per-channel deltas are already applied.
+
 ### Start a brief (optional guided intake)
 
 ```

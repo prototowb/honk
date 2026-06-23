@@ -177,14 +177,15 @@ export const TOOLS = [
   },
   {
     name: 'brand_voice',
-    description: 'Get or set the brand kit — a persistent profile (voice: tone, audience, hashtag sets, emoji/banned-word policy, CTA library, UTM rules; plus a visual identity block: accent/bg/surface/heading/body colors, logo, icon, handle, default template) that the content skills read so drafts match your voice and composed images match your look without re-specifying it each time. Per account (omit account for the default). Content config, not secrets. Call with action:"get" first to see the current profile; if it is empty, offer guided setup (see brand_schema / the brand-setup skill).',
+    description: 'Get or set the brand kit — a persistent profile (voice: tone, audience, hashtag sets, emoji/banned-word policy, CTA library, UTM rules; plus a visual identity block: accent/bg/surface/heading/body colors, logo, icon, handle, default template; plus per-platform voice deltas) that the content skills read so drafts match your voice and composed images match your look without re-specifying it each time. Per account (omit account for the default). Content config, not secrets. Call with action:"get" first to see the current profile; if it is empty, offer guided setup (see brand_schema / the brand-setup skill). Pass a platform with action:"get" to see the effective voice for that platform (base merged with its per-platform overrides).',
     inputSchema: {
       type: 'object',
       properties: {
         action:  { type: 'string', description: 'get (default) reads the profile; set writes one; clear removes it.', enum: ['get', 'set', 'clear'] },
-        profile: { type: 'object', description: 'For action:set — the fields to write, deep-merged into the stored profile (nested objects merge; arrays/scalars replace). Shape: { voice:{tone,audience,register,emoji_policy,banned_words[],do[],dont[]}, hashtags:{default[],sets{}}, cta[], visual:{accent,bg_color,surface,heading_color,body_color,logo_url,icon_url,handle,default_template}, links:{utm_defaults{},shortener}, platforms{}, notes }. The visual block is the brand identity media_compose defaults from.' },
+        profile: { type: 'object', description: 'For action:set — the fields to write, deep-merged into the stored profile (nested objects merge; arrays/scalars replace). Shape: { voice:{tone,audience,register,emoji_policy,banned_words[],do[],dont[]}, hashtags:{default[],sets{}}, cta[], visual:{accent,bg_color,surface,heading_color,body_color,logo_url,icon_url,handle,default_template}, links:{utm_defaults{},shortener}, platforms:{ <platform>:{tone,register,emoji_policy,audience,hashtags[],cta[]} }, notes }. The visual block is the brand identity media_compose defaults from; platforms holds per-platform voice deltas (a set value replaces the base for that platform).' },
         replace: { type: 'boolean', description: 'For action:set — overwrite the whole profile instead of deep-merging.' },
         account: { type: 'string', description: "Named account (e.g. 'brand'). Omit for the default profile." },
+        platform: { type: 'string', description: 'For action:get — return the effective voice resolved for this platform (base merged with profile.platforms overrides), with which fields the platform layer changed. Omit to get the raw full profile.', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] },
       },
     },
   },

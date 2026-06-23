@@ -62,9 +62,56 @@ function formatBrandProfile(p) {
     `visual:             ${obj(p.visual)}`,
     `links.utm_defaults: ${obj((p.links || {}).utm_defaults)}`,
     `links.shortener:    ${v((p.links || {}).shortener)}`,
-    `platforms:          ${obj(p.platforms)}`,
+    `platforms:          ${platformsLine(p.platforms)}`,
     `notes:              ${v(p.notes)}`,
   ].join('\n');
+}
+
+// Render the per-platform voice deltas readably (the generic obj() would print
+// each platform value as "[object Object]").
+function platformsLine(platforms) {
+  const entries = Object.entries(platforms || {});
+  if (!entries.length) return '—';
+  return entries.map(([plat, o]) => {
+    const fields = Object.entries(o || {})
+      .map(([k, val]) => `${k}=${Array.isArray(val) ? val.join(' ') : val}`)
+      .join(', ');
+    return `${plat}{${fields}}`;
+  }).join('; ');
+}
+
+// Render the effective voice resolved for a platform, marking which fields the
+// per-platform layer overrode (provenance) so the agent sees base vs delta. This
+// is a SUPERSET view, not just the six overridable fields: it also passes through
+// the global voice fields a platform skill still needs (banned_words, hashtag
+// sets, do/dont) so one platform-scoped get returns everything needed to draft.
+function formatResolvedVoice(r, label, profile) {
+  const p = profile || {};
+  const voice = p.voice || {};
+  const v = (x) => Array.isArray(x) ? (x.length ? x.join(', ') : '—') : (x || '—');
+  const mark = (k) => r.overridden.includes(k) ? '  (platform override)' : '';
+  const sets = Object.entries((p.hashtags || {}).sets || {});
+  const lines = [
+    `Effective voice for ${r.platform} (${label} brand):`,
+    '',
+    `tone:         ${v(r.effective.tone)}${mark('tone')}`,
+    `register:     ${v(r.effective.register)}${mark('register')}`,
+    `emoji_policy: ${v(r.effective.emoji_policy)}${mark('emoji_policy')}`,
+    `audience:     ${v(r.effective.audience)}${mark('audience')}`,
+    `hashtags:     ${v(r.effective.hashtags)}${mark('hashtags')}`,
+    `cta:          ${v(r.effective.cta)}${mark('cta')}`,
+    '',
+    'Global voice (applies on every platform):',
+    `banned_words:  ${v(voice.banned_words)}`,
+    `hashtags.sets: ${sets.length ? sets.map(([k, arr]) => `${k}[${(arr || []).join(', ')}]`).join('; ') : '—'}`,
+    `do:            ${v(voice.do)}`,
+    `dont:          ${v(voice.dont)}`,
+  ];
+  if (!r.overridden.length) {
+    lines.push('', `(no per-platform overrides for ${r.platform} — the six fields above are the base voice. ` +
+      `Set deltas with brand_voice(action:"set", profile:{platforms:{${r.platform}:{…}}}).)`);
+  }
+  return lines.join('\n');
 }
 
 function err(e) {
@@ -175,6 +222,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           return ok(`Saved the ${label} brand profile (${args.replace ? 'replaced' : 'merged'}).\n\n${formatBrandProfile(saved)}`);
         }
         const current = brand.get(account);
+        if (args.platform) {
+          // Resolve the effective voice for a platform — null-safe (current may
+          // be null when no profile is set; resolveVoice yields the base/empty).
+          return ok(formatResolvedVoice(brand.resolveVoice(current, args.platform), label, current));
+        }
         if (!current) return ok(`No brand profile set for ${label}. Set one with brand_voice(action:"set", profile:{...}). Empty shape:\n\n${formatBrandProfile(brand.emptyProfile())}`);
         return ok(`Brand profile (${label}):\n\n${formatBrandProfile(current)}`);
       }

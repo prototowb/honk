@@ -20,7 +20,7 @@ Use `{{tool:bluesky_post}}` from the `spmc` MCP server.
 
 > Weak: "Check out our latest blog post about productivity [link]" → Strong: "I deleted 40% of my standups and output went up. What I do instead:"
 
-Before drafting, pull the brand kit with `brand_voice(action:"get")` and match its tone, audience, emoji policy, and banned words. See the `content-intelligence` skill.
+Before drafting, pull the brand kit with `brand_voice(action:"get", platform:"bluesky")` — the voice resolved for Bluesky, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words. See the `content-intelligence` skill.
 
 ### Setup — refreshingly simple
 
