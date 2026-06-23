@@ -24,6 +24,14 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
   Kit is user-owned + portable (folder-copy). **Live-tested** through the server:
   brand-kit visual round-trips, `brand_schema` reflects it, `media_compose` resolves
   from the kit + renders (upload boundary unchanged — needs CDN creds via the bin).
+- **Per-platform voice tailoring (INDIV-003)** — the kit's `platforms` block now
+  resolves: `brand.resolveVoice` + exported `PLATFORM_OVERRIDE_FIELDS` merge per-platform
+  deltas (tone/register/emoji_policy/audience/hashtags/cta) over the base voice with
+  **replace** semantics. Exposed via `brand_voice(action:"get", platform:…)` as a
+  **superset** view (the six resolved fields + global banned_words/sets/do/dont, so a
+  platform-scoped get carries everything a draft needs). The 6 platform skills consult
+  it; `content-intelligence`/`brand-setup` document it. No new tool (overloaded `get`).
+  **Live-tested** through the server (replace + provenance + null-safety confirmed).
 - **Build / install / distribution pipeline hardening** — fixed a dead-on-arrival npm
   package (`lib/` now ships), added a **pack-smoke gate** (pack→install→boot) in CI +
   `prepublishOnly`, CI gates `development` + `feature/**`, real npm workspace, engines
@@ -43,17 +51,7 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
   **Individualization** (`PROJECT_SPECIFICATIONS.md` → *Individualization*).
 
 **State:** 30 tools · 5 templates · 2 runtime deps · **100 unit + 28-check smoke +
-`build:check` + `pack:smoke`** all green. (`development` pushed to origin; INDIV-003
-on a feature branch, not yet merged — see *Pending branch*.)
-
-## Pending branch (not yet merged)
-
-- **`feature/INDIV-per-platform-tailoring`** (off `development`) — INDIV-003
-  per-platform voice tailoring. `brand.resolveVoice` + `PLATFORM_OVERRIDE_FIELDS`
-  resolve the kit's `platforms` deltas over the base voice (replace semantics);
-  exposed via `brand_voice(action:"get", platform:…)`; the 6 platform skills consult
-  it. Tools stay 30; **100 unit + 28-check smoke + `build:check` + `pack:smoke` green.**
-  Awaiting the merge decision (`--no-ff` into `development`).
+`build:check` + `pack:smoke`** all green. (Pushed to `origin/development`.)
 
 ## NEXT
 
