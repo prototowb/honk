@@ -33,8 +33,10 @@ Visuals have zero tolerance for filler. Think conversion copywriter + creative d
 
 > Weak: "Transforming the way you build software" → Strong: "Ship 3× faster. Here's the data."
 
-Pull tone, banned words, and accent identity from the brand kit first —
-`brand_voice(action:"get")`.
+Pull tone, banned words, and visual identity from the brand kit first —
+`brand_voice(action:"get")`. **If the kit has no visual identity**, offer the
+`brand-setup` skill once (2 min) so colors/logo/handle come out consistent — or
+proceed on tasteful template defaults.
 
 ### Step 2 — Render with a template
 
@@ -50,18 +52,21 @@ URL. Pick the template by the platform's aspect ratio:
 | Facebook / X link image        | `banner-wide`                    | 1200×628 (1.91:1) |
 | Threads                        | `square-dark`                    | 1080×1080 (1:1)   |
 
+All five templates share one editorial design system — a brand row, a hero
+headline on a layered surface, body, and an accent footer:
+
 ```
-media_compose(template: "square-news", headline: "<≤6 words>", subtext: "<one line>",
-              handle: "@<from brand kit>", icon_url: "<brand icon URL>",
-              bg_color: "<brand bg>", accent: "<brand accent>")
+media_compose(template: "square-tall", headline: "<≤6 words>",
+              subtext: "<one supporting line>", kicker: "<optional eyebrow, e.g. PRODUCT UPDATE>")
 ```
 
-Brand identity (handle, icon, bg/accent colors) comes from the brand kit — read
-it with `brand_voice(action:"get")` and pass those values so a series reads as one
-identity. `square-news` renders the handle + a circular icon footer; the others
-are clean text panels. Pass `bg_image_url` to composite a backdrop photo *behind*
-the text panel, and `logo_url` to stamp a brand logo in the bottom-right corner of
-**any** template.
+**Colors, logo, icon, handle, and the default template come from the brand kit's
+visual block automatically** — you don't pass them each call. The result notes
+"brand kit applied" when it does. Override per call only for a one-off (e.g. a
+`kicker`, or a campaign `accent`). Heading/body colors left unset derive from the
+background for legibility, so a custom `bg_color` always stays readable.
+`square-news` adds a circular icon footer; pass `bg_image_url` to composite a
+backdrop photo behind the layers, and `logo_url` to stamp a logo bottom-right.
 
 ### Step 3 — Hand off
 

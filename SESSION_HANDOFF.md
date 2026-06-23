@@ -8,6 +8,12 @@
 and is **green on CI** with everything below merged + pushed. Branch off `development`,
 merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
+⚠️ **Uncommitted/branch work:** **Individualization Phases 1 & 2** are built and
+green but **not yet committed/merged** — intended for `feature/INDIV-visual-brand-kit`
+off `development`. See *NEXT → Individualization* and the 2026-06-23 entry in
+`PROJECT_STATUS.md`. (Scratch render harness `spmc-server/_scratch_render.mjs` +
+`_scratch_out/` are NOT gitignored — delete before staging.)
+
 ## On `development` now (recently merged)
 
 - **Build / install / distribution pipeline hardening** — fixed a dead-on-arrival npm
@@ -33,12 +39,16 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
 ## NEXT
 
-1. **Individualization — Phase 1: visual identity in the brand kit** (the headline next
-   build). Add a `visual` block (`accent` / `bg_color` / `logo_url` / `default_template`)
-   to `lib/brand.js` `emptyProfile()`; have `media_compose` + the output skills default
-   from it (removes the "pass colors every call" friction). Then Phase 2: `brand_schema`
-   + guided brand setup (the adoption gate). See `PROJECT_SPECIFICATIONS.md` →
-   *Individualization* for the seed + backlog.
+1. **Individualization Phases 1 & 2 — BUILT (uncommitted).** Visual `visual` block on
+   the brand kit + `media_compose` defaulting from it (`resolveVisualVars`); all 5
+   templates rebuilt on one editorial design system (protocode palette + luminance
+   fallback); `brand_schema` tool + guided `brand-setup` skill; first-run offer wired in.
+   **To finish:** delete the scratch files, `git checkout -b feature/INDIV-visual-brand-kit`,
+   commit in slices (design system · Phase-1 wiring · Phase-2), merge `--no-ff` to
+   `development`, push. Then the **backlog** (`PROJECT_SPECIFICATIONS.md` →
+   *Individualization → Backlog*): per-platform/audience tailoring, content
+   policies/guardrails, learned/adaptive few-shots, multi-brand management; plus the
+   deferred UI **export** (folder-copy works today).
 2. **FB re-verify** (user is providing a modified token): `pages_manage_engagement` for
    the FB first-comment; re-test FB alt-text — if `alt_text_custom` still doesn't read
    back, try the two-step set (create photo → POST `alt_text_custom` to the photo node).

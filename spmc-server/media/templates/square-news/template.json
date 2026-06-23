@@ -1,16 +1,24 @@
 {
   "id": "square-news",
   "name": "Square News",
-  "description": "1080×1080 branded news/carousel slide: headline, word-wrapped body, and a footer with circular account icon + handle. Instagram carousel / feed.",
+  "description": "1080×1080 branded news/carousel slide: hero headline + longer word-wrapped body on a layered surface, with a footer carrying a circular account icon + handle. Instagram carousel / feed.",
   "dimensions": { "width": 1080, "height": 1080 },
   "platforms": ["instagram", "facebook"],
+  "layout": {
+    "headline": { "x": 124, "y": 258, "lineHeight": 84, "wrap": 18, "maxLines": 3 },
+    "body":     { "x": 124, "gap": 52, "lineHeight": 54, "wrap": 33, "maxLines": 5 }
+  },
   "variables": [
-    { "id": "headline",    "label": "Headline",    "type": "text", "required": true,  "default": "" },
-    { "id": "subtext",     "label": "Body",         "type": "text", "required": false, "default": "" },
-    { "id": "bg_color",    "label": "Background",   "type": "color","required": false, "default": "#05091e" },
-    { "id": "accent",      "label": "Accent color", "type": "color","required": false, "default": "#1df7ed" },
-    { "id": "bg_image_url","label": "Backdrop image URL", "type": "url", "required": false, "default": "" },
-    { "id": "handle",      "label": "Footer handle","type": "text", "required": false, "default": "" },
-    { "id": "icon_url",    "label": "Footer icon URL", "type": "url", "required": false, "default": "" }
+    { "id": "headline",      "label": "Headline",       "type": "text",  "required": true,  "default": "" },
+    { "id": "subtext",       "label": "Body",           "type": "text",  "required": false, "default": "" },
+    { "id": "kicker",        "label": "Kicker/eyebrow",  "type": "text", "required": false, "default": "" },
+    { "id": "bg_color",      "label": "Background (dark)", "type": "color", "required": false, "default": "#05091e" },
+    { "id": "surface",       "label": "Surface (panel)",  "type": "color", "required": false, "default": "#121b33" },
+    { "id": "accent",        "label": "Accent",         "type": "color", "required": false, "default": "#1df7ed" },
+    { "id": "heading_color", "label": "Heading text",   "type": "color", "required": false, "default": "#f4f8ff" },
+    { "id": "body_color",    "label": "Body text",      "type": "color", "required": false, "default": "#8ac0dd" },
+    { "id": "bg_image_url",  "label": "Backdrop image URL", "type": "url", "required": false, "default": "" },
+    { "id": "handle",        "label": "Footer handle",  "type": "text",  "required": false, "default": "" },
+    { "id": "icon_url",      "label": "Footer icon URL", "type": "url",   "required": false, "default": "" }
   ]
 }

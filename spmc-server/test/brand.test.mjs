@@ -15,6 +15,14 @@ test('get is null when unset; getOrEmpty returns the skeleton shape', () => {
   assert.ok('utm_defaults' in empty.links);
 });
 
+test('empty profile carries the visual identity block', () => {
+  const v = brand.getOrEmpty().visual;
+  for (const k of ['accent', 'bg_color', 'surface', 'heading_color', 'body_color',
+                   'logo_url', 'icon_url', 'handle', 'default_template']) {
+    assert.equal(v[k], '', `visual.${k} should default to ''`);
+  }
+});
+
 test('set stores a profile and reads it back', () => {
   brand.set({ voice: { tone: 'concise', banned_words: ['synergy'] }, notes: 'launch week' });
   const p = brand.get();

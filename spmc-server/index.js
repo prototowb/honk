@@ -22,6 +22,7 @@ import * as brand from './lib/brand.js';
 import { tagUrl } from './lib/links.js';
 import { bestTimes, formatBestTimes } from './lib/besttime.js';
 import { briefSchema, formatBriefSchema } from './lib/brief.js';
+import { brandSchema, formatBrandSchema } from './lib/brand-schema.js';
 import { TOOLS } from './lib/tools.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -58,6 +59,7 @@ function formatBrandProfile(p) {
     `hashtags.default:   ${v((p.hashtags || {}).default)}`,
     `hashtags.sets:      ${sets.length ? sets.map(([k, arr]) => `${k}[${(arr || []).join(', ')}]`).join('; ') : '—'}`,
     `cta:                ${v(p.cta)}`,
+    `visual:             ${obj(p.visual)}`,
     `links.utm_defaults: ${obj((p.links || {}).utm_defaults)}`,
     `links.shortener:    ${v((p.links || {}).shortener)}`,
     `platforms:          ${obj(p.platforms)}`,
@@ -209,6 +211,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const profile = brand.get(args.account ?? '');
         return ok(formatBriefSchema(briefSchema(profile)));
       }
+      case 'brand_schema': {
+        const profile = brand.get(args.account ?? '');
+        return ok(formatBrandSchema(brandSchema(profile)));
+      }
       case 'audit_log': {
         const entries = auditRead({ platform: args.platform, status: args.status, source: args.source, limit: args.limit });
         if (entries.length === 0) return ok('No audit entries yet.');
@@ -302,20 +308,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       // ── Media ──────────────────────────────────────────────────────────────
       case 'media_compose': {
-        const result = await compose.compose(args.template, {
-          headline:     args.headline,
-          subtext:      args.subtext      ?? '',
-          bg_color:     args.bg_color     ?? '',
-          accent:       args.accent       ?? '',
-          bg_image_url: args.bg_image_url ?? '',
-          handle:       args.handle       ?? '',
-          icon_url:     args.icon_url      ?? '',
-          logo_url:     args.logo_url      ?? '',
-        }, { provider: args.provider ?? null, account: args.account ?? '' });
+        // Resolve identity/visual fields from the brand kit so callers don't
+        // re-specify colors/logo/handle every call: explicit arg ▸ kit.visual ▸
+        // template default. The brand kit is the individualization layer.
+        const visual = (brand.get(args.account ?? '') || {}).visual || {};
+        const { template, variables, appliedFromKit } = compose.resolveVisualVars(args, visual);
+        if (!template) throw new Error('media_compose needs a `template` (or set visual.default_template in the brand kit via brand_voice).');
+        const result = await compose.compose(template, variables, { provider: args.provider ?? null, account: args.account ?? '' });
         return ok(
           `Composed ${result.template} (${result.dimensions.width}×${result.dimensions.height})\n`
           + `Uploaded to ${result.provider}!\nPublic URL: ${result.url}`
           + (result.public_id ? `\nPublic ID: ${result.public_id}` : '')
+          + (appliedFromKit.length ? `\n(brand kit applied: ${appliedFromKit.join(', ')})` : '')
         );
       }
       case 'media_upload': {

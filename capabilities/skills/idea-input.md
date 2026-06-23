@@ -23,8 +23,9 @@ banned words) already lives in the brand kit — read it with
 - **Constraints** — timing, campaign theme, must-include / must-avoid for *this piece only*.
 
 Don't re-ask for tone, voice, or hashtags the brand kit already answers. If no
-brand kit is set, capture the voice basics once and offer to save them with
-`brand_voice(action:"set", ...)` so future runs inherit them.
+brand kit is set (first run), offer the `brand-setup` skill once — a quick guided
+pass over voice **and** visual identity — so future runs and composed images
+inherit it. Declining is fine; sensible defaults apply.
 
 ## Guided mode (optional)
 

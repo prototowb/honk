@@ -1,14 +1,23 @@
 {
   "id": "banner-wide",
   "name": "Banner Wide",
-  "description": "1200×628 (1.91:1) dark banner. X link preview card / Facebook share image.",
+  "description": "1200×628 landscape banner (link-preview / Open Graph / X card). Editorial card: brand row, headline, short body, accent footer. Keep copy concise — this is a link thumbnail.",
   "dimensions": { "width": 1200, "height": 628 },
   "platforms": ["x", "facebook"],
+  "layout": {
+    "headline": { "x": 104, "y": 232, "lineHeight": 68, "wrap": 26, "maxLines": 2 },
+    "body":     { "x": 104, "gap": 30, "lineHeight": 38, "wrap": 62, "maxLines": 2 }
+  },
   "variables": [
-    { "id": "headline",    "label": "Headline",    "type": "text", "required": true,  "default": "" },
-    { "id": "subtext",     "label": "Subtext",     "type": "text", "required": false, "default": "" },
-    { "id": "bg_color",    "label": "Background",  "type": "color","required": false, "default": "#05091e" },
-    { "id": "accent",      "label": "Accent color","type": "color","required": false, "default": "#1df7ed" },
-    { "id": "bg_image_url","label": "Backdrop image URL", "type": "url", "required": false, "default": "" }
+    { "id": "headline",      "label": "Headline",       "type": "text",  "required": true,  "default": "" },
+    { "id": "subtext",       "label": "Body",           "type": "text",  "required": false, "default": "" },
+    { "id": "kicker",        "label": "Kicker/eyebrow",  "type": "text", "required": false, "default": "" },
+    { "id": "handle",        "label": "Handle",         "type": "text",  "required": false, "default": "" },
+    { "id": "bg_color",      "label": "Background (dark)", "type": "color", "required": false, "default": "#05091e" },
+    { "id": "surface",       "label": "Surface (panel)",  "type": "color", "required": false, "default": "#121b33" },
+    { "id": "accent",        "label": "Accent",         "type": "color", "required": false, "default": "#1df7ed" },
+    { "id": "heading_color", "label": "Heading text",   "type": "color", "required": false, "default": "#f4f8ff" },
+    { "id": "body_color",    "label": "Body text",      "type": "color", "required": false, "default": "#8ac0dd" },
+    { "id": "bg_image_url",  "label": "Backdrop image URL", "type": "url", "required": false, "default": "" }
   ]
 }
