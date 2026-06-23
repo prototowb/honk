@@ -8,14 +8,22 @@
 and is **green on CI** with everything below merged + pushed. Branch off `development`,
 merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
-⚠️ **Uncommitted/branch work:** **Individualization Phases 1 & 2** are built and
-green but **not yet committed/merged** — intended for `feature/INDIV-visual-brand-kit`
-off `development`. See *NEXT → Individualization* and the 2026-06-23 entry in
-`PROJECT_STATUS.md`. (Scratch render harness `spmc-server/_scratch_render.mjs` +
-`_scratch_out/` are NOT gitignored — delete before staging.)
-
 ## On `development` now (recently merged)
 
+- **Individualization Phases 1 & 2 (INDIV-001/002)** — all 5 `media_compose`
+  templates rebuilt on one editorial design system (brand row · hero headline on a
+  layered surface · body · accent footer), driven by per-template `layout` metrics in
+  `compose.js`; colors default to the **protocode palette** (DESIGN_GUIDE: bg `#05091e`,
+  surface `#121b33`, accent `#1df7ed`, text `#8ac0dd`/`#f4f8ff`) with a
+  background-luminance legibility fallback for other brands; story-dark respects
+  safe-zones. **Phase 1:** `visual` block on the brand kit; `media_compose` defaults
+  every visual field from it (`resolveVisualVars`/`resolvePalette`, pure + tested;
+  identity set once, not per call; `template` now optional via `default_template`).
+  **Phase 2:** `brand_schema` tool + `lib/brand-schema.js` + guided **`brand-setup`**
+  skill; first-run offer wired into `pipeline-orchestrator`/`idea-input`/`output-manager`.
+  Kit is user-owned + portable (folder-copy). **Live-tested** through the server:
+  brand-kit visual round-trips, `brand_schema` reflects it, `media_compose` resolves
+  from the kit + renders (upload boundary unchanged — needs CDN creds via the bin).
 - **Build / install / distribution pipeline hardening** — fixed a dead-on-arrival npm
   package (`lib/` now ships), added a **pack-smoke gate** (pack→install→boot) in CI +
   `prepublishOnly`, CI gates `development` + `feature/**`, real npm workspace, engines
@@ -34,21 +42,18 @@ off `development`. See *NEXT → Individualization* and the 2026-06-23 entry in
 - **Plans (not built):** `INBOX_FEATURE_PLAN.md` (comment-keyword → file/link) and
   **Individualization** (`PROJECT_SPECIFICATIONS.md` → *Individualization*).
 
-**State:** 29 tools · 5 templates · 2 runtime deps · **77 unit + 25-check smoke +
-`build:check` + `pack:smoke`** all green.
+**State:** 30 tools · 5 templates · 2 runtime deps · **93 unit + 26-check smoke +
+`build:check` + `pack:smoke`** all green. (Pushed to `origin/development`.)
 
 ## NEXT
 
-1. **Individualization Phases 1 & 2 — BUILT (uncommitted).** Visual `visual` block on
-   the brand kit + `media_compose` defaulting from it (`resolveVisualVars`); all 5
-   templates rebuilt on one editorial design system (protocode palette + luminance
-   fallback); `brand_schema` tool + guided `brand-setup` skill; first-run offer wired in.
-   **To finish:** delete the scratch files, `git checkout -b feature/INDIV-visual-brand-kit`,
-   commit in slices (design system · Phase-1 wiring · Phase-2), merge `--no-ff` to
-   `development`, push. Then the **backlog** (`PROJECT_SPECIFICATIONS.md` →
-   *Individualization → Backlog*): per-platform/audience tailoring, content
-   policies/guardrails, learned/adaptive few-shots, multi-brand management; plus the
-   deferred UI **export** (folder-copy works today).
+1. **Individualization backlog** (`PROJECT_SPECIFICATIONS.md` → *Individualization →
+   Backlog*) — per-platform/audience tailoring (flesh out the kit's `platforms` block),
+   content policies/guardrails (banned topics, required disclosures, per-brand
+   auto-publish vs confirm), learned/adaptive voice few-shots + per-brand observed
+   best-times, and multi-brand management (list/switch/clone). Plus the deferred UI
+   **export** (folder-copy works today). Optional polish: a real live `media_compose`
+   upload via the `spmc` bin to confirm the kit-driven image end-to-end on the CDN.
 2. **FB re-verify** (user is providing a modified token): `pages_manage_engagement` for
    the FB first-comment; re-test FB alt-text — if `alt_text_custom` still doesn't read
    back, try the two-step set (create photo → POST `alt_text_custom` to the photo node).
