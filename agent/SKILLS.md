@@ -86,6 +86,19 @@ Post-call: `tiktok_post_video` is async — always follow up with `tiktok_check_
 
 ---
 
+## Brand & Visuals (credential-free)
+
+| Trigger phrase | Tool | Key inputs |
+|---------------|------|------------|
+| "set up my brand", "brand setup", "configure my brand kit" | `brand_schema` → `brand_voice` | walk the schema, then `action:"set"` |
+| "show my brand kit", "what's my brand voice/identity" | `brand_voice` | `action:"get"` |
+| "save this as my brand voice/colors" | `brand_voice` | `action:"set"`, `profile:{…}` (dotted paths) |
+| "make a graphic", "compose an image", "branded image for this" | `media_compose` | `template?`, `headline`, `subtext?`, `kicker?` |
+
+`media_compose` defaults colors/logo/icon/handle/default-template from the brand kit's `visual` block — set them once via `brand_voice`/the `brand-setup` skill instead of per call. If the kit is empty, offer guided setup first (`brand_schema`). Heading/body colors left unset derive from the background for legibility.
+
+---
+
 ## Observability (UNVERIFIED — pending live credential testing)
 
 | Trigger phrase | Tool | Key inputs |

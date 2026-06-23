@@ -135,6 +135,12 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('brief_schema returns the per-run brief fields', !r.isError && /`angle`/.test(text(r)) && /`platforms`/.test(text(r)));
 }
 
+// brand_schema — the guided brand-setup / settings field spec, no credentials.
+{
+  const r = await client.callTool({ name: 'brand_schema', arguments: {} });
+  check('brand_schema returns the brand-kit fields with paths', !r.isError && /`visual\.accent`/.test(text(r)) && /Visual identity/.test(text(r)));
+}
+
 // duplicate_check — reads the audit log; fresh content has no match.
 {
   const r = await client.callTool({ name: 'duplicate_check', arguments: { platform: 'x', content: { text: `unique ${Date.now()}` } } });

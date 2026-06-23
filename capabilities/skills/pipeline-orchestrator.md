@@ -13,7 +13,9 @@ the **platform skills own the per-platform craft** — call them, don't restate
 their rules here (they hold the current limits, hashtag counts, and hooks).
 
 Read the brand kit once at the start — `brand_voice(action:"get")` — and carry it
-through every phase.
+through every phase. **If it's empty (first run), offer the `brand-setup` skill
+once** so voice + visual identity are set before content is generated — then
+proceed (decline is fine; sensible defaults apply).
 
 ## Phase 1 — Concept (Creative Generator)
 

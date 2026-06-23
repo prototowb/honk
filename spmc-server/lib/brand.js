@@ -26,6 +26,17 @@ export function emptyProfile() {
       sets:    {},        // named sets, e.g. { launch: ["#..."], devlog: ["#..."] }
     },
     cta:   [],            // reusable calls-to-action, e.g. "Star the repo: {url}"
+    visual: {             // visual identity — media_compose + the output skills default from this
+      accent:        '',  // accent/emphasis color (chrome, kicker, rules), e.g. #1df7ed
+      bg_color:      '',  // primary (dark) background, e.g. #05091e
+      surface:       '',  // lighter panel/card background for depth, e.g. #121b33
+      heading_color: '',  // headline text (else derived from bg for contrast), e.g. #f4f8ff
+      body_color:    '',  // body text (else derived from bg for contrast), e.g. #8ac0dd
+      logo_url:      '',  // logo stamped bottom-right on composed images
+      icon_url:      '',  // circular avatar/icon for footers (square-news)
+      handle:        '',  // @handle wordmark shown on templates
+      default_template: '', // template id used when media_compose is called without one
+    },
     links: {
       utm_defaults: {},   // e.g. { utm_source: "{platform}", utm_medium: "social" }
       shortener:    null, // optional short-link domain/service note

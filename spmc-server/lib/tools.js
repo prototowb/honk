@@ -177,12 +177,12 @@ export const TOOLS = [
   },
   {
     name: 'brand_voice',
-    description: 'Get or set the brand voice profile — a persistent brand kit (tone, audience, hashtag sets, emoji/banned-word policy, CTA library, default UTM rules) that the content skills read so drafts match your voice without re-specifying it each time. Per account (omit account for the default). Content config, not secrets. Call with action:"get" first to see the current profile and its shape.',
+    description: 'Get or set the brand kit — a persistent profile (voice: tone, audience, hashtag sets, emoji/banned-word policy, CTA library, UTM rules; plus a visual identity block: accent/bg/surface/heading/body colors, logo, icon, handle, default template) that the content skills read so drafts match your voice and composed images match your look without re-specifying it each time. Per account (omit account for the default). Content config, not secrets. Call with action:"get" first to see the current profile; if it is empty, offer guided setup (see brand_schema / the brand-setup skill).',
     inputSchema: {
       type: 'object',
       properties: {
         action:  { type: 'string', description: 'get (default) reads the profile; set writes one; clear removes it.', enum: ['get', 'set', 'clear'] },
-        profile: { type: 'object', description: 'For action:set — the fields to write, deep-merged into the stored profile (nested objects merge; arrays/scalars replace). Shape: { voice:{tone,audience,register,emoji_policy,banned_words[],do[],dont[]}, hashtags:{default[],sets{}}, cta[], links:{utm_defaults{},shortener}, platforms{}, notes }.' },
+        profile: { type: 'object', description: 'For action:set — the fields to write, deep-merged into the stored profile (nested objects merge; arrays/scalars replace). Shape: { voice:{tone,audience,register,emoji_policy,banned_words[],do[],dont[]}, hashtags:{default[],sets{}}, cta[], visual:{accent,bg_color,surface,heading_color,body_color,logo_url,icon_url,handle,default_template}, links:{utm_defaults{},shortener}, platforms{}, notes }. The visual block is the brand identity media_compose defaults from.' },
         replace: { type: 'boolean', description: 'For action:set — overwrite the whole profile instead of deep-merging.' },
         account: { type: 'string', description: "Named account (e.g. 'brand'). Omit for the default profile." },
       },
@@ -235,6 +235,16 @@ export const TOOLS = [
       type: 'object',
       properties: {
         account: { type: 'string', description: 'Brand-kit account to resolve pre-filled defaults from (optional; omit for the default account).' },
+      },
+    },
+  },
+  {
+    name: 'brand_schema',
+    description: 'Return the brand-kit field schema with the current values for an account — the single source for guided brand setup (the brand-setup skill) and the future web-UI settings form. Lists the persistent fields a brand kit holds (voice tone/audience, visual identity: accent/bg/surface/heading/body colors + logo/icon/handle/default-template, hashtags, CTAs, notes) grouped, with type/options/help, which are recommended, and what is already set. Call it to drive guided setup (collect the empty recommended fields one at a time) or to show a brand-settings overview. Writes go through brand_voice(action:"set"). The companion to brief_schema (per-run) — this is the persistent layer.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        account: { type: 'string', description: 'Brand-kit account to read current values from (optional; omit for the default account).' },
       },
     },
   },
@@ -356,23 +366,27 @@ export const TOOLS = [
   // ── Media ─────────────────────────────────────────────────────────────────
   {
     name: 'media_compose',
-    description: 'Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), square-tall (1080×1350, IG 4:5 feed), story-dark (1080×1920), banner-wide (1200×628), square-news (1080×1080 branded carousel slide with wrapped body + handle/icon footer).',
+    description: 'Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. All five templates share one editorial design system (brand row, hero headline on a layered surface, body, accent footer). Templates: square-dark (1080×1080 feed), square-tall (1080×1350, IG 4:5 feed — highest reach), story-dark (1080×1920 story, safe-zone aware), banner-wide (1200×628 link/OG card), square-news (1080×1080 carousel slide with circular icon footer). Identity + colors (accent/bg/surface/heading/body colors, logo, icon, handle, default template) default from the brand kit\'s visual block (brand_voice) — set them once instead of per call; explicit args override. Heading/body colors not set anywhere are derived from the background for legibility.',
     inputSchema: {
       type: 'object',
       properties: {
-        template:    { type: 'string', description: 'Template ID. One of: square-dark, square-tall, story-dark, banner-wide, square-news.', enum: ['square-dark', 'square-tall', 'story-dark', 'banner-wide', 'square-news'] },
-        headline:    { type: 'string', description: 'Main headline text. Auto-wrapped to two lines.' },
-        subtext:     { type: 'string', description: 'Secondary/body text below the headline. Word-wrapped to multiple lines on square-news.' },
-        bg_color:    { type: 'string', description: 'Background hex color. Default: #05091e' },
-        accent:      { type: 'string', description: 'Accent hex color for bar and subtext. Default: #1df7ed' },
-        bg_image_url:{ type: 'string', description: 'Optional public URL of a backdrop image. Composited behind the text panel.' },
-        handle:      { type: 'string', description: 'Account handle for the footer (e.g. @brand). square-news only.' },
-        icon_url:    { type: 'string', description: 'Public URL of an avatar/logo image rendered as a circular footer icon. square-news only.' },
-        logo_url:    { type: 'string', description: 'Optional public URL of a logo stamped in the bottom-right corner of any template (scaled to ~12% width). Works across all templates — use the brand kit logo.' },
+        template:    { type: 'string', description: 'Template ID. Omit to use the brand kit visual.default_template.', enum: ['square-dark', 'square-tall', 'story-dark', 'banner-wide', 'square-news'] },
+        headline:    { type: 'string', description: 'Main headline text. Word-wrapped and clamped to the template line budget.' },
+        subtext:     { type: 'string', description: 'Body text below the headline. Word-wrapped; flows directly under the headline.' },
+        kicker:      { type: 'string', description: 'Optional short eyebrow/label above the headline (e.g. "PRODUCT UPDATE", "BREAKING"). Rendered in the accent color.' },
+        bg_color:    { type: 'string', description: 'Primary (dark) background hex. Defaults from kit visual.bg_color, else the template default (#05091e).' },
+        surface:     { type: 'string', description: 'Lighter panel/card hex for depth. Defaults from kit visual.surface, else the template default (#121b33).' },
+        accent:      { type: 'string', description: 'Accent hex for chrome (kicker, mark, rules). Defaults from kit visual.accent, else the template default (#1df7ed).' },
+        heading_color:{ type: 'string', description: 'Headline text hex. Defaults from kit visual.heading_color; if unset and a custom bg is given, derived from the background for contrast.' },
+        body_color:  { type: 'string', description: 'Body text hex. Defaults from kit visual.body_color; if unset and a custom bg is given, derived from the background for contrast.' },
+        bg_image_url:{ type: 'string', description: 'Optional public URL of a backdrop image. Composited behind the layers.' },
+        handle:      { type: 'string', description: 'Account handle wordmark (e.g. @brand). Defaults from kit visual.handle.' },
+        icon_url:    { type: 'string', description: 'Public URL of an avatar image rendered as a circular footer icon (square-news). Defaults from kit visual.icon_url.' },
+        logo_url:    { type: 'string', description: 'Optional public URL of a logo stamped bottom-right on any template (~12% width). Defaults from kit visual.logo_url.' },
         provider:    { type: 'string', description: 'CDN provider for the upload. Auto-selected if omitted.', enum: ['cloudinary', 'imgbb'] },
-        account:     { type: 'string', description: "Named account for CDN credentials (e.g. 'brand')." },
+        account:     { type: 'string', description: "Named account for CDN credentials + brand kit (e.g. 'brand')." },
       },
-      required: ['template', 'headline'],
+      required: ['headline'],
     },
   },
   {
