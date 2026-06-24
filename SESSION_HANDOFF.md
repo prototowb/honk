@@ -10,6 +10,20 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
 ## On `development` now (recently merged)
 
+- **Audience segments (INDIV-005)** — a second voice-tailoring axis: the kit's new
+  `audiences{}` map lets a brand speak differently to named audiences ("enterprise"
+  vs "indie"), independent of platform. The override field list is now one canonical
+  `OVERRIDE_FIELDS` (`PLATFORM_OVERRIDE_FIELDS` aliases it — all six;
+  `SEGMENT_OVERRIDE_FIELDS` = it **minus `audience`**, since selecting a segment IS
+  the audience). `resolveVoice(profile, {platform, audience})` (bare string still =
+  platform) layers **base ▸ audience ▸ platform** — platform wins last, so a
+  platform delta fully shadows an audience delta on the same field (replace
+  semantics); returns per-field `sources` provenance and sets the effective
+  `audience` to the segment name. ⚠️ **An unknown audience name does NOT silently
+  apply** — values stay base and `unknownAudience` is flagged in the resolved view.
+  Exposed via `brand_voice(action:"get", platform?, audience?)`. `brief.js`'s
+  `audience_delta` → a single `audience` field. **Tools stay 30.** 117 unit +
+  36-check smoke.
 - **Content policies / guardrails (INDIV-004)** — the brand kit gains a `policy`
   block (`banned_topics`, `disclosures.always/sponsored`, `auto_publish`) that is
   now **enforced**. Pure `checkPolicy(platform, content, policy, {sponsored})` in
@@ -68,24 +82,21 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 - **Plans (not built):** `INBOX_FEATURE_PLAN.md` (comment-keyword → file/link) and
   **Individualization** (`PROJECT_SPECIFICATIONS.md` → *Individualization*).
 
-**State:** 30 tools · 5 templates · 2 runtime deps · **110 unit + 33-check smoke +
+**State:** 30 tools · 5 templates · 2 runtime deps · **117 unit + 36-check smoke +
 `build:check` + `pack:smoke`** all green. (Pushed to `origin/development`.)
 
 ## NEXT
 
-1. **Individualization backlog — INDIV-004 shipped; INDIV-005 is next.** Full plans
-   (shape · logic · surface · tests · open decisions) in `PROJECT_SPECIFICATIONS.md`
-   → *Individualization → Backlog — planned*; build order also in `PROJECT_STATUS.md`
-   → *Next Up*. **Remaining order:**
-   1. **INDIV-005 Audience segments** (build next): `audiences{}` second axis;
-      generalize `PLATFORM_OVERRIDE_FIELDS`→`OVERRIDE_FIELDS`; `resolveVoice(profile,
-      {platform, audience})`; `audience` brief field. **Heads-up:** segment fields =
-      base **minus `audience`** (audience is already a platform override field — can't
-      be circular). *Open: precedence — lean base ▸ audience ▸ platform (platform wins
-      last, hardest channel constraint); confirm before building.*
-   2. **INDIV-006 Multi-brand**: `brand_voice` `action:"list"`+`"clone"`. *Open:
-      active-account pointer vs agent-carried.*
-   3. **INDIV-007 Learned/adaptive**: few-shot examples + observed best-times —
+1. **Individualization backlog — INDIV-004 + INDIV-005 shipped; INDIV-006 is next.**
+   Full plans (shape · logic · surface · tests · open decisions) in
+   `PROJECT_SPECIFICATIONS.md` → *Individualization → Backlog — planned*; build order
+   also in `PROJECT_STATUS.md` → *Next Up*. **Remaining order:**
+   1. **INDIV-006 Multi-brand** (build next): `brand_voice` `action:"list"` (enumerate
+      accounts with a one-line summary) + `action:"clone"` (`to` arg — copy a profile
+      to a new account key). *Open: stored active-account pointer (`_active` in the
+      store) vs purely agent-carried context — lean agent-carried for now, revisit
+      with the UI.*
+   2. **INDIV-007 Learned/adaptive**: few-shot examples + observed best-times —
       **data-gated** (needs accrued analytics; likely defer).
    Plus deferred UI **export** (folder-copy works today) and optional polish: a real
    live `media_compose` upload via the `spmc` bin to confirm the kit-driven image on the CDN.

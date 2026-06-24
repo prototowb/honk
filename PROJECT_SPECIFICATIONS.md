@@ -303,7 +303,21 @@ deterministic dispatch gate now or later. *No new tool (folds into kit +
 validate); if a standalone `policy_check` reads cleaner, add it — but validate is
 the natural home.*
 
-#### INDIV-005 — Audience segments  ▸ build second (extends INDIV-003 cleanly)
+#### INDIV-005 — Audience segments  ✅ shipped (2026-06-24, on `development`)
+
+**Shipped as built:** `audiences{}` on the kit; the override field list generalized
+to one `OVERRIDE_FIELDS` (`PLATFORM_OVERRIDE_FIELDS` aliases it — all six; a new
+`SEGMENT_OVERRIDE_FIELDS` is it **minus `audience`**). `resolveVoice(profile,
+{platform, audience})` (bare-string platform still accepted) layers
+**base ▸ audience ▸ platform** — platform wins last, so a platform delta fully
+shadows an audience delta on the same field (replace semantics). Selecting a known
+segment sets the effective `audience` to its name; per-field `sources` provenance.
+**Unknown audience name does NOT silently apply** — values stay base and
+`unknownAudience` is set + surfaced (the advisor-caught correctness property).
+Exposed via `brand_voice(action:"get", platform?, audience?)` (resolves when either
+is given). `brief.js`'s `audience_delta` became a single `audience` field (segment
+name or ad-hoc). `audiences` stays out of `BRAND_FIELDS` (advanced step, symmetric
+with `platforms`). Tools stay 30. 117 unit + 36-check smoke. *Original plan below.*
 
 **Intent:** a second tailoring axis — the same brand speaks differently to
 "enterprise buyers" vs "indie devs," independent of platform.
