@@ -171,6 +171,28 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   await client.callTool({ name: 'brand_voice', arguments: { action: 'set', profile: { policy: { disclosures: { always: [], sponsored: [] }, banned_topics: [] } } } });
 }
 
+// multi-brand management (INDIV-006) — list/use/clone; active drives reads, not posts.
+{
+  await client.callTool({ name: 'brand_voice', arguments: { action: 'set', account: 'acme', profile: { voice: { tone: 'crisp' } } } });
+  const list1 = await client.callTool({ name: 'brand_voice', arguments: { action: 'list' } });
+  check('brand_voice list shows accounts with the active marker',
+    !list1.isError && /active: default/i.test(text(list1)) && /\bacme\b/.test(text(list1)));
+
+  const use = await client.callTool({ name: 'brand_voice', arguments: { action: 'use', account: 'acme' } });
+  check('brand_voice use sets the active account', !use.isError && /Active account set to 'acme'/i.test(text(use)));
+
+  const got = await client.callTool({ name: 'brand_voice', arguments: { action: 'get' } });
+  check('brand_voice get with no account resolves the active account',
+    !got.isError && /active account 'acme'/i.test(text(got)) && /crisp/.test(text(got)));
+
+  const clone = await client.callTool({ name: 'brand_voice', arguments: { action: 'clone', account: 'acme', to: 'acme2' } });
+  check('brand_voice clone copies a profile to a new account', !clone.isError && /Cloned 'acme' → 'acme2'/.test(text(clone)));
+  const dup = await client.callTool({ name: 'brand_voice', arguments: { action: 'clone', account: 'acme', to: 'acme2' } });
+  check('brand_voice clone refuses to clobber an existing account', dup.isError && /already has a profile/i.test(text(dup)));
+
+  await client.callTool({ name: 'brand_voice', arguments: { action: 'use' } }); // reset active to default for later checks
+}
+
 // link_tag — deterministic, no credentials.
 {
   const r = await client.callTool({ name: 'link_tag', arguments: { url: 'https://example.com/p?ref=home', params: { utm_campaign: 'launch' }, platform: 'x' } });
