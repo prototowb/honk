@@ -345,7 +345,23 @@ closing the schema-symmetry loop.
 base; provenance source tags. **Open decision:** the precedence order above
 (platform-wins) vs audience-wins — confirm before building.
 
-#### INDIV-006 — Multi-brand management  ▸ build third (small; UI-convergent)
+#### INDIV-006 — Multi-brand management  ✅ shipped (2026-06-24, on `development`)
+
+**Shipped as built:** `brand_voice` gains `action:"list"` (joins brand profiles +
+credentialed accounts via `config.accountsOverview()`, lowercase-normalized union,
+active marked), `action:"use"` (sets an **active pointer**), `action:"clone"` (+`to`
+— deep-copy a profile to a new key; refuses to clobber). **Decision: active pointer,
+not agent-carried** (chosen for UI groundwork — a UI needs persisted selection state;
+the pointer subsumes agent-carried since an explicit `account:` always overrides).
+Stored in its **own file** (`brand-active.json`), NOT in `brand.json` — the flat
+brand map stays single-concern and the pointer file is the **seed of a future
+account registry** (no migration). **Reads** (`brand_voice get` / `brand_schema`
+with no account) default to the active account and **echo** it; **writes + publishing
++ `media_compose` stay explicit** — the active pointer never silently redirects a
+post (the hidden-global-state footgun applies to brand-dependent output). `brand.json`
+stays flat. Tools stay 30. 121 unit + 41-check smoke. *Architecture note below: keep
+`brand.json` flat; evolve toward a separate account registry (seeded by this pointer),
+not a nested mega-account object. Original plan follows.*
 
 **Intent:** run several brands/accounts from one install without hand-editing
 `brand.json`. `brand.list()` and per-account isolation already exist.

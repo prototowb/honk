@@ -10,6 +10,20 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
 ## On `development` now (recently merged)
 
+- **Multi-brand management (INDIV-006)** — `brand_voice` gains `action:"list"`
+  (unions brand profiles + credentialed accounts via `config.accountsOverview()`,
+  lowercase-normalized so casing doesn't double-count, active marked), `action:"use"`
+  (sets an **active-account pointer**), `action:"clone"` (+`to` — deep-copy a profile
+  to a new key; refuses to clobber; doesn't touch the pointer). **Active pointer was
+  chosen over agent-carried for UI groundwork** (a UI needs persisted selection; the
+  pointer also subsumes agent-carried — explicit `account:` always overrides).
+  **Architecture:** `brand.json` stays **flat** (single-concern); the pointer lives in
+  its **own `brand-active.json`** as the **seed of a future account registry** (no
+  migration). ⚠️ **Safety boundary:** reads (`brand_voice get`/`brand_schema` with no
+  account) default to the active account + echo it; **writes, publishing, and
+  `media_compose` stay explicit** — the pointer NEVER silently redirects a post
+  (persona has a mandatory "confirm the brand, pass `account:` explicitly" check).
+  **Tools stay 30.** 121 unit + 41-check smoke.
 - **Audience segments (INDIV-005)** — a second voice-tailoring axis: the kit's new
   `audiences{}` map lets a brand speak differently to named audiences ("enterprise"
   vs "indie"), independent of platform. The override field list is now one canonical
@@ -82,29 +96,29 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 - **Plans (not built):** `INBOX_FEATURE_PLAN.md` (comment-keyword → file/link) and
   **Individualization** (`PROJECT_SPECIFICATIONS.md` → *Individualization*).
 
-**State:** 30 tools · 5 templates · 2 runtime deps · **117 unit + 36-check smoke +
+**State:** 30 tools · 5 templates · 2 runtime deps · **121 unit + 41-check smoke +
 `build:check` + `pack:smoke`** all green. (Pushed to `origin/development`.)
 
 ## NEXT
 
-1. **Individualization backlog — INDIV-004 + INDIV-005 shipped; INDIV-006 is next.**
-   Full plans (shape · logic · surface · tests · open decisions) in
-   `PROJECT_SPECIFICATIONS.md` → *Individualization → Backlog — planned*; build order
-   also in `PROJECT_STATUS.md` → *Next Up*. **Remaining order:**
-   1. **INDIV-006 Multi-brand** (build next): `brand_voice` `action:"list"` (enumerate
-      accounts with a one-line summary) + `action:"clone"` (`to` arg — copy a profile
-      to a new account key). *Open: stored active-account pointer (`_active` in the
-      store) vs purely agent-carried context — lean agent-carried for now, revisit
-      with the UI.*
-   2. **INDIV-007 Learned/adaptive**: few-shot examples + observed best-times —
-      **data-gated** (needs accrued analytics; likely defer).
-   Plus deferred UI **export** (folder-copy works today) and optional polish: a real
-   live `media_compose` upload via the `spmc` bin to confirm the kit-driven image on the CDN.
-   **INDIV-004 follow-up (deferred):** a deterministic dispatch/`auto_publish` gate so
-   the queue/scheduler path enforces policy (today only direct publish hard-blocks).
-   **INDIV-005 seam (future guided-mode nicety, not a gap):** the brief's `audience`
-   field accepts a segment name as text but can't *enumerate* defined segments, so
-   guided intake won't suggest them — wire that in with the UI/guided-mode work.
+1. **Individualization backlog — INDIV-004/005/006 shipped; only INDIV-007 remains
+   (data-gated, defer).** Full plans in `PROJECT_SPECIFICATIONS.md` → *Individualization
+   → Backlog — planned*.
+   - **INDIV-007 Learned/adaptive** — voice few-shot examples + observed best-times
+     (`best_time` `observedWindows`). **Data-gated:** needs accrued analytics history,
+     which hasn't accrued (live analytics still unverified). Plan it, expect to defer
+     until there's data — this is the natural point to pause the Individualization track
+     and start the **UI phase (BETA-011)**.
+   Deferred UI **export** (folder-copy works today) and optional polish: a real live
+   `media_compose` upload via the `spmc` bin to confirm the kit-driven image on the CDN.
+   **Carry-forward follow-ups (deferred, for the UI phase):**
+   - **INDIV-006:** promote `brand-active.json` into a full account registry (display
+     names, created_at, archived) when the UI renders it; decide if/where the active
+     pointer should drive scheduler/compose defaults (kept reads-only in v1 on purpose).
+   - **INDIV-005:** the brief's `audience` field accepts a segment name as text but
+     can't *enumerate* defined segments — wire suggestions in with guided-mode/UI.
+   - **INDIV-004:** a deterministic dispatch/`auto_publish` gate so the queue/scheduler
+     path enforces policy (today only direct publish hard-blocks).
 2. **FB re-verify** (user is providing a modified token): `pages_manage_engagement` for
    the FB first-comment; re-test FB alt-text — if `alt_text_custom` still doesn't read
    back, try the two-step set (create photo → POST `alt_text_custom` to the photo node).
