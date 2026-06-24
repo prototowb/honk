@@ -6,6 +6,7 @@ import { join } from 'path';
 
 process.env.SPMC_DATA_DIR = mkdtempSync(join(tmpdir(), 'spmc-brand-'));
 const brand = await import('../lib/brand.js');
+const { accountsOverview } = await import('../lib/config.js');
 
 test('get is null when unset; getOrEmpty returns the skeleton shape', () => {
   assert.equal(brand.get(), null);
@@ -180,4 +181,44 @@ test('resolveVoice with neither platform nor audience yields the pure base', () 
   assert.equal(r.effective.audience, 'devs');
   assert.deepEqual(r.overridden, []);
   assert.equal(r.unknownAudience, false);
+});
+
+// ── active account pointer + clone + accounts overview (INDIV-006) ───────────
+
+test('getActive defaults to empty (the default account) and setActive round-trips', () => {
+  assert.equal(brand.getActive(), '');
+  assert.equal(brand.setActive('acme'), 'acme');
+  assert.equal(brand.getActive(), 'acme');
+  assert.equal(brand.setActive(''), '');   // reset to default
+  assert.equal(brand.getActive(), '');
+});
+
+test('clone copies a profile to a new key, then the two diverge independently', () => {
+  brand.set({ voice: { tone: 'crisp' } }, 'src');
+  const copy = brand.clone('src', 'dst');
+  assert.equal(copy.voice.tone, 'crisp');
+  brand.set({ voice: { tone: 'loud' } }, 'dst');
+  assert.equal(brand.get('src').voice.tone, 'crisp'); // source untouched
+  assert.equal(brand.get('dst').voice.tone, 'loud');
+});
+
+test('clone refuses to clobber an existing target and needs a real source + target', () => {
+  assert.throws(() => brand.clone('src', 'dst'), /already has a profile/);   // dst exists
+  assert.throws(() => brand.clone('src'), /target/);                          // no `to`
+  assert.throws(() => brand.clone('nope-no-profile', 'x2'), /No brand profile to clone/);
+});
+
+test('accountsOverview unions credentialed accounts that have no brand profile', () => {
+  process.env.X_API_KEY__ACME            = 'k';
+  process.env.X_API_SECRET__ACME         = 's';
+  process.env.X_ACCESS_TOKEN__ACME       = 't';
+  process.env.X_ACCESS_TOKEN_SECRET__ACME = 'ts';
+  try {
+    const acme = accountsOverview().rows.find(r => r.account === 'acme');
+    assert.ok(acme, 'a creds-only account should appear in the overview');
+    assert.equal(acme.brandProfile, false);
+    assert.ok(acme.platforms.includes('x'));
+  } finally {
+    for (const k of ['X_API_KEY__ACME', 'X_API_SECRET__ACME', 'X_ACCESS_TOKEN__ACME', 'X_ACCESS_TOKEN_SECRET__ACME']) delete process.env[k];
+  }
 });

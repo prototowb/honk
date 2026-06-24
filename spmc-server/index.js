@@ -12,7 +12,7 @@ import * as compose   from './media/compose.js';
 import { publishAudited }                 from './lib/dispatch.js';
 import { validate, checkPolicy, formatValidation } from './lib/validate.js';
 import { adapt, formatAdaptation }        from './lib/adapt.js';
-import { report as configReport, formatReport } from './lib/config.js';
+import { report as configReport, formatReport, accountsOverview, formatAccounts } from './lib/config.js';
 import { normalizeScheduledAt, isPast, timezoneWarning } from './lib/schedule.js';
 import { read as auditRead, record as auditRecord, recentDuplicate } from './lib/audit.js';
 import { hashContent }                    from './lib/hash.js';
@@ -258,28 +258,56 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         );
       }
       case 'brand_voice': {
-        const account = args.account ?? '';
-        const label = account ? `'${account}'` : 'default';
         const action = args.action ?? 'get';
+
+        // ── Multi-brand management (INDIV-006) — explicit account; never the active default ──
+        if (action === 'list') {
+          return ok(formatAccounts(accountsOverview()));
+        }
+        if (action === 'use') {
+          const saved = brand.setActive(args.account ?? '');
+          if (!saved) return ok('Active account reset to default.');
+          const known = accountsOverview().rows.some(r => !r.isDefault && r.account.toLowerCase() === saved.toLowerCase());
+          const note = known ? '' : `\n(Note: '${saved}' has no brand profile or credentials yet — set one up with brand_voice(action:"set", account:"${saved}") and the account's __${saved.toUpperCase()} env vars.)`;
+          return ok(`Active account set to '${saved}'. Reads (brand_voice get / brand_schema) now default to it; publishing stays explicit — confirm the brand before any post.${note}`);
+        }
+        if (action === 'clone') {
+          const from = args.account ?? '';
+          const saved = brand.clone(from, args.to); // throws on no source / missing or existing target; leaves the active pointer alone
+          return ok(`Cloned ${from ? `'${from}'` : 'default'} → '${args.to}'. Edit it independently with brand_voice(action:"set", account:"${args.to}"). Active account unchanged.\n\n${formatBrandProfile(saved)}`);
+        }
+
+        // ── Write ops — explicit account or default; do NOT follow the active pointer ──
         if (action === 'clear') {
+          const account = args.account ?? '';
+          const label = account ? `'${account}'` : 'default';
           const existed = brand.clear(account);
           return ok(existed ? `Cleared the ${label} brand profile.` : `No ${label} brand profile to clear.`);
         }
         if (action === 'set') {
+          const account = args.account ?? '';
+          const label = account ? `'${account}'` : 'default';
           if (!args.profile || typeof args.profile !== 'object') throw new Error('brand_voice set requires a `profile` object.');
           const saved = brand.set(args.profile, account, { replace: !!args.replace });
           return ok(`Saved the ${label} brand profile (${args.replace ? 'replaced' : 'merged'}).\n\n${formatBrandProfile(saved)}`);
         }
+
+        // ── Read (get) — defaults to the active account when none is given, and echoes it ──
+        const account = args.account ?? brand.getActive();
+        const fromActive = args.account == null && !!brand.getActive();
+        const label = account ? `'${account}'` : 'default';
+        const activeSuffix = fromActive
+          ? `\n\n(resolved from the active account ${label} — pass account: explicitly to override)` : '';
         const current = brand.get(account);
         if (args.platform || args.audience) {
           // Resolve the effective voice for a platform and/or audience segment —
           // null-safe (current may be null when no profile is set; resolveVoice
           // yields the base/empty). Precedence: base ▸ audience ▸ platform.
           return ok(formatResolvedVoice(
-            brand.resolveVoice(current, { platform: args.platform, audience: args.audience }), label, current));
+            brand.resolveVoice(current, { platform: args.platform, audience: args.audience }), label, current) + activeSuffix);
         }
-        if (!current) return ok(`No brand profile set for ${label}. Set one with brand_voice(action:"set", profile:{...}). Empty shape:\n\n${formatBrandProfile(brand.emptyProfile())}`);
-        return ok(`Brand profile (${label}):\n\n${formatBrandProfile(current)}`);
+        if (!current) return ok(`No brand profile set for ${label}. Set one with brand_voice(action:"set", profile:{...}). Empty shape:\n\n${formatBrandProfile(brand.emptyProfile())}${activeSuffix}`);
+        return ok(`Brand profile (${label}):\n\n${formatBrandProfile(current)}${activeSuffix}`);
       }
       case 'link_tag': {
         const profile = brand.getOrEmpty(args.account ?? '');
@@ -315,8 +343,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return ok(formatBriefSchema(briefSchema(profile)));
       }
       case 'brand_schema': {
-        const profile = brand.get(args.account ?? '');
-        return ok(formatBrandSchema(brandSchema(profile)));
+        const account = args.account ?? brand.getActive();
+        const fromActive = args.account == null && !!brand.getActive();
+        const profile = brand.get(account);
+        return ok(formatBrandSchema(brandSchema(profile))
+          + (fromActive ? `\n\n(account: ${account ? `'${account}'` : 'default'} — active)` : ''));
       }
       case 'audit_log': {
         const entries = auditRead({ platform: args.platform, status: args.status, source: args.source, limit: args.limit });

@@ -116,6 +116,22 @@ brand_voice(action: "set", profile: { policy: {
 } })
 ```
 
+**Multiple brands.** One install can run several brand accounts. Manage them through
+`brand_voice`:
+
+```
+brand_voice(action: "list")                 // accounts (brand kits + credentialed), active marked
+brand_voice(action: "use", account: "acme") // set the active account
+brand_voice(action: "clone", account: "acme", to: "acme-eu")  // copy a kit as a starting point
+```
+
+`use` sets the **active account** that read tools default to (`brand_voice get`,
+`brand_schema` with no `account`), so you don't restate it while working on one
+brand. **Publishing never follows the active pointer** — pass `account:` explicitly
+on the publish call and confirm the brand with the user (there is no un-publish).
+Credentials are per account via `KEY__ACCOUNT` env vars (see `config_doctor`);
+`list` unions brand kits with credentialed accounts so you see the whole picture.
+
 ### Start a brief (optional guided intake)
 
 ```
