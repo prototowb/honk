@@ -102,6 +102,9 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
    live `media_compose` upload via the `spmc` bin to confirm the kit-driven image on the CDN.
    **INDIV-004 follow-up (deferred):** a deterministic dispatch/`auto_publish` gate so
    the queue/scheduler path enforces policy (today only direct publish hard-blocks).
+   **INDIV-005 seam (future guided-mode nicety, not a gap):** the brief's `audience`
+   field accepts a segment name as text but can't *enumerate* defined segments, so
+   guided intake won't suggest them — wire that in with the UI/guided-mode work.
 2. **FB re-verify** (user is providing a modified token): `pages_manage_engagement` for
    the FB first-comment; re-test FB alt-text — if `alt_text_custom` still doesn't read
    back, try the two-step set (create photo → POST `alt_text_custom` to the photo node).
