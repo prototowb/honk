@@ -127,6 +127,30 @@ const text = (r) => r.content.map(c => c.text).join('\n');
     /synergy/.test(t) && /launch/.test(t));
 }
 
+// content policy / guardrails (INDIV-004) — set a policy, then content_validate
+// reflects it: always-disclosure warns, sponsored-disclosure errors, banned topics
+// surface as a note. The policy is loaded by the handler (validate stays pure).
+{
+  await client.callTool({ name: 'brand_voice', arguments: { action: 'set', profile: {
+    policy: { disclosures: { always: ['Ad'], sponsored: ['#ad'] }, banned_topics: ['politics'] },
+  } } });
+  const got = await client.callTool({ name: 'brand_voice', arguments: { action: 'get' } });
+  check('brand_voice get renders the policy block', !got.isError && /policy:/i.test(text(got)) && /banned_topics=\[politics\]/.test(text(got)));
+
+  const warn = await client.callTool({ name: 'content_validate', arguments: { platform: 'x', content: { text: 'no disclosure here' } } });
+  check('content_validate warns on a missing always-on disclosure', !warn.isError && /Required disclosure "Ad" is missing/i.test(text(warn)));
+  check('content_validate surfaces banned topics as a policy note', /do not write about: politics/i.test(text(warn)));
+
+  const sErr = await client.callTool({ name: 'content_validate', arguments: { platform: 'x', content: { text: 'buy now' }, sponsored: true } });
+  check('content_validate errors on a sponsored post missing #ad', !sErr.isError && /Invalid/i.test(text(sErr)) && /missing the required disclosure "#ad"/i.test(text(sErr)));
+
+  const sOk = await client.callTool({ name: 'content_validate', arguments: { platform: 'x', content: { text: 'buy now Ad #ad' }, sponsored: true } });
+  check('content_validate passes a sponsored post with the disclosure present', !sOk.isError && /Valid/i.test(text(sOk)));
+
+  // Restore a policy-free default profile so later checks (queue, drafts) are unaffected.
+  await client.callTool({ name: 'brand_voice', arguments: { action: 'set', profile: { policy: { disclosures: { always: [], sponsored: [] }, banned_topics: [] } } } });
+}
+
 // link_tag — deterministic, no credentials.
 {
   const r = await client.callTool({ name: 'link_tag', arguments: { url: 'https://example.com/p?ref=home', params: { utm_campaign: 'launch' }, platform: 'x' } });

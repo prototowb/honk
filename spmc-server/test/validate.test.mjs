@@ -1,6 +1,6 @@
 import test   from 'node:test';
 import assert from 'node:assert/strict';
-import { validate } from '../lib/validate.js';
+import { validate, checkPolicy, formatValidation } from '../lib/validate.js';
 
 test('accepts a short tweet', () => {
   assert.equal(validate('x', { text: 'hi' }).ok, true);
@@ -116,4 +116,63 @@ test('first_comment is rejected where there is no comments edge', () => {
     assert.equal(v.ok, false, `${p[0]} should reject first_comment`);
     assert.match(v.errors.join(), /does not support a first comment/);
   }
+});
+
+// ── content policy / guardrails (INDIV-004) ──────────────────────────────────
+
+test('checkPolicy warns when an always-on disclosure is missing from the text', () => {
+  const r = checkPolicy('x', { text: 'just shipped a thing' }, { disclosures: { always: ['Ad'] } });
+  assert.equal(r.errors.length, 0);
+  assert.match(r.warnings.join(), /Required disclosure "Ad" is missing/);
+});
+
+test('checkPolicy passes (note, no warning) when the always-on disclosure is present, case-insensitively', () => {
+  const r = checkPolicy('x', { text: 'an AD for our launch' }, { disclosures: { always: ['Ad'] } });
+  assert.equal(r.warnings.length, 0);
+  assert.match(r.notes.join(), /Disclosure "Ad" present/);
+});
+
+test('checkPolicy errors on a sponsored post missing its sponsored disclosure', () => {
+  const r = checkPolicy('instagram', { caption: 'buy our thing' }, { disclosures: { sponsored: ['#ad'] } }, { sponsored: true });
+  assert.match(r.errors.join(), /missing the required disclosure "#ad"/);
+});
+
+test('checkPolicy does NOT enforce sponsored disclosures when sponsored is not flagged', () => {
+  const r = checkPolicy('instagram', { caption: 'buy our thing' }, { disclosures: { sponsored: ['#ad'] } });
+  assert.equal(r.errors.length, 0);
+  assert.equal(r.warnings.length, 0);
+});
+
+test('checkPolicy passes a sponsored post that includes the disclosure', () => {
+  const r = checkPolicy('instagram', { caption: 'buy our thing #ad' }, { disclosures: { sponsored: ['#ad'] } }, { sponsored: true });
+  assert.equal(r.errors.length, 0);
+  assert.match(r.notes.join(), /Sponsored disclosure "#ad" present/);
+});
+
+test('checkPolicy surfaces banned topics as a drafting reminder note', () => {
+  const r = checkPolicy('x', { text: 'hello' }, { banned_topics: ['politics', 'competitor comparisons'] });
+  assert.equal(r.errors.length, 0);
+  assert.match(r.notes.join(), /do not write about: politics, competitor comparisons/);
+});
+
+test('checkPolicy reads a thread\'s joined tweets for disclosures', () => {
+  const present = checkPolicy('x', { tweets: ['intro', 'this is sponsored #ad', 'outro'] }, { disclosures: { sponsored: ['#ad'] } }, { sponsored: true });
+  assert.equal(present.errors.length, 0);
+  const missing = checkPolicy('x', { tweets: ['intro', 'outro'] }, { disclosures: { sponsored: ['#ad'] } }, { sponsored: true });
+  assert.equal(missing.errors.length, 1);
+});
+
+test('checkPolicy is null-safe with no/empty policy', () => {
+  for (const policy of [null, undefined, {}, { disclosures: {}, banned_topics: [] }]) {
+    const r = checkPolicy('x', { text: 'hi' }, policy);
+    assert.deepEqual(r.errors, []);
+    assert.deepEqual(r.warnings, []);
+    assert.deepEqual(r.notes, []);
+  }
+});
+
+test('formatValidation renders a Policy section from notes', () => {
+  const out = formatValidation({ ok: true, label: 'X (Twitter)', errors: [], warnings: [], notes: ['Disclosure "Ad" present ✓'] });
+  assert.match(out, /Policy:/);
+  assert.match(out, /Disclosure "Ad" present/);
 });
