@@ -34,7 +34,9 @@ what make outputs feel on-brand — and offer to stop once those are done:
    hex (e.g. `#1df7ed`). Leave heading/body blank to auto-derive legible colors
    from the background. If the user has a brand style guide, ask for its palette.
 3. **Hashtags & CTA** — default hashtags, reusable calls-to-action.
-4. **Notes** — anything else to keep in mind.
+4. **Content policy** — banned topics, required disclosures (always/sponsored),
+   auto-publish. Optional but high-value; see below.
+5. **Notes** — anything else to keep in mind.
 
 `brand_schema` is the same field spec a future web-UI settings form renders —
 collect against it, use the **dotted paths** it lists (e.g. `visual.accent`),
@@ -75,6 +77,32 @@ brand_voice(action:"set", profile:{ platforms:{
 
 Check the resolved result with `brand_voice(action:"get", platform:"x")`. The
 platform skills read this automatically when drafting for a channel.
+
+## Content policy / guardrails (optional, high-value)
+
+The kit's `policy` block is the brand's safety layer — what it must not say, what
+it must always say, and how freely it publishes. Worth setting for any brand that
+runs ads or has off-limits topics:
+
+- **Banned topics** (`policy.banned_topics`) — themes never to post about
+  (agent-judged), e.g. "competitor comparisons". The drafting skills treat these
+  as hard rules.
+- **Always-on disclosures** (`policy.disclosures.always`) — strings every post
+  must include; `content_validate` warns when one is missing.
+- **Sponsored disclosures** (`policy.disclosures.sponsored`) — strings a paid post
+  must include (e.g. `#ad`); publishing a post flagged `sponsored: true` without
+  one is **blocked**.
+- **Auto-publish** (`policy.auto_publish`) — leave `false` (default) to always
+  confirm before publishing; set `true` only if the user wants the agent to
+  publish without a per-post check.
+
+```
+brand_voice(action:"set", profile:{ policy:{
+  banned_topics:["competitor comparisons"],
+  disclosures:{ always:[], sponsored:["#ad"] },
+  auto_publish:false
+}})
+```
 
 ## Portability
 

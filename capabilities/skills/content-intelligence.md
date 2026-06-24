@@ -65,6 +65,31 @@ brand_voice(action: "set", profile: { platforms: { x: { tone: "punchier", hashta
 When you're about to write for a specific platform, prefer the platform-resolved
 get over the raw profile so per-channel deltas are already applied.
 
+**Content policy / guardrails.** The kit also carries a `policy` block — the
+brand's safety layer. Honor it on every draft:
+
+- `policy.banned_topics` — themes the brand will **not** post about (agent-judged,
+  e.g. "competitor comparisons", "politics"). Treat these as hard "do not write
+  about" rules; if a request lands on one, flag it and stop rather than draft it.
+- `policy.disclosures.always` — strings every post must contain (e.g. `Ad`).
+  Include them; `content_validate` warns if one is missing.
+- `policy.disclosures.sponsored` — strings a **sponsored/paid** post must contain
+  (e.g. `#ad`). When a post is sponsored, include them and publish with
+  `sponsored: true` — a missing sponsored disclosure then **blocks** publishing.
+- `policy.auto_publish` — `false` (the default) means **always confirm with the
+  user before publishing**. Only when it is explicitly `true` may you publish
+  without a per-post confirmation.
+
+Set them once:
+
+```
+brand_voice(action: "set", profile: { policy: {
+  banned_topics: ["competitor comparisons"],
+  disclosures: { always: [], sponsored: ["#ad"] },
+  auto_publish: false,
+} })
+```
+
 ### Start a brief (optional guided intake)
 
 ```
@@ -95,12 +120,15 @@ Existing query params and the fragment are preserved. Set the defaults once via
 
 ```
 content_validate(platform: "x" | "instagram" | "tiktok" | "facebook" | "threads" | "bluesky",
-                 content: { /* same fields as the posting tool */ })
+                 content: { /* same fields as the posting tool */ }, account?, sponsored?)
 ```
 
-Returns blocking **errors** (over length, missing required field, bad media URL)
-and non-blocking **warnings** (near the limit). Run this before `queue_add` or any
-publish tool. Length checks are grapheme-aware for Bluesky.
+Returns blocking **errors** (over length, missing required field, bad media URL),
+non-blocking **warnings** (near the limit), and **policy** notes from the brand
+kit. Run this before `queue_add` or any publish tool. Length checks are
+grapheme-aware for Bluesky. Pass `account` to check against that account's policy,
+and `sponsored: true` to enforce its sponsored disclosures (a missing one becomes
+an error). Publish tools accept the same `sponsored` flag.
 
 ### Guard against accidental reposts
 

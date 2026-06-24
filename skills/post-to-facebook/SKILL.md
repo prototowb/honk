@@ -23,7 +23,7 @@ Use `facebook_post` from the `spmc` MCP server.
 
 > Weak: "We are thrilled to share an update with our community." → Strong: "We rebuilt onboarding from scratch. New users hit 'aha' in 2 minutes, down from 11."
 
-Before drafting, pull the brand kit with `brand_voice(action:"get", platform:"facebook")` — the voice resolved for Facebook, with any per-platform deltas already applied — and match its tone, audience, and emoji policy. See the `content-intelligence` skill.
+Before drafting, pull the brand kit with `brand_voice(action:"get", platform:"facebook")` — the voice resolved for Facebook, with any per-platform deltas already applied — and match its tone, audience, and emoji policy. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
 ### Requirements
 
