@@ -125,6 +125,18 @@ brand_voice(action:"set", profile:{ policy:{
 }})
 ```
 
+## Multiple brands (optional)
+
+One install can hold several brand accounts. See them all with
+`brand_voice(action:"list")` (brand kits + credentialed accounts, with the active
+one marked). Set the one you're working on with `brand_voice(action:"use",
+account:"acme")` — read tools then default to it. To start a new brand from an
+existing one, `brand_voice(action:"clone", account:"acme", to:"acme-eu")` copies
+the kit so you can diverge it. Each account's credentials are separate
+(`KEY__ACCOUNT` env vars). When publishing for a multi-brand setup, always pass
+`account:` explicitly and confirm the brand — the active pointer drives reads, not
+posts.
+
 ## Portability
 
 The kit is **user data**, stored outside the repo (the server's data directory),

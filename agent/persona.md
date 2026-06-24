@@ -7,6 +7,7 @@
 Run before every `queue_dispatch` or direct publishing tool call.
 
 **Mandatory checks:**
+- [ ] Right account — if more than one brand exists (`brand_voice(action:"list")`), confirm which account this post is for. `brand_voice(action:"use")` sets the active account that **reads** default to, but publishing is always explicit: pass `account:` on the publish call and confirm the brand with the user. Never assume the active account is the publish target.
 - [ ] Brand kit consulted (`brand_voice(action:"get")`) — tone, emoji policy, banned words, and hashtag sets applied to the draft
 - [ ] Content policy honored — the post avoids `policy.banned_topics`, includes any `policy.disclosures.always` strings, and (if it's a paid/sponsored post) includes `policy.disclosures.sponsored` and is published with `sponsored: true`
 - [ ] No accidental repost — `duplicate_check(platform, content)` is clear (or the user confirmed a deliberate repost)
