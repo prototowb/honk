@@ -46,6 +46,12 @@ export function emptyProfile() {
                           // Overridable keys: tone, register, emoji_policy, audience,
                           // hashtags, cta (see PLATFORM_OVERRIDE_FIELDS). A set value
                           // replaces the base for that platform; resolveVoice() merges.
+    audiences: {},        // optional named audience segments — the second tailoring
+                          // axis (INDIV-005), e.g. { "enterprise": { tone: "measured",
+                          // hashtags: ["#infosec"] } }. Segment keys: tone, register,
+                          // emoji_policy, hashtags, cta (NOT audience — selecting the
+                          // segment IS the audience choice; see SEGMENT_OVERRIDE_FIELDS).
+                          // resolveVoice() merges a segment over the base, under platform.
     policy: {             // content guardrails (INDIV-004) — what the brand must not
                           // say, what it must always say, and how freely it publishes.
                           // Checked by validate's checkPolicy() (the handler passes
@@ -64,13 +70,13 @@ export function emptyProfile() {
   };
 }
 
-// The voice fields a per-platform override can set, each mapped to where the
-// base value lives in the profile. This is the single source for per-platform
-// tailoring: resolveVoice() reads it, and a future per-platform UI panel /
+// The voice fields a tailoring override can set, each mapped to where the base
+// value lives in the profile. The single source for BOTH tailoring axes
+// (per-platform and per-audience): resolveVoice() reads it, and a future UI panel /
 // brand_schema extension renders from it (schema symmetry — same ethos as
-// BRAND_FIELDS). `key` is the flat key under profile.platforms[platform];
-// `basePath` is the dotted base fallback; `type` drives empty-value defaulting.
-export const PLATFORM_OVERRIDE_FIELDS = [
+// BRAND_FIELDS). `key` is the flat key under the override map; `basePath` is the
+// dotted base fallback; `type` drives empty-value defaulting.
+export const OVERRIDE_FIELDS = [
   { key: 'tone',         basePath: 'voice.tone',         label: 'Tone',         type: 'text' },
   { key: 'register',     basePath: 'voice.register',     label: 'Register',     type: 'text' },
   { key: 'emoji_policy', basePath: 'voice.emoji_policy', label: 'Emoji policy', type: 'enum' },
@@ -78,6 +84,15 @@ export const PLATFORM_OVERRIDE_FIELDS = [
   { key: 'hashtags',     basePath: 'hashtags.default',   label: 'Hashtags',     type: 'list' },
   { key: 'cta',          basePath: 'cta',                label: 'CTAs',         type: 'list' },
 ];
+
+// A per-platform override can set all six fields. (Alias kept as the platform set's
+// stable name; it IS the full OVERRIDE_FIELDS.)
+export const PLATFORM_OVERRIDE_FIELDS = OVERRIDE_FIELDS;
+
+// A named audience SEGMENT can set every field EXCEPT `audience` — a segment can't
+// redefine which audience it is (circular); selecting the segment is itself the
+// audience choice (resolveVoice sets the effective audience to the segment name).
+export const SEGMENT_OVERRIDE_FIELDS = OVERRIDE_FIELDS.filter(f => f.key !== 'audience');
 
 function at(obj, path) {
   return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
@@ -89,29 +104,49 @@ function isSet(v) {
   return String(v).trim() !== '';
 }
 
-// Resolve the effective voice for a platform: for each overridable field, take
-// the per-platform value (profile.platforms[platform][key]) when set, else fall
-// back to the base value. Replace semantics throughout — a set override wins
-// wholesale, arrays included (a per-platform hashtag list replaces the default
-// list, it does not extend it), matching the kit's deep-merge contract. Pure and
-// null-safe: a missing profile/override yields the base (or an empty value).
-// `overridden` names the fields the platform layer actually changed (provenance,
-// like media's appliedFromKit).
-export function resolveVoice(profile, platform) {
-  const base = profile || {};
-  const override = (base.platforms && base.platforms[platform]) || {};
+// Resolve the effective voice for a platform and/or a named audience segment.
+// Two tailoring axes layered over the base voice with precedence
+// **base ▸ audience ▸ platform** — platform wins last because it is the hardest
+// channel constraint (X wants 1–2 hashtags whatever the audience). Replace
+// semantics throughout — a set override wins wholesale, arrays included (a delta's
+// hashtag list replaces, never extends), matching the kit's deep-merge contract;
+// so a platform delta on a field FULLY shadows an audience delta on the same field.
+//
+// `opts` is `{ platform?, audience? }`; a bare string is treated as the platform
+// (back-compat). The `audience` field is special: a segment can't carry its own
+// audience, so selecting a known segment sets the effective `audience` to the
+// segment name (a platform delta can still override it). An audience NAME that
+// isn't a defined segment does NOT silently apply — values stay base and
+// `unknownAudience` is set so the caller can flag it.
+//
+// Pure and null-safe. Returns `effective` (the six fields), `sources` (per-field
+// provenance: 'base' | 'audience' | 'platform'), `overridden` (the non-base keys),
+// and `unknownAudience`.
+export function resolveVoice(profile, opts = {}) {
+  const { platform, audience } = typeof opts === 'string' ? { platform: opts } : (opts || {});
+  const base       = profile || {};
+  const platformOv = (platform && base.platforms && base.platforms[platform]) || {};
+  const audiences  = base.audiences || {};
+  const named      = audience != null && audience !== '';
+  const knownAudience   = named && Object.prototype.hasOwnProperty.call(audiences, audience);
+  const unknownAudience = named && !knownAudience;
+  const segment    = knownAudience ? (audiences[audience] || {}) : {};
+
   const effective = {};
-  const overridden = [];
-  for (const f of PLATFORM_OVERRIDE_FIELDS) {
-    if (isSet(override[f.key])) {
-      effective[f.key] = override[f.key];
-      overridden.push(f.key);
-    } else {
-      const baseVal = at(base, f.basePath);
-      effective[f.key] = isSet(baseVal) ? baseVal : (f.type === 'list' ? [] : '');
+  const sources   = {};
+  for (const f of OVERRIDE_FIELDS) {
+    if (f.key === 'audience') {
+      if (isSet(platformOv.audience)) { effective.audience = platformOv.audience; sources.audience = 'platform'; }
+      else if (knownAudience)         { effective.audience = audience;            sources.audience = 'audience'; }
+      else { const b = at(base, f.basePath); effective.audience = isSet(b) ? b : ''; sources.audience = 'base'; }
+      continue;
     }
+    if (isSet(platformOv[f.key]))   { effective[f.key] = platformOv[f.key]; sources[f.key] = 'platform'; }
+    else if (isSet(segment[f.key])) { effective[f.key] = segment[f.key];   sources[f.key] = 'audience'; }
+    else { const b = at(base, f.basePath); effective[f.key] = isSet(b) ? b : (f.type === 'list' ? [] : ''); sources[f.key] = 'base'; }
   }
-  return { platform, effective, overridden };
+  const overridden = OVERRIDE_FIELDS.map(f => f.key).filter(k => sources[k] !== 'base');
+  return { platform, audience, effective, overridden, sources, unknownAudience };
 }
 
 function load() {
