@@ -10,7 +10,7 @@ import * as media     from './media/upload.js';
 import * as compose   from './media/compose.js';
 
 import { publishAudited }                 from './lib/dispatch.js';
-import { validate, formatValidation }     from './lib/validate.js';
+import { validate, checkPolicy, formatValidation } from './lib/validate.js';
 import { adapt, formatAdaptation }        from './lib/adapt.js';
 import { report as configReport, formatReport } from './lib/config.js';
 import { normalizeScheduledAt, isPast, timezoneWarning } from './lib/schedule.js';
@@ -63,8 +63,23 @@ function formatBrandProfile(p) {
     `links.utm_defaults: ${obj((p.links || {}).utm_defaults)}`,
     `links.shortener:    ${v((p.links || {}).shortener)}`,
     `platforms:          ${platformsLine(p.platforms)}`,
+    `policy:             ${policyLine(p.policy)}`,
     `notes:              ${v(p.notes)}`,
   ].join('\n');
+}
+
+// Render the content-policy block (INDIV-004) readably: banned topics, the
+// always/sponsored required disclosures, and the auto_publish setting.
+function policyLine(policy) {
+  const pol = policy || {};
+  const disc = pol.disclosures || {};
+  const arr = (a) => (Array.isArray(a) && a.length ? a.join(', ') : '—');
+  const topics = Array.isArray(pol.banned_topics) ? pol.banned_topics : [];
+  const always = Array.isArray(disc.always) ? disc.always : [];
+  const sponsored = Array.isArray(disc.sponsored) ? disc.sponsored : [];
+  if (!topics.length && !always.length && !sponsored.length && pol.auto_publish !== true) return '—';
+  return `banned_topics=[${arr(topics)}], disclosures.always=[${arr(always)}], `
+    + `disclosures.sponsored=[${arr(sponsored)}], auto_publish=${pol.auto_publish === true}`;
 }
 
 // Render the per-platform voice deltas readably (the generic obj() would print
@@ -118,14 +133,34 @@ function err(e) {
   return { content: [{ type: 'text', text: `Error: ${e.message}` }], isError: true };
 }
 
-// Single publish path for every direct posting tool: validate → (dry-run preview
-// | audited publish). Returns the agent-facing summary string.
-async function doPublish(platform, content, account, dryRun) {
+// Platform-rule validation merged with the brand kit's content policy (INDIV-004).
+// validate() stays pure/disk-free; the policy is loaded here and passed into the
+// pure checkPolicy(). Policy errors (e.g. a sponsored post missing #ad) block like
+// any validation error; warnings/notes flow through. `sponsored` is a per-call
+// flag (it escalates the sponsored-disclosure check from absent → error), not
+// stored content.
+function validateWithPolicy(platform, content, account, { sponsored = false } = {}) {
   const v = validate(platform, content);
+  const policy = (brand.getOrEmpty(account) || {}).policy || {};
+  const pol = checkPolicy(platform, content, policy, { sponsored });
+  return {
+    ...v,
+    errors:   [...v.errors, ...pol.errors],
+    warnings: [...v.warnings, ...pol.warnings],
+    notes:    pol.notes,
+    ok:       v.ok && pol.errors.length === 0,
+  };
+}
+
+// Single publish path for every direct posting tool: validate (+ policy) →
+// (dry-run preview | audited publish). Returns the agent-facing summary string.
+async function doPublish(platform, content, account, dryRun, { sponsored = false } = {}) {
+  const v = validateWithPolicy(platform, content, account, { sponsored });
   if (!v.ok) {
     throw new Error(`Validation failed for ${v.label || platform}:\n` + v.errors.map(e => `  - ${e}`).join('\n'));
   }
-  const warn = v.warnings.length ? `\nWarnings:\n` + v.warnings.map(w => `  - ${w}`).join('\n') : '';
+  const warn  = v.warnings.length ? `\nWarnings:\n` + v.warnings.map(w => `  - ${w}`).join('\n') : '';
+  const notes = v.notes.length    ? `\nPolicy:\n`   + v.notes.map(n => `  - ${n}`).join('\n')   : '';
 
   if (dryRun) {
     auditRecord({ platform, account: account || null, source: 'direct', status: 'dry_run', content_hash: hashContent(content) });
@@ -134,10 +169,14 @@ async function doPublish(platform, content, account, dryRun) {
     if (content.alt_text)  extras.push(`alt text: "${clip(content.alt_text)}"`);
     if (Array.isArray(content.alt_texts) && content.alt_texts.length) extras.push(`${content.alt_texts.length} per-slide alt texts`);
     if (content.first_comment) extras.push(`first comment: "${clip(content.first_comment)}"`);
+    if (sponsored) extras.push('flagged sponsored');
     const extraNote = extras.length ? `\nWould also set — ${extras.join('; ')}.` : '';
-    return `DRY RUN — ${v.label} payload is valid; nothing was published.${extraNote}${warn}`;
+    return `DRY RUN — ${v.label} payload is valid; nothing was published.${extraNote}${warn}${notes}`;
   }
 
+  // Policy notes are pre-publish drafting guidance (e.g. banned-topic reminders);
+  // they'd be backward-facing noise on every live publish, so they stay in the
+  // dry-run/validate paths only. Warnings about this post's content still echo.
   const { summary } = await publishAudited(platform, content, account, { source: 'direct' });
   return summary + warn;
 }
@@ -157,9 +196,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (name) {
       // ── Direct publishing ───────────────────────────────────────────────
       case 'x_post_tweet':
-        return ok(await doPublish('x', { text: args.text }, args.account ?? '', args.dry_run));
+        return ok(await doPublish('x', { text: args.text }, args.account ?? '', args.dry_run, { sponsored: args.sponsored }));
       case 'x_post_thread':
-        return ok(await doPublish('x', { tweets: args.tweets }, args.account ?? '', args.dry_run));
+        return ok(await doPublish('x', { tweets: args.tweets }, args.account ?? '', args.dry_run, { sponsored: args.sponsored }));
       case 'instagram_post': {
         const igContent = { caption: args.caption };
         if (Array.isArray(args.image_urls) && args.image_urls.length) igContent.image_urls = args.image_urls;
@@ -167,10 +206,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (args.alt_text)      igContent.alt_text = args.alt_text;
         if (Array.isArray(args.alt_texts)) igContent.alt_texts = args.alt_texts;
         if (args.first_comment) igContent.first_comment = args.first_comment;
-        return ok(await doPublish('instagram', igContent, args.account ?? '', args.dry_run));
+        return ok(await doPublish('instagram', igContent, args.account ?? '', args.dry_run, { sponsored: args.sponsored }));
       }
       case 'tiktok_post_video':
-        return ok(await doPublish('tiktok', { video_url: args.video_url, caption: args.caption, privacy_level: args.privacy_level }, args.account ?? '', args.dry_run));
+        return ok(await doPublish('tiktok', { video_url: args.video_url, caption: args.caption, privacy_level: args.privacy_level }, args.account ?? '', args.dry_run, { sponsored: args.sponsored }));
       case 'tiktok_check_publish_status': {
         const r = await tiktok.checkStatus(args.publish_id, args.account ?? '');
         return ok(`TikTok publish status: ${r.status}${r.fail_reason ? ` (reason: ${r.fail_reason})` : ''}`);
@@ -179,19 +218,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const fbContent = { message: args.message, image_url: args.image_url };
         if (args.alt_text)      fbContent.alt_text = args.alt_text;
         if (args.first_comment) fbContent.first_comment = args.first_comment;
-        return ok(await doPublish('facebook', fbContent, args.account ?? '', args.dry_run));
+        return ok(await doPublish('facebook', fbContent, args.account ?? '', args.dry_run, { sponsored: args.sponsored }));
       }
       case 'threads_post': {
         const thContent = { text: args.text, image_url: args.image_url };
         if (args.alt_text) thContent.alt_text = args.alt_text;
-        return ok(await doPublish('threads', thContent, args.account ?? '', args.dry_run));
+        return ok(await doPublish('threads', thContent, args.account ?? '', args.dry_run, { sponsored: args.sponsored }));
       }
       case 'bluesky_post':
-        return ok(await doPublish('bluesky', { text: args.text }, args.account ?? '', args.dry_run));
+        return ok(await doPublish('bluesky', { text: args.text }, args.account ?? '', args.dry_run, { sponsored: args.sponsored }));
 
       // ── Content intelligence ──────────────────────────────────────────────
       case 'content_validate':
-        return ok(formatValidation(validate(args.platform, args.content)));
+        return ok(formatValidation(validateWithPolicy(args.platform, args.content, args.account ?? '', { sponsored: args.sponsored })));
       case 'content_adapt':
         return ok(formatAdaptation(adapt(args.text, args.platforms)));
       case 'config_doctor':
@@ -313,11 +352,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // ── Queue ────────────────────────────────────────────────────────────
       case 'queue_add': {
         const scheduledAt = normalizeScheduledAt(args.scheduled_at ?? null);
-        const v = validate(args.platform, args.content);
+        // Policy-aware (account-resolved) but without the sponsored escalation —
+        // a queued item carries no per-call sponsored flag, and the real dispatch
+        // path does not re-validate, so this is advisory only (see SESSION_HANDOFF).
+        const v = validateWithPolicy(args.platform, args.content, args.account ?? '');
         const item = queue.add(args.platform, args.content, scheduledAt, args.account ?? '', args.draft ? 'draft' : 'pending');
-        const warn = v.ok
+        const note = v.notes.length ? `\n${v.notes.map(n => `  - ${n}`).join('\n')}` : '';
+        const warn = (v.ok
           ? (v.warnings.length ? `\n⚠ ${v.warnings.join('; ')}` : '')
-          : `\n⚠ Content has validation errors (saved anyway):\n` + v.errors.map(e => `  - ${e}`).join('\n');
+          : `\n⚠ Content has validation errors (saved anyway):\n` + v.errors.map(e => `  - ${e}`).join('\n')) + note;
         // Drafts are never auto-dispatched, so the past-time/dispatch warning doesn't apply.
         const past = (!args.draft && scheduledAt && isPast(scheduledAt)) ? `\n⚠ scheduled_at is in the past — will dispatch on next scheduler tick.` : '';
         const tzWarn = scheduledAt ? timezoneWarning(args.scheduled_at) : '';
@@ -343,9 +386,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'queue_dispatch': {
         const item = queue.get(args.id);
         if (args.dry_run) {
-          const v = validate(item.platform, item.content);
+          const v = validateWithPolicy(item.platform, item.content, item.account ?? '');
           auditRecord({ platform: item.platform, account: item.account || null, source: 'queue', status: 'dry_run', content_hash: hashContent(item.content) });
-          return ok(`DRY RUN — ${item.id} (${item.platform}) ${v.ok ? 'is valid; not published.' : 'has errors:\n' + v.errors.map(e => `  - ${e}`).join('\n')}`);
+          const note = v.notes.length ? `\nPolicy:\n` + v.notes.map(n => `  - ${n}`).join('\n') : '';
+          return ok(`DRY RUN — ${item.id} (${item.platform}) ${v.ok ? 'is valid; not published.' : 'has errors:\n' + v.errors.map(e => `  - ${e}`).join('\n')}${note}`);
         }
         queue.update(args.id, { status: 'dispatched' });
         try {

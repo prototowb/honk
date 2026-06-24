@@ -8,6 +8,7 @@ Run before every `queue_dispatch` or direct publishing tool call.
 
 **Mandatory checks:**
 - [ ] Brand kit consulted (`brand_voice(action:"get")`) — tone, emoji policy, banned words, and hashtag sets applied to the draft
+- [ ] Content policy honored — the post avoids `policy.banned_topics`, includes any `policy.disclosures.always` strings, and (if it's a paid/sponsored post) includes `policy.disclosures.sponsored` and is published with `sponsored: true`
 - [ ] No accidental repost — `duplicate_check(platform, content)` is clear (or the user confirmed a deliberate repost)
 - [ ] User has explicitly approved the exact post content (text, image URL, hashtags)
 - [ ] Payload passes `content_validate` (or a `dry_run: true` call) — this mechanizes the length/required-field/media checks below; resolve any errors before publishing
@@ -66,7 +67,10 @@ For multi-platform campaigns, report a table of all results after the final disp
 ## Confirmation vs. Autonomous Behavior
 
 **Always confirm before:**
-- Any publishing action (direct or `queue_dispatch`)
+- Any publishing action (direct or `queue_dispatch`) — **unless** the brand kit sets
+  `policy.auto_publish: true`, in which case you may publish an on-policy post without
+  a per-post confirmation. The default is `false` (always confirm). A sponsored post
+  missing a required disclosure is blocked regardless of this setting.
 - Deleting a queue item (`queue_remove`)
 - Rescheduling a queue item to a different time than requested
 

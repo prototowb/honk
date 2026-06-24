@@ -51,6 +51,16 @@ export const BRAND_FIELDS = [
   { path: 'cta', label: 'Calls to action', type: 'list', group: 'Hashtags & CTA',
     help: 'Reusable CTAs, e.g. "Star the repo: {url}".' },
 
+  // ── Content policy / guardrails (INDIV-004) ─────────────────────────────────
+  { path: 'policy.banned_topics', label: 'Banned topics', type: 'list', group: 'Content policy',
+    help: 'Themes never to write about (agent-judged), e.g. "competitor comparisons", "politics". Surfaced as a hard reminder when drafting.' },
+  { path: 'policy.disclosures.always', label: 'Always-on disclosures', type: 'list', group: 'Content policy',
+    help: 'Strings every post must contain — a missing one is a warning, e.g. "Ad".' },
+  { path: 'policy.disclosures.sponsored', label: 'Sponsored disclosures', type: 'list', group: 'Content policy',
+    help: 'Strings a sponsored/paid post must contain — a missing one blocks publishing when sponsored:true, e.g. "#ad".' },
+  { path: 'policy.auto_publish', label: 'Auto-publish', type: 'bool', group: 'Content policy',
+    help: 'false (default) = always confirm before publishing. Set true to let the agent publish without a per-post confirmation.' },
+
   // ── Notes ─────────────────────────────────────────────────────────────────
   { path: 'notes', label: 'Brand notes', type: 'text', group: 'Notes',
     help: 'Anything else the agent should keep in mind when writing for this brand.' },

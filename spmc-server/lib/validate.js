@@ -110,6 +110,81 @@ export function validate(platform, content) {
   return { ok: errors.length === 0, platform, label: spec.label, errors, warnings };
 }
 
+// The human-visible text of a payload for a platform — the single text field, or
+// a thread's tweets joined — used by the policy disclosure check. Mirrors how
+// validate() locates the text field via the platform spec.
+function contentText(platform, content) {
+  const spec = PLATFORM_SPECS[platform];
+  const c = content || {};
+  if (spec?.thread && Array.isArray(c[spec.thread.field])) {
+    return c[spec.thread.field].filter(t => typeof t === 'string').join('\n');
+  }
+  const field = spec?.text?.field;
+  return field != null && c[field] != null ? String(c[field]) : '';
+}
+
+function tokenSet(v) {
+  return Array.isArray(v) ? v.filter(t => String(t ?? '').trim() !== '') : [];
+}
+
+// Whether `token` appears in `text` (both already lowercased) as a standalone
+// unit, not buried inside a larger word. Plain substring containment fails open:
+// "#ad" would match "#advanced" and "Ad" would match "had", letting a post skip a
+// required disclosure. So we require a non-word char (or string edge) on each side
+// of the match. Token-internal characters (e.g. the leading "#", or a space in
+// "paid partnership") are unaffected — only the outer edges are boundary-checked.
+const isWordChar = (ch) => ch !== undefined && /[a-z0-9_]/.test(ch);
+function containsToken(text, token) {
+  if (!token) return false;
+  for (let i = text.indexOf(token); i !== -1; i = text.indexOf(token, i + 1)) {
+    const before = i > 0 ? text[i - 1] : undefined;
+    const after  = text[i + token.length]; // undefined past the end
+    if (!isWordChar(before) && !isWordChar(after)) return true;
+  }
+  return false;
+}
+
+// Content policy / guardrail check (INDIV-004). PURE: the handler loads the
+// brand kit's `policy` block via brand.getOrEmpty(account) and passes it in, so
+// validate stays disk-free (the link_tag pattern). Returns errors[] (blocking),
+// warnings[] (non-blocking), and notes[] (agent reminders) the caller merges
+// into the validation result and the dry-run preview.
+//
+// - Required disclosures: a `disclosures.always` token absent from the text is a
+//   WARNING. On a sponsored post (sponsored:true — a per-call flag, not stored
+//   content), a `disclosures.sponsored` token absent is an ERROR (you may not
+//   ship a sponsored post missing #ad). Present tokens are echoed as notes so the
+//   preview is a positive confirmation, not just a list of what's wrong.
+// - Banned topics: not string-detectable (agent-judged) — surfaced as a note so
+//   the drafter is reminded; banned_words stays the agent-consulted voice check.
+//
+// Null-safe: a missing/empty policy yields no errors/warnings/notes.
+export function checkPolicy(platform, content, policy, { sponsored = false } = {}) {
+  const errors = [];
+  const warnings = [];
+  const notes = [];
+  const p = policy || {};
+  const disc = p.disclosures || {};
+  const text = contentText(platform, content).toLowerCase();
+  const present = (tok) => containsToken(text, String(tok).toLowerCase());
+
+  for (const tok of tokenSet(disc.always)) {
+    if (present(tok)) notes.push(`Disclosure "${tok}" present ✓`);
+    else warnings.push(`Required disclosure "${tok}" is missing from the text.`);
+  }
+  if (sponsored) {
+    for (const tok of tokenSet(disc.sponsored)) {
+      if (present(tok)) notes.push(`Sponsored disclosure "${tok}" present ✓`);
+      else errors.push(`Sponsored post is missing the required disclosure "${tok}".`);
+    }
+  }
+
+  const topics = tokenSet(p.banned_topics);
+  if (topics.length) notes.push(`Banned topics — do not write about: ${topics.join(', ')} (agent-judged).`);
+
+  return { errors, warnings, notes };
+}
+
 // Human-readable one-tool summary.
 export function formatValidation(v) {
   const head = v.ok
@@ -118,5 +193,6 @@ export function formatValidation(v) {
   const parts = [head];
   if (v.errors.length)   parts.push('Errors:\n' + v.errors.map(e => `  - ${e}`).join('\n'));
   if (v.warnings.length) parts.push('Warnings:\n' + v.warnings.map(w => `  - ${w}`).join('\n'));
+  if (v.notes && v.notes.length) parts.push('Policy:\n' + v.notes.map(n => `  - ${n}`).join('\n'));
   return parts.join('\n');
 }
