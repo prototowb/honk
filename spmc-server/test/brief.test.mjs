@@ -23,15 +23,15 @@ test('briefSchema is pure — it never mutates BRIEF_FIELDS', () => {
 
 test('briefSchema annotates a field the brand kit pre-fills', () => {
   const fields = briefSchema({ voice: { audience: 'indie devs and founders' } });
-  const aud = fields.find(f => f.key === 'audience_delta');
+  const aud = fields.find(f => f.key === 'audience');
   assert.equal(aud.prefill, 'indie devs and founders');
   // a field with no brandKitPath stays un-prefilled
   assert.ok(!('prefill' in fields.find(f => f.key === 'angle')));
 });
 
 test('briefSchema omits prefill when the kit value is empty or absent', () => {
-  assert.ok(!('prefill' in briefSchema(null).find(f => f.key === 'audience_delta')));
-  assert.ok(!('prefill' in briefSchema({ voice: { audience: '' } }).find(f => f.key === 'audience_delta')));
+  assert.ok(!('prefill' in briefSchema(null).find(f => f.key === 'audience')));
+  assert.ok(!('prefill' in briefSchema({ voice: { audience: '' } }).find(f => f.key === 'audience')));
 });
 
 test('formatBriefSchema renders required-ness, options, conditional, and prefill', () => {

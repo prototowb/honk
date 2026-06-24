@@ -122,3 +122,62 @@ test('PLATFORM_OVERRIDE_FIELDS is the single source of overridable keys', () => 
   assert.deepEqual(keys.sort(),
     ['audience', 'cta', 'emoji_policy', 'hashtags', 'register', 'tone']);
 });
+
+// ── resolveVoice: audience segments (INDIV-005) ──────────────────────────────
+
+test('SEGMENT_OVERRIDE_FIELDS is the override set minus audience (a segment cannot redefine its own audience)', () => {
+  const keys = brand.SEGMENT_OVERRIDE_FIELDS.map(f => f.key);
+  assert.deepEqual(keys.sort(), ['cta', 'emoji_policy', 'hashtags', 'register', 'tone']);
+  assert.ok(!keys.includes('audience'));
+});
+
+test('emptyProfile carries an audiences map', () => {
+  assert.deepEqual(brand.emptyProfile().audiences, {});
+});
+
+const audProfile = {
+  voice:     { tone: 'concise', audience: 'devs', emoji_policy: 'sparing' },
+  hashtags:  { default: ['#a'] },
+  audiences: { enterprise: { tone: 'measured', hashtags: ['#infosec'] } },
+  platforms: { x: { hashtags: ['#x'] } },
+};
+
+test('resolveVoice applies a named audience segment over the base, with provenance', () => {
+  const r = brand.resolveVoice(audProfile, { audience: 'enterprise' });
+  assert.equal(r.effective.tone, 'measured');            // audience override
+  assert.equal(r.sources.tone, 'audience');
+  assert.deepEqual(r.effective.hashtags, ['#infosec']);  // audience override (replace, not extend)
+  assert.equal(r.effective.emoji_policy, 'sparing');     // base
+  assert.equal(r.sources.emoji_policy, 'base');
+  assert.equal(r.unknownAudience, false);
+});
+
+test('resolveVoice sets the effective audience to the selected segment name', () => {
+  const r = brand.resolveVoice(audProfile, { audience: 'enterprise' });
+  assert.equal(r.effective.audience, 'enterprise');
+  assert.equal(r.sources.audience, 'audience');
+});
+
+test('resolveVoice precedence is base ▸ audience ▸ platform (a platform delta shadows the audience)', () => {
+  const r = brand.resolveVoice(audProfile, { platform: 'x', audience: 'enterprise' });
+  assert.deepEqual(r.effective.hashtags, ['#x']);  // platform wins over the segment hashtags
+  assert.equal(r.sources.hashtags, 'platform');
+  assert.equal(r.effective.tone, 'measured');      // audience still applies where the platform is silent
+  assert.equal(r.sources.tone, 'audience');
+});
+
+test('resolveVoice flags an unknown audience name and falls back to base (no silent un-tailoring)', () => {
+  const r = brand.resolveVoice(audProfile, { audience: 'entrprise' }); // typo
+  assert.equal(r.unknownAudience, true);
+  assert.equal(r.effective.tone, 'concise');   // base, NOT the segment
+  assert.equal(r.effective.audience, 'devs');  // base audience, not the bogus name
+  assert.equal(r.sources.tone, 'base');
+});
+
+test('resolveVoice with neither platform nor audience yields the pure base', () => {
+  const r = brand.resolveVoice(audProfile, {});
+  assert.equal(r.effective.tone, 'concise');
+  assert.equal(r.effective.audience, 'devs');
+  assert.deepEqual(r.overridden, []);
+  assert.equal(r.unknownAudience, false);
+});
