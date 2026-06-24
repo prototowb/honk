@@ -6,6 +6,10 @@
 // are generated from this array + lib/specs.js — never hand-maintained.
 
 const DRY_RUN_PROP = { type: 'boolean', description: 'If true, validate and preview the post without publishing. Records a dry_run audit entry.' };
+// INDIV-004: marks this publish as a sponsored/paid post, escalating the brand
+// kit's policy.disclosures.sponsored tokens from a warning to a blocking error if
+// any is missing from the text. A per-call flag, not stored content.
+const SPONSORED_PROP = { type: 'boolean', description: 'Mark this as a sponsored/paid post. Enforces the brand kit\'s required sponsored disclosures (policy.disclosures.sponsored) — a missing one blocks publishing.' };
 
 export const TOOLS = [
   // ── X (Twitter) ──────────────────────────────────────────────────────────
@@ -18,6 +22,7 @@ export const TOOLS = [
         text:    { type: 'string', description: 'Tweet text (max 280 chars)' },
         account: { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
         dry_run: DRY_RUN_PROP,
+        sponsored: SPONSORED_PROP,
       },
       required: ['text'],
     },
@@ -31,6 +36,7 @@ export const TOOLS = [
         tweets:  { type: 'array', items: { type: 'string' }, description: 'Ordered array of tweet texts' },
         account: { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
         dry_run: DRY_RUN_PROP,
+        sponsored: SPONSORED_PROP,
       },
       required: ['tweets'],
     },
@@ -50,6 +56,7 @@ export const TOOLS = [
         first_comment: { type: 'string', description: 'Text posted as the first comment right after publishing (e.g. hashtags or a link kept out of the caption). Best-effort — if it fails, the post stays live.' },
         account:       { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
         dry_run:       DRY_RUN_PROP,
+        sponsored:     SPONSORED_PROP,
       },
       required: ['caption'],
     },
@@ -70,6 +77,7 @@ export const TOOLS = [
         },
         account: { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
         dry_run: DRY_RUN_PROP,
+        sponsored: SPONSORED_PROP,
       },
       required: ['video_url', 'caption'],
     },
@@ -99,6 +107,7 @@ export const TOOLS = [
         first_comment: { type: 'string', description: 'Text posted as the first comment right after publishing. Best-effort — if it fails, the post stays live.' },
         account:       { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
         dry_run:       DRY_RUN_PROP,
+        sponsored:     SPONSORED_PROP,
       },
       required: ['message'],
     },
@@ -115,6 +124,7 @@ export const TOOLS = [
         alt_text:  { type: 'string', description: 'Accessibility alt text for the attached image (only applies when image_url is set).' },
         account:   { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
         dry_run:   DRY_RUN_PROP,
+        sponsored: SPONSORED_PROP,
       },
       required: ['text'],
     },
@@ -129,6 +139,7 @@ export const TOOLS = [
         text:    { type: 'string', description: 'Post text (max 300 graphemes)' },
         account: { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
         dry_run: DRY_RUN_PROP,
+        sponsored: SPONSORED_PROP,
       },
       required: ['text'],
     },
@@ -136,12 +147,14 @@ export const TOOLS = [
   // ── Content intelligence ───────────────────────────────────────────────────
   {
     name: 'content_validate',
-    description: 'Validate a post payload against a platform\'s rules (length, required fields, media) without publishing. Returns errors that would block publishing and warnings. Use before queuing or posting.',
+    description: 'Validate a post payload against a platform\'s rules (length, required fields, media) AND the brand kit\'s content policy (required disclosures, banned-topic reminders) without publishing. Returns blocking errors, warnings, and policy notes. Use before queuing or posting.',
     inputSchema: {
       type: 'object',
       properties: {
-        platform: { type: 'string', description: 'Target platform', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] },
-        content:  { type: 'object', description: 'Platform-specific content fields (same shape as the posting tools)' },
+        platform:  { type: 'string', description: 'Target platform', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] },
+        content:   { type: 'object', description: 'Platform-specific content fields (same shape as the posting tools)' },
+        account:   { type: 'string', description: "Named account whose brand-kit policy to check against (e.g. 'brand'). Omit for the default account." },
+        sponsored: SPONSORED_PROP,
       },
       required: ['platform', 'content'],
     },
@@ -177,12 +190,12 @@ export const TOOLS = [
   },
   {
     name: 'brand_voice',
-    description: 'Get or set the brand kit — a persistent profile (voice: tone, audience, hashtag sets, emoji/banned-word policy, CTA library, UTM rules; plus a visual identity block: accent/bg/surface/heading/body colors, logo, icon, handle, default template; plus per-platform voice deltas) that the content skills read so drafts match your voice and composed images match your look without re-specifying it each time. Per account (omit account for the default). Content config, not secrets. Call with action:"get" first to see the current profile; if it is empty, offer guided setup (see brand_schema / the brand-setup skill). Pass a platform with action:"get" to see the effective voice for that platform (base merged with its per-platform overrides).',
+    description: 'Get or set the brand kit — a persistent profile (voice: tone, audience, hashtag sets, emoji/banned-word policy, CTA library, UTM rules; plus a visual identity block: accent/bg/surface/heading/body colors, logo, icon, handle, default template; plus per-platform voice deltas; plus a content policy: banned topics, required disclosures, auto-publish) that the content skills read so drafts match your voice, composed images match your look, and posts respect your guardrails without re-specifying it each time. Per account (omit account for the default). Content config, not secrets. Call with action:"get" first to see the current profile; if it is empty, offer guided setup (see brand_schema / the brand-setup skill). Pass a platform with action:"get" to see the effective voice for that platform (base merged with its per-platform overrides).',
     inputSchema: {
       type: 'object',
       properties: {
         action:  { type: 'string', description: 'get (default) reads the profile; set writes one; clear removes it.', enum: ['get', 'set', 'clear'] },
-        profile: { type: 'object', description: 'For action:set — the fields to write, deep-merged into the stored profile (nested objects merge; arrays/scalars replace). Shape: { voice:{tone,audience,register,emoji_policy,banned_words[],do[],dont[]}, hashtags:{default[],sets{}}, cta[], visual:{accent,bg_color,surface,heading_color,body_color,logo_url,icon_url,handle,default_template}, links:{utm_defaults{},shortener}, platforms:{ <platform>:{tone,register,emoji_policy,audience,hashtags[],cta[]} }, notes }. The visual block is the brand identity media_compose defaults from; platforms holds per-platform voice deltas (a set value replaces the base for that platform).' },
+        profile: { type: 'object', description: 'For action:set — the fields to write, deep-merged into the stored profile (nested objects merge; arrays/scalars replace). Shape: { voice:{tone,audience,register,emoji_policy,banned_words[],do[],dont[]}, hashtags:{default[],sets{}}, cta[], visual:{accent,bg_color,surface,heading_color,body_color,logo_url,icon_url,handle,default_template}, links:{utm_defaults{},shortener}, platforms:{ <platform>:{tone,register,emoji_policy,audience,hashtags[],cta[]} }, policy:{banned_topics[],disclosures:{always[],sponsored[]},auto_publish}, notes }. The visual block is the brand identity media_compose defaults from; platforms holds per-platform voice deltas (a set value replaces the base for that platform); policy holds content guardrails — disclosures.always tokens warn when missing, disclosures.sponsored tokens error on a sponsored post, banned_topics are agent-judged reminders, auto_publish:false keeps the always-confirm rule.' },
         replace: { type: 'boolean', description: 'For action:set — overwrite the whole profile instead of deep-merging.' },
         account: { type: 'string', description: "Named account (e.g. 'brand'). Omit for the default profile." },
         platform: { type: 'string', description: 'For action:get — return the effective voice resolved for this platform (base merged with profile.platforms overrides), with which fields the platform layer changed. Omit to get the raw full profile.', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] },

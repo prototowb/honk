@@ -46,6 +46,20 @@ export function emptyProfile() {
                           // Overridable keys: tone, register, emoji_policy, audience,
                           // hashtags, cta (see PLATFORM_OVERRIDE_FIELDS). A set value
                           // replaces the base for that platform; resolveVoice() merges.
+    policy: {             // content guardrails (INDIV-004) — what the brand must not
+                          // say, what it must always say, and how freely it publishes.
+                          // Checked by validate's checkPolicy() (the handler passes
+                          // this block in; validate stays disk-free).
+      banned_topics: [],  // semantic no-go themes (agent-judged, surfaced as reminders),
+                          //   e.g. "competitor comparisons", "politics"
+      disclosures: {      // required strings the text must contain
+        always:    [],    //   always required — missing → warning, e.g. ["Ad"]
+        sponsored: [],    //   required only on a sponsored post — missing → error, e.g. ["#ad"]
+      },
+      auto_publish: false,// false (default) = always confirm before publishing.
+                          //   Agent-guided (documented in the persona/skills); a
+                          //   deterministic dispatch gate is a deferred follow-up.
+    },
     notes:     '',        // freeform brand notes for the agent
   };
 }
