@@ -197,6 +197,42 @@ export function list() {
   return Object.keys(load());
 }
 
+// ── Active account pointer (INDIV-006) ──────────────────────────────────────
+// A single persisted "which account am I working on" selection, kept in its OWN
+// small state file rather than inside brand.json — so the flat brand-profile map
+// stays single-concern and this can grow into a fuller account registry (display
+// names, created_at) when the UI lands, with no migration. '' = the default
+// account. This is selection state the brand-management surface + a future UI
+// read; it deliberately does NOT become a silent default for publishing/compose.
+function activeFile() { return dataFile('brand-active.json'); }
+
+export function getActive() {
+  if (!existsSync(activeFile())) return '';
+  try { return JSON.parse(readFileSync(activeFile(), 'utf8')).active || ''; }
+  catch { return ''; }
+}
+
+export function setActive(account = '') {
+  writeFileSync(activeFile(), JSON.stringify({ active: account || '' }, null, 2));
+  return account || '';
+}
+
+// Copy an account's whole profile to a new account key as a starting point
+// (multi-brand bootstrap). Deep clone so the two diverge independently. Refuses
+// to clobber an existing target, and never touches the active pointer (this is
+// "create", not "switch"). Throws if there's nothing to copy or no target.
+export function clone(from = '', to) {
+  const target = (to || '').trim();
+  if (!target) throw new Error('clone needs a target account name (`to`).');
+  const all = load();
+  const src = all[key(from)];
+  if (!src) throw new Error(`No brand profile to clone for ${from ? `'${from}'` : 'the default account'}.`);
+  if (all[key(target)]) throw new Error(`Account '${target}' already has a profile — clear it first or pick another name.`);
+  all[key(target)] = JSON.parse(JSON.stringify(src));
+  save(all);
+  return all[key(target)];
+}
+
 function deepMerge(base, patch) {
   if (patch === null || typeof patch !== 'object' || Array.isArray(patch)) return patch;
   const out = { ...base };
