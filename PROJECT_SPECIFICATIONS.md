@@ -244,7 +244,21 @@ every commit; branch off `development`, merge `--no-ff`) apply throughout.
 
 ---
 
-#### INDIV-004 — Content policies / guardrails  ▸ build first (highest value, safety)
+#### INDIV-004 — Content policies / guardrails  ✅ shipped (2026-06-24, on `development`)
+
+**Shipped as built:** `policy` block on the kit (`banned_topics`,
+`disclosures.always/sponsored`, `auto_publish`); pure `checkPolicy(platform,
+content, policy, {sponsored})` in `validate.js` merged into the validate path via
+a `validateWithPolicy` handler helper (loads policy via `brand.getOrEmpty` — the
+link_tag pattern, validate stays disk-free). `always`→warn, `sponsored`→error
+(escalated by a per-call `sponsored` flag on the 7 publish tools + `content_validate`);
+`banned_topics`→drafting-reminder note; disclosures echoed ✓ in dry-run/validate.
+Disclosure matching is **word-boundary token containment** (not plain substring —
+"#ad" is not satisfied by "#advanced", "Ad" not by "had"). `auto_publish` is
+agent-guided (documented in persona/skills), no deterministic dispatch gate.
+**Enforcement boundary:** direct publish hard-blocks; `queue_add` is advisory and
+the real dispatch/scheduler path does not re-validate (deferred follow-up). Tools
+stay 30 (folds into validate). 110 unit + 33-check smoke. *Original plan below.*
 
 **Intent:** let a brand encode what it must *not* say and what it must *always*
 say, and how freely it may publish — the safety layer a publishing tool needs.

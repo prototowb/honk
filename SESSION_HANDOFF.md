@@ -10,6 +10,24 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
 ## On `development` now (recently merged)
 
+- **Content policies / guardrails (INDIV-004)** — the brand kit gains a `policy`
+  block (`banned_topics`, `disclosures.always/sponsored`, `auto_publish`) that is
+  now **enforced**. Pure `checkPolicy(platform, content, policy, {sponsored})` in
+  `validate.js` (disk-free — the handler loads policy via `brand.getOrEmpty` and a
+  `validateWithPolicy` helper merges it in, the link_tag pattern): a missing
+  `disclosures.always` token **warns**; a missing `disclosures.sponsored` token on
+  a post flagged `sponsored:true` is a blocking **error**; `banned_topics` surface
+  as drafting-reminder notes; present disclosures echo ✓ in dry-run/validate.
+  `sponsored` is a per-call flag on the 7 publish tools + `content_validate` (which
+  also gained `account`). **Disclosure matching is word-boundary token containment,
+  not plain substring** — "#ad" is NOT satisfied by "#advanced", "Ad" NOT by "had"
+  (closes the fail-open on the blocking path). `auto_publish` is agent-guided
+  (persona + skills), **no deterministic dispatch gate in v1.** ⚠️ **Enforcement
+  boundary:** only **direct publish** hard-blocks; `queue_add` is advisory and the
+  real **queue/scheduler dispatch path does not re-validate**, so a policy-violating
+  queued post can still go out — the deterministic dispatch/auto_publish gate is the
+  deferred follow-up. Documented in `content-intelligence`/`brand-setup`/6 platform
+  skills/persona + `brand_schema`. **Tools stay 30.** 110 unit + 33-check smoke.
 - **Individualization Phases 1 & 2 (INDIV-001/002)** — all 5 `media_compose`
   templates rebuilt on one editorial design system (brand row · hero headline on a
   layered surface · body · accent footer), driven by per-template `layout` metrics in
@@ -50,28 +68,29 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 - **Plans (not built):** `INBOX_FEATURE_PLAN.md` (comment-keyword → file/link) and
   **Individualization** (`PROJECT_SPECIFICATIONS.md` → *Individualization*).
 
-**State:** 30 tools · 5 templates · 2 runtime deps · **100 unit + 28-check smoke +
+**State:** 30 tools · 5 templates · 2 runtime deps · **110 unit + 33-check smoke +
 `build:check` + `pack:smoke`** all green. (Pushed to `origin/development`.)
 
 ## NEXT
 
-1. **Individualization backlog — planned, ready to build.** Full plans (shape ·
-   logic · surface · tests · open decisions) in `PROJECT_SPECIFICATIONS.md` →
-   *Individualization → Backlog — planned*; build order also in `PROJECT_STATUS.md`
-   → *Next Up*. **Recommended order:**
-   1. **INDIV-004 Content policies / guardrails** (build first — value + safety):
-      `policy` block (banned_topics, disclosures, auto_publish); required-disclosure
-      check in `content_validate`/`dry_run` + a `sponsored` flag. *Open: warn-vs-error,
-      how `sponsored` is signaled.*
-   2. **INDIV-005 Audience segments**: `audiences{}` second axis; generalize
-      `PLATFORM_OVERRIDE_FIELDS`→`OVERRIDE_FIELDS`; `resolveVoice(profile,{platform,
-      audience})`; `audience` brief field. *Open: precedence (base ▸ audience ▸ platform).*
-   3. **INDIV-006 Multi-brand**: `brand_voice` `action:"list"`+`"clone"`. *Open:
+1. **Individualization backlog — INDIV-004 shipped; INDIV-005 is next.** Full plans
+   (shape · logic · surface · tests · open decisions) in `PROJECT_SPECIFICATIONS.md`
+   → *Individualization → Backlog — planned*; build order also in `PROJECT_STATUS.md`
+   → *Next Up*. **Remaining order:**
+   1. **INDIV-005 Audience segments** (build next): `audiences{}` second axis;
+      generalize `PLATFORM_OVERRIDE_FIELDS`→`OVERRIDE_FIELDS`; `resolveVoice(profile,
+      {platform, audience})`; `audience` brief field. **Heads-up:** segment fields =
+      base **minus `audience`** (audience is already a platform override field — can't
+      be circular). *Open: precedence — lean base ▸ audience ▸ platform (platform wins
+      last, hardest channel constraint); confirm before building.*
+   2. **INDIV-006 Multi-brand**: `brand_voice` `action:"list"`+`"clone"`. *Open:
       active-account pointer vs agent-carried.*
-   4. **INDIV-007 Learned/adaptive**: few-shot examples + observed best-times —
+   3. **INDIV-007 Learned/adaptive**: few-shot examples + observed best-times —
       **data-gated** (needs accrued analytics; likely defer).
    Plus deferred UI **export** (folder-copy works today) and optional polish: a real
    live `media_compose` upload via the `spmc` bin to confirm the kit-driven image on the CDN.
+   **INDIV-004 follow-up (deferred):** a deterministic dispatch/`auto_publish` gate so
+   the queue/scheduler path enforces policy (today only direct publish hard-blocks).
 2. **FB re-verify** (user is providing a modified token): `pages_manage_engagement` for
    the FB first-comment; re-test FB alt-text — if `alt_text_custom` still doesn't read
    back, try the two-step set (create photo → POST `alt_text_custom` to the photo node).
