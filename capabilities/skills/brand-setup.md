@@ -78,6 +78,25 @@ brand_voice(action:"set", profile:{ platforms:{
 Check the resolved result with `brand_voice(action:"get", platform:"x")`. The
 platform skills read this automatically when drafting for a channel.
 
+## Audience segments (optional, advanced)
+
+A second tailoring axis: the same brand speaks differently to different audiences
+("enterprise buyers" vs "indie devs"), independent of platform. Store named
+segments under `audiences`; a segment can set `tone`, `register`, `emoji_policy`,
+`hashtags`, `cta` (NOT `audience` — selecting the segment *is* the audience):
+
+```
+brand_voice(action:"set", profile:{ audiences:{
+  enterprise: { tone:"measured, credible", hashtags:["#infosec","#compliance"] },
+  indie:      { tone:"punchy, candid",     hashtags:["#buildinpublic"] }
+}})
+```
+
+Resolve one with `brand_voice(action:"get", audience:"enterprise")`, or combine
+with a platform — precedence is **base ▸ audience ▸ platform** (a per-platform
+delta wins over an audience delta on the same field). Skip this unless the user
+clearly addresses distinct audiences.
+
 ## Content policy / guardrails (optional, high-value)
 
 The kit's `policy` block is the brand's safety layer — what it must not say, what
