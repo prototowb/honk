@@ -149,6 +149,19 @@ test('checkPolicy passes a sponsored post that includes the disclosure', () => {
   assert.match(r.notes.join(), /Sponsored disclosure "#ad" present/);
 });
 
+test('checkPolicy matches disclosures as whole tokens, not substrings (fail-closed)', () => {
+  // "Ad" must not be considered present inside "had"; "#ad" must not be satisfied by "#advanced".
+  const adMissing = checkPolicy('x', { text: 'we had a great launch today' }, { disclosures: { always: ['Ad'] } });
+  assert.match(adMissing.warnings.join(), /Required disclosure "Ad" is missing/);
+  const tagMissing = checkPolicy('instagram', { caption: 'check our #advanced tier' }, { disclosures: { sponsored: ['#ad'] } }, { sponsored: true });
+  assert.equal(tagMissing.errors.length, 1, '#advanced must not satisfy a required #ad');
+  // The genuine tokens, surrounded by boundaries, are detected.
+  const adPresent = checkPolicy('x', { text: 'paid Ad — link in bio' }, { disclosures: { always: ['Ad'] } });
+  assert.equal(adPresent.warnings.length, 0);
+  const tagPresent = checkPolicy('instagram', { caption: 'on sale now #ad' }, { disclosures: { sponsored: ['#ad'] } }, { sponsored: true });
+  assert.equal(tagPresent.errors.length, 0);
+});
+
 test('checkPolicy surfaces banned topics as a drafting reminder note', () => {
   const r = checkPolicy('x', { text: 'hello' }, { banned_topics: ['politics', 'competitor comparisons'] });
   assert.equal(r.errors.length, 0);

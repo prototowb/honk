@@ -127,6 +127,23 @@ function tokenSet(v) {
   return Array.isArray(v) ? v.filter(t => String(t ?? '').trim() !== '') : [];
 }
 
+// Whether `token` appears in `text` (both already lowercased) as a standalone
+// unit, not buried inside a larger word. Plain substring containment fails open:
+// "#ad" would match "#advanced" and "Ad" would match "had", letting a post skip a
+// required disclosure. So we require a non-word char (or string edge) on each side
+// of the match. Token-internal characters (e.g. the leading "#", or a space in
+// "paid partnership") are unaffected — only the outer edges are boundary-checked.
+const isWordChar = (ch) => ch !== undefined && /[a-z0-9_]/.test(ch);
+function containsToken(text, token) {
+  if (!token) return false;
+  for (let i = text.indexOf(token); i !== -1; i = text.indexOf(token, i + 1)) {
+    const before = i > 0 ? text[i - 1] : undefined;
+    const after  = text[i + token.length]; // undefined past the end
+    if (!isWordChar(before) && !isWordChar(after)) return true;
+  }
+  return false;
+}
+
 // Content policy / guardrail check (INDIV-004). PURE: the handler loads the
 // brand kit's `policy` block via brand.getOrEmpty(account) and passes it in, so
 // validate stays disk-free (the link_tag pattern). Returns errors[] (blocking),
@@ -149,7 +166,7 @@ export function checkPolicy(platform, content, policy, { sponsored = false } = {
   const p = policy || {};
   const disc = p.disclosures || {};
   const text = contentText(platform, content).toLowerCase();
-  const present = (tok) => text.includes(String(tok).toLowerCase());
+  const present = (tok) => containsToken(text, String(tok).toLowerCase());
 
   for (const tok of tokenSet(disc.always)) {
     if (present(tok)) notes.push(`Disclosure "${tok}" present ✓`);

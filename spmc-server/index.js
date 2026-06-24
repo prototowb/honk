@@ -174,8 +174,11 @@ async function doPublish(platform, content, account, dryRun, { sponsored = false
     return `DRY RUN — ${v.label} payload is valid; nothing was published.${extraNote}${warn}${notes}`;
   }
 
+  // Policy notes are pre-publish drafting guidance (e.g. banned-topic reminders);
+  // they'd be backward-facing noise on every live publish, so they stay in the
+  // dry-run/validate paths only. Warnings about this post's content still echo.
   const { summary } = await publishAudited(platform, content, account, { source: 'direct' });
-  return summary + warn + notes;
+  return summary + warn;
 }
 
 // ─── Server ───────────────────────────────────────────────────────────────
