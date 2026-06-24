@@ -65,6 +65,30 @@ brand_voice(action: "set", profile: { platforms: { x: { tone: "punchier", hashta
 When you're about to write for a specific platform, prefer the platform-resolved
 get over the raw profile so per-channel deltas are already applied.
 
+**Audience segments.** A brand also speaks differently to different *audiences* —
+"enterprise buyers" vs "indie devs" — independent of platform. Store those as named
+segments in the kit's `audiences` block and resolve one (optionally with a platform)
+with:
+
+```
+brand_voice(action: "get", audience: "enterprise")          // audience layer only
+brand_voice(action: "get", platform: "x", audience: "enterprise")  // both
+```
+
+Precedence is **base ▸ audience ▸ platform** — the platform is the hardest channel
+constraint, so a per-platform delta wins over an audience delta on the same field
+(set both `audiences.enterprise.hashtags` and `platforms.x.hashtags` and on X the
+platform list wins). Selecting a segment sets the effective `audience` to the
+segment name; a segment can set every field *except* `audience`. Set segments with:
+
+```
+brand_voice(action: "set", profile: { audiences: { enterprise: { tone: "measured", hashtags: ["#infosec"] } } })
+```
+
+If you pass an `audience` name that isn't a defined segment, the resolver falls back
+to the base voice **and flags it** (so a typo never silently un-tailors a post) —
+check the names it lists and fix the call.
+
 **Content policy / guardrails.** The kit also carries a `policy` block — the
 brand's safety layer. Honor it on every draft:
 

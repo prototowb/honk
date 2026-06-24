@@ -42,8 +42,8 @@ export const BRIEF_FIELDS = [
     brandKitPath: null,
   },
   {
-    key: 'audience_delta', label: 'Audience (this piece)', type: 'text', required: false,
-    help: "Only if it differs from the brand kit's default audience.",
+    key: 'audience', label: 'Audience', type: 'text', required: false,
+    help: "Who this piece targets. Name a defined audience segment (see brand_voice audiences) to tailor the voice to it, or free-text a one-off audience. Omit to use the brand kit's default.",
     brandKitPath: 'voice.audience',
   },
   {

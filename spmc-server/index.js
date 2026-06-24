@@ -63,6 +63,7 @@ function formatBrandProfile(p) {
     `links.utm_defaults: ${obj((p.links || {}).utm_defaults)}`,
     `links.shortener:    ${v((p.links || {}).shortener)}`,
     `platforms:          ${platformsLine(p.platforms)}`,
+    `audiences:          ${platformsLine(p.audiences)}`,
     `policy:             ${policyLine(p.policy)}`,
     `notes:              ${v(p.notes)}`,
   ].join('\n');
@@ -82,8 +83,8 @@ function policyLine(policy) {
     + `disclosures.sponsored=[${arr(sponsored)}], auto_publish=${pol.auto_publish === true}`;
 }
 
-// Render the per-platform voice deltas readably (the generic obj() would print
-// each platform value as "[object Object]").
+// Render a map of named voice deltas readably (per-platform OR per-audience —
+// same shape; the generic obj() would print each value as "[object Object]").
 function platformsLine(platforms) {
   const entries = Object.entries(platforms || {});
   if (!entries.length) return '—';
@@ -104,10 +105,14 @@ function formatResolvedVoice(r, label, profile) {
   const p = profile || {};
   const voice = p.voice || {};
   const v = (x) => Array.isArray(x) ? (x.length ? x.join(', ') : '—') : (x || '—');
-  const mark = (k) => r.overridden.includes(k) ? '  (platform override)' : '';
+  // Provenance per field: platform overrides win over audience (base ▸ audience ▸ platform).
+  const mark = (k) => r.sources?.[k] === 'platform' ? '  (platform override)'
+                    : r.sources?.[k] === 'audience' ? '  (audience override)'
+                    : '';
+  const scope = [r.platform, r.audience ? `audience "${r.audience}"` : null].filter(Boolean).join(' · ') || 'base';
   const sets = Object.entries((p.hashtags || {}).sets || {});
   const lines = [
-    `Effective voice for ${r.platform} (${label} brand):`,
+    `Effective voice for ${scope} (${label} brand):`,
     '',
     `tone:         ${v(r.effective.tone)}${mark('tone')}`,
     `register:     ${v(r.effective.register)}${mark('register')}`,
@@ -116,15 +121,20 @@ function formatResolvedVoice(r, label, profile) {
     `hashtags:     ${v(r.effective.hashtags)}${mark('hashtags')}`,
     `cta:          ${v(r.effective.cta)}${mark('cta')}`,
     '',
-    'Global voice (applies on every platform):',
+    'Global voice (applies everywhere):',
     `banned_words:  ${v(voice.banned_words)}`,
     `hashtags.sets: ${sets.length ? sets.map(([k, arr]) => `${k}[${(arr || []).join(', ')}]`).join('; ') : '—'}`,
     `do:            ${v(voice.do)}`,
     `dont:          ${v(voice.dont)}`,
   ];
-  if (!r.overridden.length) {
-    lines.push('', `(no per-platform overrides for ${r.platform} — the six fields above are the base voice. ` +
-      `Set deltas with brand_voice(action:"set", profile:{platforms:{${r.platform}:{…}}}).)`);
+  if (r.unknownAudience) {
+    const names = Object.keys(p.audiences || {});
+    lines.push('', `⚠ No audience segment named "${r.audience}" — fell back to the base voice. `
+      + (names.length
+          ? `Defined segments: ${names.join(', ')}.`
+          : `No segments defined yet — add one with brand_voice(action:"set", profile:{audiences:{"<name>":{…}}}).`));
+  } else if (!r.overridden.length) {
+    lines.push('', `(no ${r.audience ? 'audience/' : ''}platform overrides for ${scope} — the six fields above are the base voice.)`);
   }
   return lines.join('\n');
 }
@@ -261,10 +271,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           return ok(`Saved the ${label} brand profile (${args.replace ? 'replaced' : 'merged'}).\n\n${formatBrandProfile(saved)}`);
         }
         const current = brand.get(account);
-        if (args.platform) {
-          // Resolve the effective voice for a platform — null-safe (current may
-          // be null when no profile is set; resolveVoice yields the base/empty).
-          return ok(formatResolvedVoice(brand.resolveVoice(current, args.platform), label, current));
+        if (args.platform || args.audience) {
+          // Resolve the effective voice for a platform and/or audience segment —
+          // null-safe (current may be null when no profile is set; resolveVoice
+          // yields the base/empty). Precedence: base ▸ audience ▸ platform.
+          return ok(formatResolvedVoice(
+            brand.resolveVoice(current, { platform: args.platform, audience: args.audience }), label, current));
         }
         if (!current) return ok(`No brand profile set for ${label}. Set one with brand_voice(action:"set", profile:{...}). Empty shape:\n\n${formatBrandProfile(brand.emptyProfile())}`);
         return ok(`Brand profile (${label}):\n\n${formatBrandProfile(current)}`);

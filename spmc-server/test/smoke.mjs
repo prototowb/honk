@@ -127,6 +127,26 @@ const text = (r) => r.content.map(c => c.text).join('\n');
     /synergy/.test(t) && /launch/.test(t));
 }
 
+// brand_voice audience segments (INDIV-005) — a second tailoring axis, resolved
+// with base ▸ audience ▸ platform precedence; an unknown name is flagged.
+{
+  await client.callTool({ name: 'brand_voice', arguments: { action: 'set', profile: {
+    audiences: { enterprise: { tone: 'measured', hashtags: ['#infosec'] } },
+  } } });
+  const aud = await client.callTool({ name: 'brand_voice', arguments: { action: 'get', audience: 'enterprise' } });
+  const at = text(aud);
+  check('brand_voice get audience:enterprise applies the segment',
+    !aud.isError && /audience "enterprise"/i.test(at) && /measured/.test(at) && /audience override/i.test(at));
+
+  // platform wins over the segment on a shared field (x already overrides tone → punchier earlier).
+  const both = await client.callTool({ name: 'brand_voice', arguments: { action: 'get', platform: 'x', audience: 'enterprise' } });
+  check('brand_voice get platform+audience resolves both layers',
+    !both.isError && /audience "enterprise"/i.test(text(both)) && /platform override/i.test(text(both)));
+
+  const bad = await client.callTool({ name: 'brand_voice', arguments: { action: 'get', audience: 'nope' } });
+  check('brand_voice get flags an unknown audience name', !bad.isError && /No audience segment named "nope"/i.test(text(bad)));
+}
+
 // content policy / guardrails (INDIV-004) — set a policy, then content_validate
 // reflects it: always-disclosure warns, sponsored-disclosure errors, banned topics
 // surface as a note. The policy is loaded by the handler (validate stays pure).
