@@ -119,9 +119,19 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
      can't *enumerate* defined segments — wire suggestions in with guided-mode/UI.
    - **INDIV-004:** a deterministic dispatch/`auto_publish` gate so the queue/scheduler
      path enforces policy (today only direct publish hard-blocks).
-2. **FB re-verify** (user is providing a modified token): `pages_manage_engagement` for
-   the FB first-comment; re-test FB alt-text — if `alt_text_custom` still doesn't read
-   back, try the two-step set (create photo → POST `alt_text_custom` to the photo node).
+2. **Live verification (needs valid creds — read scopes).** Turnkey steps in
+   **`ANALYTICS_VERIFICATION.md`**.
+   - **Analytics path — de-risked 2026-06-25, live run pending.** Re-verified all
+     three metric sets against current Meta/Threads docs: **no drift** — the June-2026
+     FB cull is reach/impression-only; our engagement/click/reaction set is unaffected;
+     IG was fetched live 2026-06-17. The scheduler loads its own creds, and
+     `SPMC_ANALYTICS_DELAY_MS=0` collapses the 24h follow-up to seconds. **Remaining:**
+     the live end-to-end run (one-shot `analytics_fetch` on a real post_id from
+     `audit_log`, then the auto-follow-up loop) + **Threads** (never had creds). Scopes:
+     IG `instagram_manage_insights`, FB `read_insights`, Threads `threads_manage_insights`.
+   - **FB re-verify** (user is providing a modified token): `pages_manage_engagement` for
+     the FB first-comment; re-test FB alt-text — if `alt_text_custom` still doesn't read
+     back, try the two-step set (create photo → POST `alt_text_custom` to the photo node).
 3. **INBOX-001** — decide Phase 0 (public reply, ships on current architecture) vs
    Phase 1 (DM, needs Meta App Review). Plan in `INBOX_FEATURE_PLAN.md`.
 4. **Deferred:** publish story (#4 — unclaimed `spmc` npm name); ALPHA-016 delete

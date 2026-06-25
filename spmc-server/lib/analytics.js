@@ -9,11 +9,19 @@ import * as threads   from '../adapters/threads.js';
 // getMetrics() and appends a timestamped snapshot to a local store, so you can
 // track a post's performance over time.
 //
-// UNVERIFIED: the adapter insights calls have not been exercised against live
-// APIs (credential testing is deferred). X, TikTok, and Bluesky have no
-// getMetrics yet — their insights APIs need a higher access tier or aren't
-// exposed. The store, routing, and tools are real; only live confirmation is
-// pending.
+// Live status (metric names re-verified 2026-06-25 against the Meta/Threads docs):
+//   • Metric names are CURRENT. The June-2026 FB Page-insights cull is
+//     reach/impression/video-view only; our engagement/click/reaction set is
+//     unaffected. IG dropped `impressions` for `views` earlier, so we use
+//     `reach`; the IG set (reach,likes,comments,saved,shares) was fetched live on
+//     2026-06-17. Threads metric names are valid but live-UNVERIFIED (no creds).
+//   • The auto-follow-up loop (followups.js → scheduler) is wired and the
+//     scheduler loads its own creds, but the full publish→drain→snapshot loop has
+//     not been run end-to-end live. See ANALYTICS_VERIFICATION.md to verify it
+//     without the 24h wait (SPMC_ANALYTICS_DELAY_MS=0).
+//   • X, TikTok, Bluesky have no getMetrics — their insights need a higher access
+//     tier or aren't exposed.
+// The store, routing, and tools are real; what remains is the live end-to-end run.
 
 const SUPPORTED = { instagram, facebook, threads };
 
