@@ -17,11 +17,11 @@ Use `{{tool:instagram_post}}` from the `spmc` MCP server.
 - **The first 125 chars are the visible preview** (before "...more") — put the hook there.
 - **Hashtags: 3–8 relevant tags** — either at the end of the caption or kept out of it via `first_comment` (see below). Mix reach + niche; avoid banned/overused tags.
 - **Caption voice carries it** — a story, POV, or specific claim beats a flat description.
-- **Carousels:** slide 1 must earn the swipe (make a clear promise); strong save/share driver. Pass `image_urls` (2–10) for a carousel, `image_url` for a single image.
+- **Carousels: structure the arc.** Slide 1 = the promise (a hook + a clear promise of the payoff — it earns the swipe); middle slides = one beat each, in sequence; final slide = CTA + source credit. One idea per slide — add a slide rather than crowd one. Strong save/share driver. Pass `image_urls` (2–10) for a carousel, `image_url` for a single image; see `content-craft` §5 and the `output-manager` skill for the slide-by-slide render.
 
 > Weak: "Excited to share our journey and what we've learned along the way!" → Strong: "We almost shut down in month 3. Swipe for the email that saved us →"
 
-Before drafting, pull the brand kit with `brand_voice(action:"get", platform:"instagram")` — the voice resolved for Instagram, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words; draw hashtags from its sets. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
+Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (IG captions aren't clickable — put any source link in `first_comment` or credit it on the image). Then pull the brand kit with `brand_voice(action:"get", platform:"instagram")` — the voice resolved for Instagram, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words; draw hashtags from its sets. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
 ### Requirements
 

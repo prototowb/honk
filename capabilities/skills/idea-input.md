@@ -27,16 +27,20 @@ brand kit is set (first run), offer the `brand-setup` skill once — a quick gui
 pass over voice **and** visual identity — so future runs and composed images
 inherit it. Declining is fine; sensible defaults apply.
 
-## Guided mode (optional)
+## Guided mode — offer it up front
 
-When the user wants to be walked through it — or says "guided" — don't ask for
-everything at once. Call `brief_schema` for the field list, then collect **one
-field at a time**, in order, **skipping any the brand kit already pre-fills**
-(confirm those rather than re-asking). Required fields first (angle → goal →
-platforms); offer to stop once those are set. Show the assembled brief, get an
-explicit yes, then hand to `pipeline-orchestrator`. `brief_schema` is the same
-field spec a future web UI renders as a form — collect against it, don't invent
-fields. Guided mode is **opt-in**; the default stays a single quick brief.
+**Proactively offer guided mode for anything beyond a quick one-off** — don't jump
+straight to a single draft. A two-line offer ("want me to walk you through a short
+brief, or do you have it?") costs nothing and produces a sharper post.
+
+When the user takes it — or says "guided" — don't ask for everything at once. Call
+`brief_schema` for the field list, then collect **one field at a time**, in order,
+**skipping any the brand kit already pre-fills** (confirm those rather than re-asking).
+Required fields first (angle → goal → platforms); offer to stop once those are set.
+Show the assembled brief, get an explicit yes, then hand to `pipeline-orchestrator`.
+`brief_schema` is the same field spec a future web UI renders as a form — collect
+against it, don't invent fields. Declining is fine (a quick one-shot brief still
+works) — but make the offer first rather than defaulting to a bare draft.
 
 ## Output
 

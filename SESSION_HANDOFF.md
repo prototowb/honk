@@ -10,180 +10,109 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
 ## On `development` now (recently merged)
 
-- **Instagram publish race fixed (INIT-002)** — `adapters/instagram.js` created the
-  media container and called `media_publish` on the next line, **never polling the
-  container's `status_code`**. Under real timing Instagram returns code
-  `9007`/`2207027` ("media can't be published yet") and **live IG posts fail** (a plain
-  retry just recreates the container and races again). Added `waitForContainer` — polls
-  `status_code` until `FINISHED` before publish, on both the single-image and carousel
-  paths (Meta-recommended flow). Because `lib/dispatch.js` + `lib/analytics.js` import
-  the same adapter, this **also closes the identical race on the queue/scheduler dispatch
-  path** (the deferred-gate weak spot). **Live-confirmed:** posted to @protocode_ (IG
-  media `17874248277652862`, FB post `…_1411992160954659`). All four gates green.
-- **Multi-brand management (INDIV-006)** — `brand_voice` gains `action:"list"`
-  (unions brand profiles + credentialed accounts via `config.accountsOverview()`,
-  lowercase-normalized so casing doesn't double-count, active marked), `action:"use"`
-  (sets an **active-account pointer**), `action:"clone"` (+`to` — deep-copy a profile
-  to a new key; refuses to clobber; doesn't touch the pointer). **Active pointer was
-  chosen over agent-carried for UI groundwork** (a UI needs persisted selection; the
-  pointer also subsumes agent-carried — explicit `account:` always overrides).
-  **Architecture:** `brand.json` stays **flat** (single-concern); the pointer lives in
-  its **own `brand-active.json`** as the **seed of a future account registry** (no
-  migration). ⚠️ **Safety boundary:** reads (`brand_voice get`/`brand_schema` with no
-  account) default to the active account + echo it; **writes, publishing, and
-  `media_compose` stay explicit** — the pointer NEVER silently redirects a post
-  (persona has a mandatory "confirm the brand, pass `account:` explicitly" check).
-  **Tools stay 30.** 121 unit + 41-check smoke.
-- **Audience segments (INDIV-005)** — a second voice-tailoring axis: the kit's new
-  `audiences{}` map lets a brand speak differently to named audiences ("enterprise"
-  vs "indie"), independent of platform. The override field list is now one canonical
-  `OVERRIDE_FIELDS` (`PLATFORM_OVERRIDE_FIELDS` aliases it — all six;
-  `SEGMENT_OVERRIDE_FIELDS` = it **minus `audience`**, since selecting a segment IS
-  the audience). `resolveVoice(profile, {platform, audience})` (bare string still =
-  platform) layers **base ▸ audience ▸ platform** — platform wins last, so a
-  platform delta fully shadows an audience delta on the same field (replace
-  semantics); returns per-field `sources` provenance and sets the effective
-  `audience` to the segment name. ⚠️ **An unknown audience name does NOT silently
-  apply** — values stay base and `unknownAudience` is flagged in the resolved view.
-  Exposed via `brand_voice(action:"get", platform?, audience?)`. `brief.js`'s
-  `audience_delta` → a single `audience` field. **Tools stay 30.** 117 unit +
-  36-check smoke.
-- **Content policies / guardrails (INDIV-004)** — the brand kit gains a `policy`
-  block (`banned_topics`, `disclosures.always/sponsored`, `auto_publish`) that is
-  now **enforced**. Pure `checkPolicy(platform, content, policy, {sponsored})` in
-  `validate.js` (disk-free — the handler loads policy via `brand.getOrEmpty` and a
-  `validateWithPolicy` helper merges it in, the link_tag pattern): a missing
-  `disclosures.always` token **warns**; a missing `disclosures.sponsored` token on
-  a post flagged `sponsored:true` is a blocking **error**; `banned_topics` surface
-  as drafting-reminder notes; present disclosures echo ✓ in dry-run/validate.
-  `sponsored` is a per-call flag on the 7 publish tools + `content_validate` (which
-  also gained `account`). **Disclosure matching is word-boundary token containment,
-  not plain substring** — "#ad" is NOT satisfied by "#advanced", "Ad" NOT by "had"
-  (closes the fail-open on the blocking path). `auto_publish` is agent-guided
-  (persona + skills), **no deterministic dispatch gate in v1.** ⚠️ **Enforcement
-  boundary:** only **direct publish** hard-blocks; `queue_add` is advisory and the
-  real **queue/scheduler dispatch path does not re-validate**, so a policy-violating
-  queued post can still go out — the deterministic dispatch/auto_publish gate is the
-  deferred follow-up. Documented in `content-intelligence`/`brand-setup`/6 platform
-  skills/persona + `brand_schema`. **Tools stay 30.** 110 unit + 33-check smoke.
-- **Individualization Phases 1 & 2 (INDIV-001/002)** — all 5 `media_compose`
-  templates rebuilt on one editorial design system (brand row · hero headline on a
-  layered surface · body · accent footer), driven by per-template `layout` metrics in
-  `compose.js`; colors default to the **protocode palette** (DESIGN_GUIDE: bg `#05091e`,
-  surface `#121b33`, accent `#1df7ed`, text `#8ac0dd`/`#f4f8ff`) with a
-  background-luminance legibility fallback for other brands; story-dark respects
-  safe-zones. **Phase 1:** `visual` block on the brand kit; `media_compose` defaults
-  every visual field from it (`resolveVisualVars`/`resolvePalette`, pure + tested;
-  identity set once, not per call; `template` now optional via `default_template`).
-  **Phase 2:** `brand_schema` tool + `lib/brand-schema.js` + guided **`brand-setup`**
-  skill; first-run offer wired into `pipeline-orchestrator`/`idea-input`/`output-manager`.
-  Kit is user-owned + portable (folder-copy). **Live-tested** through the server:
-  brand-kit visual round-trips, `brand_schema` reflects it, `media_compose` resolves
-  from the kit + renders (upload boundary unchanged — needs CDN creds via the bin).
-- **Per-platform voice tailoring (INDIV-003)** — the kit's `platforms` block now
-  resolves: `brand.resolveVoice` + exported `PLATFORM_OVERRIDE_FIELDS` merge per-platform
-  deltas (tone/register/emoji_policy/audience/hashtags/cta) over the base voice with
-  **replace** semantics. Exposed via `brand_voice(action:"get", platform:…)` as a
-  **superset** view (the six resolved fields + global banned_words/sets/do/dont, so a
-  platform-scoped get carries everything a draft needs). The 6 platform skills consult
-  it; `content-intelligence`/`brand-setup` document it. No new tool (overloaded `get`).
-  **Live-tested** through the server (replace + provenance + null-safety confirmed).
-- **Build / install / distribution pipeline hardening** — fixed a dead-on-arrival npm
-  package (`lib/` now ships), added a **pack-smoke gate** (pack→install→boot) in CI +
-  `prepublishOnly`, CI gates `development` + `feature/**`, real npm workspace, engines
-  split (runtime ≥20.9 / tooling ≥21), the `spmc-start` bin (scheduler), and
-  CHANGELOG / RELEASING / `npm version`. Full critique: **`PIPELINE_REVIEW.md`**.
-- **`hermes/` → `agent/`** — generic bring-your-own-agent surface. ⚠️ Any external
-  agent config (incl. the user's running Hermes) pointing at `hermes/*` must move to
-  `agent/*`.
-- **Guided pipeline intake (interactivity Layer 1)** — `lib/brief.js` + the
-  `brief_schema` tool; opt-in **guided mode** in `idea-input` / `research-trends` /
-  `content-intelligence`.
-- **Alt-text + first-comment (ALPHA-014/015)** — `alt_text` (+ `alt_texts[]` carousel)
-  on IG/FB/Threads; `first_comment` on IG/FB, **best-effort after a confirmed publish**.
-  **Live-tested on @protocode_ / protocode:** IG verified — but live publish required
-  the async media-container poll fix (see **INIT-002** above; "verified" was incomplete);
-  **FB alt-text UNVERIFIED**; **FB first-comment needs the `pages_manage_engagement` scope.**
-- **Plans (not built):** `INBOX_FEATURE_PLAN.md` (comment-keyword → file/link) and
-  **Individualization** (`PROJECT_SPECIFICATIONS.md` → *Individualization*).
+- **★ Content-quality fundamentals (INIT-003)** — closes the user-set top priority: the
+  2026-06-26 IG+FB post was **too basic** (1–3 flat facts, no copy structure, sources
+  only in chat, guided mode never offered). The fix is **fundamental and brand-agnostic**,
+  not brand polish. New **`content-craft`** skill (single-concern, auto-discovered) is the
+  craft layer every draft starts from:
+    - **Engagement philosophy** — one idea per post, specificity over vagueness, open a gap
+      early, value density, design for saves/shares, native format, action-inviting CTA.
+    - **Layered copy structure** — hook → context/tension → payoff/insight → CTA, mapped
+      onto single post / caption / carousel / thread (**hook + payoff non-negotiable**).
+    - **Accessible source attribution** — every fact-bearing post puts the source where the
+      reader can follow it (caption link / `first_comment` / on-image). **Distinct from the
+      pipeline's primary-source *verification*** (`pipeline-orchestrator`): verify it's true,
+      *then* make it followable. Reuses existing mechanisms (`link_tag`, `first_comment`,
+      `media_compose` subtext, `alt_text`) — **no new plumbing**.
+    - **Hashtag intent** — fewer/intentional; **defers per-platform counts** to the platform
+      skills + brand-kit sets (no contradiction).
+    - **Carousel arc** — slide-1 promise → one beat per slide → CTA/source.
+  ⚠️ **Anti-orphan design:** a consulted skill only earns its place if something loads it —
+  so content-craft has **real trigger phrases AND is explicitly invoked** by the 6 platform
+  skills' Craft sections + `pipeline-orchestrator` Phase 1/3 + `output-manager` (not a passive
+  "see also"). The hard **accessible-sourcing + copy-structure checks live in the persona
+  checklist** (the always-run, non-skippable pre-publish gate — prose alone is skippable).
+  Guided mode reframed buried-opt-in → **offered up front** (idea-input/research-trends).
+  **Deferred (advisor-confirmed):** a deterministic "stat-without-URL" `content_validate`
+  nudge — false-positives on "3× faster"/"month 3", doesn't enforce; the real deterministic
+  gap is the already-deferred INDIV-004 dispatch re-validation. **Prose-first** on the
+  single-origin build (1 new capability + 10 edited; **no `lib/` change**). **Tools stay 30,
+  skills 14→15.** All four gates green at every commit.
+- **Instagram publish race fixed (INIT-002)** — `adapters/instagram.js` created the media
+  container and called `media_publish` on the next line, **never polling `status_code`**;
+  under real timing IG returns `9007`/`2207027` ("media can't be published yet") and **live
+  IG posts fail**. Added `waitForContainer` — polls until `FINISHED` before publish, on both
+  the single-image and carousel paths. Because `lib/dispatch.js` + `lib/analytics.js` import
+  the same adapter, this **also closes the race on the queue/scheduler dispatch path**.
+  **Live-confirmed** on @protocode_ (IG media `17874248277652862`, FB `…_1411992160954659`).
+- **Multi-brand management (INDIV-006)** — `brand_voice` `list` / `use` (active-account
+  pointer in its own `brand-active.json`, brand.json stays flat) / `clone`. Reads default to
+  active + echo; **writes/publishing/compose stay explicit** (pointer never redirects a post).
+- **Audience segments (INDIV-005)** — `audiences{}` second tailoring axis; `resolveVoice`
+  layers **base ▸ audience ▸ platform** (platform wins; replace semantics; provenance);
+  unknown audience flagged, not silently applied.
+- **Content policies / guardrails (INDIV-004)** — `policy` block + pure `checkPolicy`; always→
+  warn, sponsored→error (per-call `sponsored` flag), **word-boundary** disclosure matching.
+  ⚠️ **Direct publish hard-blocks; queue/scheduler dispatch does NOT re-validate** (deferred).
+- **Individualization P1–P3 (INDIV-001/002/003)** — visual brand kit + 5 rebuilt templates;
+  `brand_schema` + guided `brand-setup`; per-platform voice tailoring (`resolveVoice`).
+- **Build/install pipeline hardening** — `lib/` ships, **pack-smoke gate**, CI gates
+  `development` + `feature/**`, npm workspace, engines split, `spmc-start` bin. Critique:
+  `PIPELINE_REVIEW.md`. ⚠️ `hermes/` → `agent/` (any `hermes/*` config moves to `agent/*`).
+- **Alt-text + first-comment (ALPHA-014/015)** — IG verified live; **FB alt-text UNVERIFIED**;
+  **FB first-comment needs `pages_manage_engagement`**; IG first-comment needs
+  `instagram_manage_comments`.
 
-**State:** 30 tools · 5 templates · 2 runtime deps · **121 unit + 41-check smoke +
-`build:check` + `pack:smoke`** all green. (Pushed to `origin/development`.)
+**State:** 30 tools · **15 skills** · 5 templates · 2 runtime deps · **121 unit + 41-check
+smoke + `build:check` + `pack:smoke`** all green. (Pushed to `origin/development`.)
 
 ## NEXT
 
-0. **★ CONTENT QUALITY — engagement & copy FUNDAMENTALS first (TOP PRIORITY, user-set
-   2026-06-26; reframed after feedback).** The 2026-06-26 IG+FB post was **too basic**.
-   The core gap is **fundamental and brand-agnostic** — *not* mainly brand polish (the
-   earlier "brand kit first" framing was wrong). These apply to every post and nearly
-   every post type, independent of brand:
-   - **Engagement philosophy** — work from a documented set of principles for what makes
-     a post engaging, applied across post types. Don't wing each post.
-   - **Layered copy structure** — hook → context/tension → payoff/insight → CTA. Not
-     "drop 1–3 facts and stop." Real copywriting craft, every post. Rethink hashtag policy.
-   - **Accessible source attribution by default** — every fact-bearing post attributes
-     sources where the audience can follow them (caption / first-comment / on-image).
-     Today they only reached chat. Universal baseline, not a brand feature.
-   - **Offer/initiate guided mode** — the guided intake (`brief.js` / `brief_schema`,
-     opt-in in research-trends / idea-input / content-intelligence) was **never offered**
-     this session. Offer or initiate it; don't jump straight to a single draft.
-   - **Templates / multi-slide** — design carousel / multi-slide structures for save-share
-     and richer hierarchy; current 5 are a floor. Re-check `media_compose` consistency.
-   **Brand layer (SECONDARY — complements, does NOT gate the above):** logo on-image
-   (`logo_url`/`icon_url`), palette, visual identity → brand kit (`brand-setup` /
-   `brand_schema`; no `brand.json` yet). Suggest formalizing as **INIT-003**. See memory
-   `post-quality-standards`.
-1. **Individualization backlog — INDIV-004/005/006 shipped; only INDIV-007 remains
-   (data-gated, defer).** Full plans in `PROJECT_SPECIFICATIONS.md` → *Individualization
-   → Backlog — planned*.
-   - **INDIV-007 Learned/adaptive** — voice few-shot examples + observed best-times
-     (`best_time` `observedWindows`). **Data-gated:** needs accrued analytics history,
-     which hasn't accrued (live analytics still unverified). Plan it, expect to defer
-     until there's data — this is the natural point to pause the Individualization track
-     and start the **UI phase (BETA-011)**.
-   Deferred UI **export** (folder-copy works today) and optional polish: a real live
-   `media_compose` upload via the `spmc` bin to confirm the kit-driven image on the CDN.
-   **Carry-forward follow-ups (deferred, for the UI phase):**
-   - **INDIV-006:** promote `brand-active.json` into a full account registry (display
-     names, created_at, archived) when the UI renders it; decide if/where the active
-     pointer should drive scheduler/compose defaults (kept reads-only in v1 on purpose).
-   - **INDIV-005:** the brief's `audience` field accepts a segment name as text but
-     can't *enumerate* defined segments — wire suggestions in with guided-mode/UI.
-   - **INDIV-004:** a deterministic dispatch/`auto_publish` gate so the queue/scheduler
-     path enforces policy (today only direct publish hard-blocks).
+0. **Content quality — fundamentals SHIPPED (INIT-003); now prove + extend.** The
+   brand-agnostic craft layer is in place. Remaining content-quality work:
+   - **Live-prove it.** The real test is a real post going out **materially better** — draft
+     the next fact-bearing post through `content-craft` + the persona gates and confirm
+     hook→payoff→CTA + a **followable** source (caption link / `first_comment`), not flat
+     facts. A before/after draft was produced this session; a live publish wasn't.
+   - **Brand layer (SECONDARY — suggest INIT-004).** Logo on-image (`logo_url`/`icon_url`),
+     palette, visual identity → brand kit (`brand-setup`/`brand_schema`). Complements the
+     fundamentals; does **not** gate them. There's no `brand.json` for @protocode_ yet —
+     setting one up is the natural next concrete step before the next real post.
+   - **Templates beyond the floor (optional).** The carousel *structure* is now documented;
+     new multi-slide *templates* (vs. the current 5) are a possible follow-up, not required.
+   See memory `post-quality-standards`.
+1. **INDIV-007 Learned/adaptive** — voice few-shot examples + observed best-times
+   (`best_time` `observedWindows`). **Data-gated** — needs accrued analytics history (still
+   unverified). Plan it, expect to defer; natural point to pause Individualization and start
+   the **UI phase (BETA-011)**. Carry-forward follow-ups (deferred, for the UI phase):
+   INDIV-006 account registry; INDIV-005 segment enumeration in guided mode; INDIV-004
+   deterministic dispatch/`auto_publish` gate.
 2. **Live verification (needs valid creds — read scopes).** Turnkey steps in
-   **`ANALYTICS_VERIFICATION.md`**.
-   - **Analytics path — de-risked 2026-06-25, live run pending.** Re-verified all
-     three metric sets against current Meta/Threads docs: **no drift** — the June-2026
-     FB cull is reach/impression-only; our engagement/click/reaction set is unaffected;
-     IG was fetched live 2026-06-17. The scheduler loads its own creds, and
-     `SPMC_ANALYTICS_DELAY_MS=0` collapses the 24h follow-up to seconds. **Remaining:**
-     the live end-to-end run (one-shot `analytics_fetch` on a real post_id from
-     `audit_log`, then the auto-follow-up loop) + **Threads** (never had creds). Scopes:
-     IG `instagram_manage_insights`, FB `read_insights`, Threads `threads_manage_insights`.
-   - **FB re-verify** (user is providing a modified token): `pages_manage_engagement` for
-     the FB first-comment; re-test FB alt-text — if `alt_text_custom` still doesn't read
-     back, try the two-step set (create photo → POST `alt_text_custom` to the photo node).
-3. **INBOX-001** — decide Phase 0 (public reply, ships on current architecture) vs
-   Phase 1 (DM, needs Meta App Review). Plan in `INBOX_FEATURE_PLAN.md`.
+   `ANALYTICS_VERIFICATION.md`. Analytics path de-risked 2026-06-25 (metric sets re-verified,
+   no drift); remaining = the live end-to-end run + Threads (never had creds). **FB re-verify**
+   (`pages_manage_engagement` first-comment; re-test FB alt-text two-step set).
+3. **INBOX-001** — decide Phase 0 (public reply) vs Phase 1 (DM, needs Meta App Review). Plan
+   in `INBOX_FEATURE_PLAN.md`.
 4. **Deferred:** publish story (#4 — unclaimed `spmc` npm name); ALPHA-016 delete
-   (destructive, scope-paused); Mastodon (017) / LinkedIn (018) creds; X 402;
-   BETA-011 UI stop-line.
+   (destructive, scope-paused); Mastodon (017) / LinkedIn (018) creds; X 402; BETA-011 UI.
 
 ## Conventions In Force
 
-- **Build origin:** tool → `lib/tools.js`; limit → `lib/specs.js`; credential/media key
-  → `lib/config.js` (+ `.env.example`); skill/agent prose → `capabilities/`; template →
+- **Build origin:** tool → `lib/tools.js`; limit → `lib/specs.js`; credential/media key →
+  `lib/config.js` (+ `.env.example`); skill/agent prose → `capabilities/`; template →
   `media/templates/<id>/`; version → `spmc-server/package.json`. Then `npm run build`.
-  **Never hand-edit generated artifacts** (`build:check` rejects it).
-- **Gates (green at every commit):** `npm test` · `npm run build:check` · `test:smoke`
-  · `pack:smoke`. CI runs all on push to `main` / `development` / `feature/**` + PRs;
-  `prepublishOnly` re-runs them before any publish.
+  Adding `capabilities/skills/<x>.md` auto-registers `skills/<x>/SKILL.md` (build discovers
+  the tree). **Never hand-edit generated artifacts** (`build:check` rejects it).
+- **Gates (green at every commit):** `npm test` · `npm run build:check` · (in `spmc-server`)
+  `npm run test:smoke` · `npm run pack:smoke`. CI runs all on push to `main` / `development` /
+  `feature/**` + PRs; `prepublishOnly` re-runs them; the opt-in pre-commit hook runs
+  `build:check`. ⚠️ The Bash tool here is git-bash (not PowerShell); commit via `git commit -F
+  <msgfile>` to dodge here-string/apostrophe breakage.
 - **Bins:** `spmc` = `run.js` (MCP only) · `spmc-start` = `start.js` (MCP + scheduler).
-- **Document permission scopes:** every feature touching a platform documents the scope
-  it needs for user setup (`.env.example` + the skill) — AGENTS.md rule #7.
-- **Credentials** in `~/.claude/spmc.env`; multi-account `KEY__ACCOUNT`. **Always confirm
-  post content with the user before publishing** (no un-publish; `duplicate_check`
-  guards reposts).
-- **Git flow:** branch off `development`, merge `--no-ff` (no PR), push; `main` via PR
-  only. Releases: `RELEASING.md`.
+- **Document permission scopes:** every feature touching a platform documents the scope it
+  needs (`.env.example` + the skill) — AGENTS.md rule #7.
+- **Credentials** in `~/.claude/spmc.env`; multi-account `KEY__ACCOUNT`. **Always confirm post
+  content with the user before publishing** (no un-publish; `duplicate_check` guards reposts).
+- **Git flow:** branch off `development`, merge `--no-ff` (no PR), push; `main` via PR only.
+  ⚠️ `pg`'s ticket counter is out of sync with git's ticket IDs — confirm the next free ID
+  against git history (it re-echoed INIT-002, already used by the IG fix → this work is INIT-003).

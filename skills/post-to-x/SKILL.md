@@ -24,7 +24,7 @@ Use tools from the `spmc` MCP server.
 
 > Weak: "We're excited to announce our new feature is now live!" → Strong: "Your CI has been lying to you. Here's the 3-line fix 🧵"
 
-Before drafting, pull the brand kit with `brand_voice(action:"get", platform:"x")` — the voice resolved for X, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words; draw hashtags from its sets. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
+Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (on X, put any source link in a reply or the last tweet, not the first — first-tweet links suppress reach). Then pull the brand kit with `brand_voice(action:"get", platform:"x")` — the voice resolved for X, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words; draw hashtags from its sets. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
 ### Single tweet
 

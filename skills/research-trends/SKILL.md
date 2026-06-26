@@ -26,11 +26,12 @@ sources) and bring back a *brief*, not raw links.
 A pipeline-ready brief (same shape as `idea-input`'s) plus a one-line "why now."
 Confirm with the user, then hand to the `pipeline-orchestrator` skill.
 
-**Guided mode (optional):** if the user wants to be walked through the brief after
-you pick a trend, call `brief_schema` and fill the remaining per-run fields **one
-at a time** — pre-seed `angle`/`references` from your research, skip what the brand
-kit pre-fills, confirm the rest. Same field spec as `idea-input` and the future web
-UI form. Opt-in; the default stays a single confirmed brief.
+**Guided mode — offer it after picking a trend:** once you've chosen the angle,
+**proactively offer to walk the brief** rather than handing over a single draft. If
+the user takes it, call `brief_schema` and fill the remaining per-run fields **one at
+a time** — pre-seed `angle`/`references` from your research, skip what the brand kit
+pre-fills, confirm the rest. Same field spec as `idea-input` and the future web UI
+form. Declining is fine; but make the offer rather than defaulting to a bare draft.
 
 ## Principles
 

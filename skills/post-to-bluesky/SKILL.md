@@ -22,7 +22,7 @@ Use `bluesky_post` from the `spmc` MCP server.
 
 > Weak: "Check out our latest blog post about productivity [link]" → Strong: "I deleted 40% of my standups and output went up. What I do instead:"
 
-Before drafting, pull the brand kit with `brand_voice(action:"get", platform:"bluesky")` — the voice resolved for Bluesky, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
+Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (on Bluesky, an inline link renders a rich card — use it to carry the source). Then pull the brand kit with `brand_voice(action:"get", platform:"bluesky")` — the voice resolved for Bluesky, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
 ### Setup — refreshingly simple
 

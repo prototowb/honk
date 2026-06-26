@@ -22,6 +22,11 @@ Tools on the `spmc` MCP server. None of these publish; all but the analytics
 fetch run without platform credentials. Use them to prepare and check content
 before calling a publishing tool.
 
+For the **craft** of the post itself — engagement principles, the
+hook→context→payoff→CTA structure, accessible sourcing, hashtag intent — see the
+`content-craft` skill. This skill is the *tooling* around the writing; that one is
+*how to write it*.
+
 ### Brand voice — consult first
 
 Before drafting anything, read the brand kit:

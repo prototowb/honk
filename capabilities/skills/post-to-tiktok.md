@@ -21,7 +21,7 @@ Use `{{tool:tiktok_post_video}}` from the `spmc` MCP server. Follow up with `{{t
 
 > Weak caption: "Our app helps you save time ✨" → Strong: "POV: you automated the thing your boss still does by hand 👀"
 
-Before drafting, pull the brand kit with `brand_voice(action:"get", platform:"tiktok")` — the voice resolved for TikTok, with any per-platform deltas already applied — and match its tone, audience, and hashtag sets. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
+Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (TikTok captions can't carry clickable links — name the source in the caption or on-screen and point to bio). Then pull the brand kit with `brand_voice(action:"get", platform:"tiktok")` — the voice resolved for TikTok, with any per-platform deltas already applied — and match its tone, audience, and hashtag sets. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
 ### Requirements
 
