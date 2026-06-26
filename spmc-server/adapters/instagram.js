@@ -4,6 +4,26 @@ function env(key, account = '') {
   return account ? process.env[`${key}__${account.toUpperCase()}`] : process.env[key];
 }
 
+// A freshly-created image container isn't immediately publishable — Instagram
+// fetches and processes the image asynchronously. Calling media_publish too
+// early returns code 9007 / subcode 2207027 ("media can't be published yet").
+// Poll status_code until FINISHED before publishing (Meta-recommended flow).
+async function waitForContainer(creationId, accessToken, { tries = 12, delayMs = 3000 } = {}) {
+  for (let i = 0; i < tries; i++) {
+    const res = await fetch(
+      `${BASE}/${creationId}?fields=status_code&access_token=${encodeURIComponent(accessToken)}`,
+    );
+    if (res.ok) {
+      const { status_code: code } = await res.json();
+      if (code === 'FINISHED') return;
+      if (code === 'ERROR' || code === 'EXPIRED')
+        throw new Error(`IG container processing ${code}`);
+    }
+    if (i < tries - 1) await new Promise(r => setTimeout(r, delayMs));
+  }
+  throw new Error(`IG container still processing after ${tries} checks — try again shortly`);
+}
+
 export async function post(imageUrl, caption, account = '', opts = {}) {
   const igUserId    = env('INSTAGRAM_USER_ID', account);
   const accessToken = env('INSTAGRAM_ACCESS_TOKEN', account);
@@ -22,6 +42,8 @@ export async function post(imageUrl, caption, account = '', opts = {}) {
     throw new Error(`IG container ${containerRes.status}: ${await containerRes.text()}`);
 
   const { id: creationId } = await containerRes.json();
+
+  await waitForContainer(creationId, accessToken);
 
   const publishRes = await fetch(`${BASE}/${igUserId}/media_publish`, {
     method: 'POST',
@@ -69,6 +91,8 @@ export async function postCarousel(imageUrls, caption, account = '', opts = {}) 
     throw new Error(`IG carousel container ${parentRes.status}: ${await parentRes.text()}`);
 
   const { id: creationId } = await parentRes.json();
+
+  await waitForContainer(creationId, accessToken);
 
   const publishRes = await fetch(`${BASE}/${igUserId}/media_publish`, {
     method: 'POST',
