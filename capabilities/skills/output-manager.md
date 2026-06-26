@@ -25,6 +25,8 @@ TikTok; optionally Threads) — unless the user supplies an image URL or says to
 ### Step 1 — Write the visual copy (conversion-grade)
 
 Visuals have zero tolerance for filler. Think conversion copywriter + creative director.
+The `content-craft` fundamentals apply on-image too — one idea, a real hook, a payoff —
+compressed to what fits a single frame.
 
 - **Headline ≤ 6 words, one idea.** The eye gets one focal line — make it the payoff.
 - **No clichés.** Never "Unlock", "Revolutionize", "Elevate", "Delve", "Discover", "Transform", "Tapestry", "Game-changer", or anything template-shaped — they signal low effort and kill engagement.
@@ -81,7 +83,18 @@ skill. Then queue or publish via `manage-queue`.
 - **Legibility first.** High contrast between headline and background; use the brand accent for emphasis, not decoration. If `bg_image_url` is busy, the text panel must stay readable.
 - **Respect safe zones.** On 9:16 (story), keep text clear of the top ~250px and bottom ~250px where platform UI overlays sit.
 - **Brand consistency.** Reuse the same bg/accent/handle/icon across a series — all from the brand kit.
+- **Credit sources on-image.** For a stat-driven graphic, add a small source line (via `subtext` or the footer) so the claim and its origin travel together — the `content-craft` §3 accessible-sourcing rule applies to visuals too.
 - **Less is more.** No more than the headline + one line. Whitespace is a feature.
+
+### Carousels — structure the arc
+
+A carousel is a narrative, not a photo dump (the `content-craft` carousel structure, rendered):
+
+- **Slide 1 — the promise.** Earns the swipe: a hook + a clear promise of the payoff. If slide 1 doesn't promise something worth the swipe, no one swipes.
+- **Middle slides — one beat each.** One idea per slide, in sequence; each advances the payoff. Crowding two points on a slide? Add a slide.
+- **Final slide — CTA + source.** The one next step (save, follow, read the source) plus any source credit.
+
+Render one `media_compose` template per slide and publish with `instagram_post(image_urls: [...])`. Keep one visual system across slides (same bg/accent/handle/icon — `square-news` carries the handle+icon footer) so the set reads as a series. Carousels are strong **save/share** drivers — design slide 1 to promise something worth saving.
 
 ### Notes
 

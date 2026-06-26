@@ -23,6 +23,10 @@ From the brief (angle, goal, audience), generate **3 distinct concepts**. Each:
 title, angle, key message, hook, best-fit platforms. Explore genuinely different
 perspectives; keep them on-brand and audience-relevant. Present all 3.
 
+Shape every concept with the `content-craft` fundamentals — one sharp idea, a real
+hook, and a payoff worth the stop (not 1–3 flat facts). That craft layer is
+brand-agnostic and applies before any per-platform tailoring.
+
 ## Phase 2 — Review (Critical Editor)
 
 Score each concept on originality, audience fit, brand alignment, and platform
@@ -34,8 +38,10 @@ move forward. Kill clichés and anything that reads as template.
 
 For each approved concept + target platform, write the variant **using that
 platform's skill** — `post-to-x`, `post-to-instagram`, `post-to-tiktok`,
-`post-to-facebook`, `post-to-threads`, `post-to-bluesky`. Each carries its own
-craft and limits; follow it, don't hardcode numbers here.
+`post-to-facebook`, `post-to-threads`, `post-to-bluesky`. Each drafts against the
+shared `content-craft` fundamentals (engagement philosophy, hook→context→payoff→CTA,
+accessible sourcing) **plus** its own channel craft and limits — follow both, don't
+hardcode numbers here.
 
 - For one idea across many platforms, start with `content_adapt(text, platforms)` for length-fitted drafts, then rewrite each in the platform's voice (adapt does length only, not tone).
 - Validate every variant with `content_validate(platform, content)` before it leaves this phase.
@@ -67,3 +73,9 @@ vulnerabilities" is a different claim. Primary sourcing protects credibility.
 **How:** follow the brief's reference links back to the original and cite the
 origin. If a stat can't be verified to its source, cut it or flag it to the user
 — never publish an unverifiable number.
+
+**Then make the source followable.** Verification confirms the number is *true*; the
+post must also let the reader *reach* the source — via the caption, a reply,
+`first_comment`, or an on-image credit, per the platform. A stat whose source only
+reached this chat is **not done**. See `content-craft` §3 for the per-platform channel,
+and the persona checklist, which gates this before publish.

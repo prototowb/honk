@@ -21,7 +21,7 @@ Use `{{tool:facebook_post}}` from the `spmc` MCP server.
 
 > Weak: "We are thrilled to share an update with our community." → Strong: "We rebuilt onboarding from scratch. New users hit 'aha' in 2 minutes, down from 11."
 
-Before drafting, pull the brand kit with `brand_voice(action:"get", platform:"facebook")` — the voice resolved for Facebook, with any per-platform deltas already applied — and match its tone, audience, and emoji policy. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
+Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (on Facebook, put any source link in the caption with a line of context, or in `first_comment`). Then pull the brand kit with `brand_voice(action:"get", platform:"facebook")` — the voice resolved for Facebook, with any per-platform deltas already applied — and match its tone, audience, and emoji policy. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
 ### Requirements
 

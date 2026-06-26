@@ -23,7 +23,7 @@ Use `threads_post` from the `spmc` MCP server.
 
 > Weak: "New episode is out now, go listen!" → Strong: "Most 'productivity' advice is procrastination with extra steps. What actually moved the needle for you?"
 
-Before drafting, pull the brand kit with `brand_voice(action:"get", platform:"threads")` — the voice resolved for Threads, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
+Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (on Threads, drop any source link inline or in a reply). Then pull the brand kit with `brand_voice(action:"get", platform:"threads")` — the voice resolved for Threads, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
 ### Requirements
 
