@@ -10,6 +10,16 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
 ## On `development` now (recently merged)
 
+- **Instagram publish race fixed (INIT-002)** — `adapters/instagram.js` created the
+  media container and called `media_publish` on the next line, **never polling the
+  container's `status_code`**. Under real timing Instagram returns code
+  `9007`/`2207027` ("media can't be published yet") and **live IG posts fail** (a plain
+  retry just recreates the container and races again). Added `waitForContainer` — polls
+  `status_code` until `FINISHED` before publish, on both the single-image and carousel
+  paths (Meta-recommended flow). Because `lib/dispatch.js` + `lib/analytics.js` import
+  the same adapter, this **also closes the identical race on the queue/scheduler dispatch
+  path** (the deferred-gate weak spot). **Live-confirmed:** posted to @protocode_ (IG
+  media `17874248277652862`, FB post `…_1411992160954659`). All four gates green.
 - **Multi-brand management (INDIV-006)** — `brand_voice` gains `action:"list"`
   (unions brand profiles + credentialed accounts via `config.accountsOverview()`,
   lowercase-normalized so casing doesn't double-count, active marked), `action:"use"`
@@ -91,8 +101,9 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
   `content-intelligence`.
 - **Alt-text + first-comment (ALPHA-014/015)** — `alt_text` (+ `alt_texts[]` carousel)
   on IG/FB/Threads; `first_comment` on IG/FB, **best-effort after a confirmed publish**.
-  **Live-tested on @protocode_ / protocode:** IG verified; **FB alt-text UNVERIFIED**;
-  **FB first-comment needs the `pages_manage_engagement` scope.**
+  **Live-tested on @protocode_ / protocode:** IG verified — but live publish required
+  the async media-container poll fix (see **INIT-002** above; "verified" was incomplete);
+  **FB alt-text UNVERIFIED**; **FB first-comment needs the `pages_manage_engagement` scope.**
 - **Plans (not built):** `INBOX_FEATURE_PLAN.md` (comment-keyword → file/link) and
   **Individualization** (`PROJECT_SPECIFICATIONS.md` → *Individualization*).
 
