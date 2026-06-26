@@ -112,6 +112,24 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
 ## NEXT
 
+0. **★ CONTENT QUALITY — professional post system (TOP PRIORITY, user-set 2026-06-26).**
+   The 2026-06-26 IG+FB post shipped, but the user flagged the whole image+text structure
+   as **too basic**: no engagement concept, no storytelling, missing professional design
+   criteria, and **logo + source attribution missing _again_** (recurring). Fix the
+   post-production *system*, not one post:
+   - **Brand kit first (prerequisite).** Still **no `brand.json`** — which is why there's
+     no logo and weak visual identity. Run `brand-setup` / `brand_schema`: logo asset,
+     palette, voice. Everything below depends on this.
+   - **Logo on every card** — wire `logo_url`/`icon_url` through `media_compose` defaults
+     (from the kit), so it's automatic, not remembered.
+   - **Source attribution by default** — on-image source line and/or caption/first-comment
+     links. Today sources only reached chat; they must reach the post.
+   - **Engagement concept & storytelling** — hook → tension → payoff; design
+     carousel / multi-slide templates for save/share; captions written as narrative with
+     a deliberate CTA, not a stat dump; rethink hashtag policy (generic tags went out).
+   - **Templates** — the current 5 are a floor with thin hierarchy; design richer
+     editorial/carousel layouts. Re-check `media_compose` output consistency then.
+   - Suggest formalizing as **INIT-003** in proto-gear. See memory `post-quality-standards`.
 1. **Individualization backlog — INDIV-004/005/006 shipped; only INDIV-007 remains
    (data-gated, defer).** Full plans in `PROJECT_SPECIFICATIONS.md` → *Individualization
    → Backlog — planned*.
