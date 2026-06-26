@@ -112,24 +112,27 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
 ## NEXT
 
-0. **★ CONTENT QUALITY — professional post system (TOP PRIORITY, user-set 2026-06-26).**
-   The 2026-06-26 IG+FB post shipped, but the user flagged the whole image+text structure
-   as **too basic**: no engagement concept, no storytelling, missing professional design
-   criteria, and **logo + source attribution missing _again_** (recurring). Fix the
-   post-production *system*, not one post:
-   - **Brand kit first (prerequisite).** Still **no `brand.json`** — which is why there's
-     no logo and weak visual identity. Run `brand-setup` / `brand_schema`: logo asset,
-     palette, voice. Everything below depends on this.
-   - **Logo on every card** — wire `logo_url`/`icon_url` through `media_compose` defaults
-     (from the kit), so it's automatic, not remembered.
-   - **Source attribution by default** — on-image source line and/or caption/first-comment
-     links. Today sources only reached chat; they must reach the post.
-   - **Engagement concept & storytelling** — hook → tension → payoff; design
-     carousel / multi-slide templates for save/share; captions written as narrative with
-     a deliberate CTA, not a stat dump; rethink hashtag policy (generic tags went out).
-   - **Templates** — the current 5 are a floor with thin hierarchy; design richer
-     editorial/carousel layouts. Re-check `media_compose` output consistency then.
-   - Suggest formalizing as **INIT-003** in proto-gear. See memory `post-quality-standards`.
+0. **★ CONTENT QUALITY — engagement & copy FUNDAMENTALS first (TOP PRIORITY, user-set
+   2026-06-26; reframed after feedback).** The 2026-06-26 IG+FB post was **too basic**.
+   The core gap is **fundamental and brand-agnostic** — *not* mainly brand polish (the
+   earlier "brand kit first" framing was wrong). These apply to every post and nearly
+   every post type, independent of brand:
+   - **Engagement philosophy** — work from a documented set of principles for what makes
+     a post engaging, applied across post types. Don't wing each post.
+   - **Layered copy structure** — hook → context/tension → payoff/insight → CTA. Not
+     "drop 1–3 facts and stop." Real copywriting craft, every post. Rethink hashtag policy.
+   - **Accessible source attribution by default** — every fact-bearing post attributes
+     sources where the audience can follow them (caption / first-comment / on-image).
+     Today they only reached chat. Universal baseline, not a brand feature.
+   - **Offer/initiate guided mode** — the guided intake (`brief.js` / `brief_schema`,
+     opt-in in research-trends / idea-input / content-intelligence) was **never offered**
+     this session. Offer or initiate it; don't jump straight to a single draft.
+   - **Templates / multi-slide** — design carousel / multi-slide structures for save-share
+     and richer hierarchy; current 5 are a floor. Re-check `media_compose` consistency.
+   **Brand layer (SECONDARY — complements, does NOT gate the above):** logo on-image
+   (`logo_url`/`icon_url`), palette, visual identity → brand kit (`brand-setup` /
+   `brand_schema`; no `brand.json` yet). Suggest formalizing as **INIT-003**. See memory
+   `post-quality-standards`.
 1. **Individualization backlog — INDIV-004/005/006 shipped; only INDIV-007 remains
    (data-gated, defer).** Full plans in `PROJECT_SPECIFICATIONS.md` → *Individualization
    → Backlog — planned*.
