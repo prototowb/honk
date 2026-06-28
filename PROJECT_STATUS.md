@@ -120,6 +120,33 @@ Full plans (shape · logic · surface · tests · open decisions) in
 | ALPHA-018 | **LinkedIn** adapter (new platform — strategic, the Taplio space) | Needs creds + API access-tier decision |
 
 ### Deferred stop-lines (unchanged)
+
+---
+
+## Rename: SPMC → Honk
+
+**Decision (2026-06-28):** The project is being renamed from *Social Publishing Mission Control (SPMC)* to **Honk**. The transition is gradual — phased across upcoming sprints, not a single big-bang rename.
+
+### Done
+| What | Old | New |
+|------|-----|-----|
+| Runtime data directory | `~/.spmc/` | `~/.honk/` |
+| Data dir env var | `SPMC_DATA_DIR` | `HONK_DATA_DIR` |
+
+### Pending (next phases — in rough priority order)
+| What | Old | New | Notes |
+|------|-----|-----|-------|
+| MCP server name in configs | `"spmc"` | `"honk"` | `claude_desktop_config.json`, `.mcp.json`, `agent/mcp-config.json` — build-generated, update template in `build/generate.mjs` |
+| npm package name | `spmc` | `honk` | `spmc-server/package.json` → publish new name |
+| Binary names | `spmc`, `spmc-start` | `honk`, `honk-start` | `package.json` `bin` block |
+| Server directory | `spmc-server/` | `honk-server/` (or `server/`) | Repo rename + import paths |
+| Skill/doc references | "SPMC" throughout | "Honk" | `capabilities/`, `agent/`, `PROJECT_*.md` |
+| Claude Desktop config comment | `spmc` references | `honk` | cosmetic, build-generated |
+
+### Convention during transition
+- New features use **Honk** naming from the start
+- Existing `SPMC_*` credential env vars stay until explicitly migrated — users would need to rename them
+- The data dir (`~/.honk/`) and `HONK_DATA_DIR` are already Honk-named — do not revert
 | ID | Title | Priority |
 |----|-------|----------|
 | BETA-011 | UI implementation **planning** — analytics dashboard + content calendar (Phase 2/3). NOT started | ⚪ Next phase (stop line) |

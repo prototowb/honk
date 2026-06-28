@@ -27,18 +27,20 @@ to tasteful template defaults when nothing is set.
 
 Call `brand_schema` for the field list **with current values**. Then collect
 **one field at a time, in group order**, skipping anything already set (confirm
-those rather than re-asking). Lead with the **recommended** fields — they are
-what make outputs feel on-brand — and offer to stop once those are done:
+those rather than re-asking). Complete all five groups — only offer to stop
+after group 3 (hashtags/CTAs done) if the user is short on time:
 
-1. **Voice** — tone, audience (recommended); register, emoji policy, banned words.
-2. **Visual identity** — accent + background colors and handle (recommended);
+1. **Voice** — tone, audience; register, emoji policy, banned words, do/don't list.
+2. **Visual identity** — accent + background colors and handle;
    surface/heading/body colors, logo URL, icon URL, default template. Colors are
    hex (e.g. `#1df7ed`). Leave heading/body blank to auto-derive legible colors
    from the background. If the user has a brand style guide, ask for its palette.
-3. **Hashtags & CTA** — default hashtags, reusable calls-to-action.
+3. **Hashtags & CTA** — default hashtags, named hashtag sets by topic, reusable
+   calls-to-action. *(Offer to stop here if the user is short on time.)*
 4. **Content policy** — banned topics, required disclosures (always/sponsored),
    auto-publish. Optional but high-value; see below.
-5. **Notes** — anything else to keep in mind.
+5. **Notes** — niche, content angle, post structure, and anything else the agent
+   should always keep in mind.
 
 `brand_schema` is the same field spec a future web-UI settings form renders —
 collect against it, use the **dotted paths** it lists (e.g. `visual.accent`),
@@ -62,11 +64,12 @@ For a non-default account, pass `account`. Show the saved kit back
 with `media_compose(template:"square-tall", headline:"…")` — it should pick up
 the brand colors and handle automatically (the result notes "brand kit applied").
 
-## Per-platform deltas (optional, advanced)
+## Per-platform deltas
 
-Once the core kit is set, a brand can tune its voice per channel — punchier and
-near-zero hashtags on X, more hashtags on Instagram. This is optional; skip it
-unless the user asks or clearly varies by platform. Store deltas under the
+Once the core kit is set, offer to tune the voice per channel — more hashtags
+on Instagram, discussion-first CTAs on Facebook, punchier on X. A scheduled
+pipeline calls `brand_voice(action:"get", platform:"…")` on every draft, so
+populated deltas improve automated output from day one. Store deltas under the
 `platforms` block (overridable: `tone`, `register`, `emoji_policy`, `audience`,
 `hashtags`, `cta`); a set value **replaces** the base for that platform:
 

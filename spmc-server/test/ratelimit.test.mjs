@@ -4,7 +4,7 @@ import { mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-process.env.SPMC_DATA_DIR = mkdtempSync(join(tmpdir(), 'spmc-rl-'));
+process.env.HONK_DATA_DIR = mkdtempSync(join(tmpdir(), 'spmc-rl-'));
 const { isRateLimitError, noteFromError, status } = await import('../lib/ratelimit.js');
 
 test('detects rate-limit responses from error text', () => {

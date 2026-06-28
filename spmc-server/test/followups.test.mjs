@@ -5,7 +5,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 
 // Isolate state to a throwaway dir before importing the modules under test.
-process.env.SPMC_DATA_DIR = mkdtempSync(join(tmpdir(), 'spmc-followups-'));
+process.env.HONK_DATA_DIR = mkdtempSync(join(tmpdir(), 'spmc-followups-'));
 
 const followups = await import('../lib/followups.js');
 const { extractPostId } = await import('../lib/analytics.js');

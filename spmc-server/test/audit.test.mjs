@@ -5,7 +5,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 
 // Isolate state to a throwaway dir before importing the module under test.
-process.env.SPMC_DATA_DIR = mkdtempSync(join(tmpdir(), 'spmc-audit-'));
+process.env.HONK_DATA_DIR = mkdtempSync(join(tmpdir(), 'spmc-audit-'));
 const { record, read, recentDuplicate } = await import('../lib/audit.js');
 
 test('records entries and reads them back most-recent-first', () => {

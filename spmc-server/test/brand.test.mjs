@@ -4,7 +4,7 @@ import { mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-process.env.SPMC_DATA_DIR = mkdtempSync(join(tmpdir(), 'spmc-brand-'));
+process.env.HONK_DATA_DIR = mkdtempSync(join(tmpdir(), 'spmc-brand-'));
 const brand = await import('../lib/brand.js');
 const { accountsOverview } = await import('../lib/config.js');
 

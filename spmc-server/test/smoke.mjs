@@ -24,7 +24,7 @@ const transport = new StdioClientTransport({
   command: process.execPath,
   args:    [serverPath],
   // Isolate audit/state writes to a throwaway dir.
-  env:     { ...process.env, SPMC_DATA_DIR: mkdtempSync(join(tmpdir(), 'spmc-smoke-')) },
+  env:     { ...process.env, HONK_DATA_DIR: mkdtempSync(join(tmpdir(), 'spmc-smoke-')) },
 });
 
 const client = new Client({ name: 'smoke', version: '0' }, { capabilities: {} });

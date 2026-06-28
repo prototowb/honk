@@ -1,4 +1,4 @@
-# SESSION_HANDOFF — SPMC
+# SESSION_HANDOFF — SPMC (→ Honk)
 
 > Read this before anything else. Replace entirely at session end — this is current state, not a log.
 
@@ -9,6 +9,21 @@ and is **green on CI** with everything below merged + pushed. Branch off `develo
 merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
 ## On `development` now (recently merged)
+
+- **@protocode_ brand kit populated + data dir moved (2026-06-28)** — brand kit
+  (`~/.honk/brand.json`, key `protocode_`) now fully populated: voice do/don't,
+  emoji policy, 4-color visual palette, 5 personal CTAs, 4 named hashtag sets,
+  per-platform deltas (IG: save-worthy CTAs + 6 hashtags; FB: conversational
+  register + discussion CTAs), notes capturing niche/angle/alternating structure.
+  `brand-active.json` created → `brand_voice(action:"get")` now resolves correctly
+  from Claude Desktop. Data dir moved from `spmc-server/data/` to `~/.honk/`
+  (`lib/paths.js` uses `os.homedir()`). `SPMC_DATA_DIR` → `HONK_DATA_DIR`
+  (paths.js + test files + .env.example). `brand-setup` skill fixed: guided
+  walkthrough now completes all 5 groups before offering to stop (was stopping
+  after group 2), and platform deltas are proactively offered not skipped.
+  **Rename SPMC → Honk** started: done items tracked in `PROJECT_STATUS.md` →
+  *Rename* section; pending = MCP server name, npm package, bins, server dir, docs.
+  ⚠️ Restart Claude Desktop for the new `~/.honk/` data path to take effect.
 
 - **★ Content-quality fundamentals (INIT-003)** — closes the user-set top priority: the
   2026-06-26 IG+FB post was **too basic** (1–3 flat facts, no copy structure, sources
@@ -116,3 +131,6 @@ smoke + `build:check` + `pack:smoke`** all green. (Pushed to `origin/development
 - **Git flow:** branch off `development`, merge `--no-ff` (no PR), push; `main` via PR only.
   ⚠️ `pg`'s ticket counter is out of sync with git's ticket IDs — confirm the next free ID
   against git history (it re-echoed INIT-002, already used by the IG fix → this work is INIT-003).
+- **Rename in progress — SPMC → Honk:** data dir already `~/.honk/`. Remaining phases
+  (package name, bin, server dir, env var, docs) tracked in `PROJECT_STATUS.md` → *Rename* section.
+  New features use Honk naming; existing `SPMC_*` identifiers stay until their phase.
