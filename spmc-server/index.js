@@ -249,12 +249,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const mod = { instagram, facebook }[args.platform];
         if (!mod) throw new Error(`account_info not available for "${args.platform}". Supported: instagram, facebook.`);
         const p = await mod.getProfile(args.account ?? '');
+        let seedNote = '';
+        if (args.seed_brand_kit && (p.handle || p.icon_url)) {
+          const brandAccount = args.account ?? brand.getActive();
+          const patch = { visual: {} };
+          if (p.handle)   patch.visual.handle   = p.handle;
+          if (p.icon_url) patch.visual.icon_url = p.icon_url;
+          brand.set(patch, brandAccount);
+          const label = brandAccount || 'default';
+          seedNote = `\n\nBrand kit updated (account '${label}'): `
+            + [p.handle && `handle → ${p.handle}`, p.icon_url && 'icon_url → set'].filter(Boolean).join(', ') + '.';
+        }
         return ok(
           `${p.platform}${args.account ? `/${args.account}` : ''} profile:\n`
           + `  name:   ${p.name ?? '(none)'}\n`
           + `  handle: ${p.handle ?? '(none set)'}\n`
           + `  id:     ${p.id}\n`
           + `  icon:   ${p.icon_url ?? '(none)'}`
+          + seedNote
         );
       }
       case 'brand_voice': {

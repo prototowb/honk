@@ -178,12 +178,13 @@ export const TOOLS = [
   },
   {
     name: 'account_info',
-    description: 'Fetch the connected account profile (handle, display name, avatar URL) for a platform. Read-only — confirms which account is wired up and supplies branding assets. Supported: instagram, facebook (Graph API).',
+    description: "Fetch the connected account profile (handle, display name, avatar URL) for a platform. Read-only — confirms which account is wired up and supplies branding assets. Supported: instagram, facebook (Graph API). Pass seed_brand_kit:true to merge the fetched handle + avatar URL into the active brand account's visual block.",
     inputSchema: {
       type: 'object',
       properties: {
-        platform: { type: 'string', description: 'Platform to query', enum: ['instagram', 'facebook'] },
-        account:  { type: 'string', description: "Named account (e.g. 'brand'). Omit for the default account." },
+        platform:       { type: 'string', description: 'Platform to query', enum: ['instagram', 'facebook'] },
+        account:        { type: 'string', description: "Named account (e.g. 'brand'). Omit for the default account." },
+        seed_brand_kit: { type: 'boolean', description: "If true, merge the fetched handle and avatar URL into the active brand account's visual block (icon_url and handle). The target brand account is the active account when no explicit account is given." },
       },
       required: ['platform'],
     },
