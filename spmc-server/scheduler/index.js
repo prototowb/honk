@@ -32,7 +32,7 @@ function loadEnvFile(filePath) {
   return count;
 }
 
-for (const loc of [join(homedir(), '.claude', 'spmc.env'), join(__dir, '..', '.env')]) {
+for (const loc of [join(homedir(), '.claude', 'honk.env'), join(homedir(), '.claude', 'spmc.env'), join(__dir, '..', '.env')]) {
   if (loadEnvFile(loc) > 0) break;
 }
 

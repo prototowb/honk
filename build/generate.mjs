@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SPMC build generator — emits per-surface artifacts from the single origin.
+// Honk build generator — emits per-surface artifacts from the single origin.
 //
 // Origin (two halves):
 //   • Machine facts — spmc-server/lib/tools.js (tool schemas) + lib/specs.js
@@ -106,7 +106,7 @@ function renderToolTables(heading = '##') {
 
 function renderToolCatalog() {
   let md = GENERATED_HEADER('npm run build:check');
-  md += `\n# SPMC Tool Reference\n\n`;
+  md += `\n# Honk Tool Reference\n\n`;
   md += `**${TOOLS.length} tools** · generated from \`spmc-server/lib/tools.js\` + \`lib/specs.js\` · server v${pkg.version}\n`;
   md += renderToolTables('##');
   return md;
@@ -131,7 +131,7 @@ function renderPluginManifest() {
 // (the "same server, three shapes, one a live defect" problem). The differences
 // are intentional: launch path (plugin var vs absolute vs npx) and whether an
 // env block is present (Claude Code injects creds via ${VAR}; the others self-
-// load from ~/.claude/spmc.env at startup, so they carry no env).
+// load from ~/.claude/honk.env at startup, so they carry no env).
 
 // The 17 credential env keys, single-sourced: every platform's credentials plus
 // every media provider's keys. Adding a platform/provider updates all configs.
@@ -153,11 +153,11 @@ function envPlaceholders() {
 // it carries manual-setup guidance). JSON files can't hold a DO-NOT-EDIT comment
 // without risking a schema validator, so drift is caught by build:check instead.
 function mcpConfig({ command, args, env, comment }) {
-  const spmc = { command, args };
-  if (env) spmc.env = env;
+  const honk = { command, args };
+  if (env) honk.env = env;
   const out = {};
   if (comment) out._comment = comment;
-  out.mcpServers = { spmc };
+  out.mcpServers = { honk };
   return JSON.stringify(out, null, 2) + '\n';
 }
 
@@ -173,7 +173,7 @@ function renderMcpJson() {
 
 // Agent (bring-your-own): outside the Claude plugin ecosystem, so no ${CLAUDE_PLUGIN_ROOT} — it
 // needs an absolute path to run.js (machine-specific by nature). No env block:
-// run.js self-loads creds from ~/.claude/spmc.env.
+// run.js self-loads creds from ~/.claude/honk.env.
 //
 // This is the one artifact `build:check` does NOT verify (see `localOnly` in the
 // registry). build:check asserts reproducibility-from-origin; this file's only
@@ -190,7 +190,7 @@ function renderAgentMcpConfig() {
 }
 
 // Claude Desktop: the no-marketplace manual fallback. Uses npx so no clone path;
-// creds self-load from ~/.claude/spmc.env. Keeps the setup guidance in _comment.
+// creds self-load from ~/.claude/honk.env. Keeps the setup guidance in _comment.
 function renderClaudeDesktopConfig() {
   return mcpConfig({
     comment: [
@@ -199,16 +199,16 @@ function renderClaudeDesktopConfig() {
       'Windows: %APPDATA%\\Claude\\claude_desktop_config.json',
       'macOS:   ~/Library/Application Support/Claude/claude_desktop_config.json',
       '',
-      "OPTION A — npm (after 'npm install -g spmc', or 'npm pack && npm install -g spmc-" + pkg.version + ".tgz'):",
-      '  Use the npx block below. Credentials load from ~/.claude/spmc.env automatically.',
+      "OPTION A — npm (after 'npm install -g honk', or 'npm pack && npm install -g honk-" + pkg.version + ".tgz'):",
+      '  Use the npx block below. Credentials load from ~/.claude/honk.env automatically.',
       '',
       'OPTION B — local clone (replace the path with your actual clone location):',
       '  { "command": "node", "args": ["/path/to/spmc-server/run.js"] }',
       '',
-      'Either way, store credentials in ~/.claude/spmc.env (see .env.example).',
+      'Either way, store credentials in ~/.claude/honk.env (see .env.example).',
     ],
     command: 'npx',
-    args: ['-y', 'spmc'],
+    args: ['-y', 'honk'],
   });
 }
 

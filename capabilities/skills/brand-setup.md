@@ -3,7 +3,7 @@ name: brand-setup
 description: Guide a first-time user through setting up their brand kit (voice + visual identity) so every post and composed image is on-brand without re-specifying it each time. Populates the persistent brand kit the other skills read.
 metadata:
   version: "0.3.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 # Brand Setup

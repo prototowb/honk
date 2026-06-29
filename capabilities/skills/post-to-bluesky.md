@@ -5,12 +5,12 @@ description: >
   Bluesky. No OAuth — just an app password. Simplest setup of any platform.
 metadata:
   version: "0.3.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 ## Posting to Bluesky
 
-Use `{{tool:bluesky_post}}` from the `spmc` MCP server.
+Use `{{tool:bluesky_post}}` from the `honk` MCP server.
 
 ### Craft a strong post (Bluesky-native)
 

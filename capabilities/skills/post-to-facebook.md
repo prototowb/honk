@@ -5,12 +5,12 @@ description: >
   publish content to a Facebook Page feed. Uses the same Meta Graph API token as Instagram.
 metadata:
   version: "0.3.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 ## Posting to Facebook
 
-Use `{{tool:facebook_post}}` from the `spmc` MCP server.
+Use `{{tool:facebook_post}}` from the `honk` MCP server.
 
 ### Craft a strong post (Facebook-native)
 

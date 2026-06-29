@@ -9,7 +9,7 @@ description: >
   intent that apply to every post on top of the brand voice.
 metadata:
   version: "0.1.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 ## Content Craft — how a post earns engagement

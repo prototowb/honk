@@ -1,9 +1,9 @@
 {
-  "name": "spmc-workspace",
+  "name": "honk-workspace",
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "SPMC repo root — build tooling that generates per-surface artifacts from the spmc-server origin (lib/tools.js + lib/specs.js). See BUILD_CONCEPT.md.",
+  "description": "Honk repo root — build tooling that generates per-surface artifacts from the spmc-server origin (lib/tools.js + lib/specs.js). See BUILD_CONCEPT.md.",
   "workspaces": [
     "spmc-server"
   ],

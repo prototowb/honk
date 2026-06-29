@@ -2,7 +2,7 @@
      Edit the origin (spmc-server/lib/tools.js + lib/specs.js) and regenerate.
      Regenerate: npm run build   ·   Verify: npm run build:check -->
 
-# SPMC Tool Reference
+# Honk Tool Reference
 
 **30 tools** · generated from `spmc-server/lib/tools.js` + `lib/specs.js` · server v0.3.0-alpha
 

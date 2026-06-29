@@ -3,17 +3,17 @@ name: manage-queue
 description: >
   Use when the user says "add to queue", "schedule a post", "show my queue",
   "what's queued", "dispatch this post", "publish queued item", or asks to manage
-  the SPMC content queue. The queue is file-backed and persists between sessions.
+  the Honk content queue. The queue is file-backed and persists between sessions.
   The scheduler (spmc-server/scheduler/index.js) auto-dispatches items when their
   scheduled_at time arrives — run it as a background process alongside the MCP server.
 metadata:
   version: "0.2.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 ## Managing the Content Queue
 
-Use queue tools from the `spmc` MCP server. All tools work without platform credentials
+Use queue tools from the `honk` MCP server. All tools work without platform credentials
 (only `queue_dispatch` requires them, at publish time).
 
 ### Adding to queue

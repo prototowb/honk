@@ -31,15 +31,15 @@ const tarball = join(process.cwd(), tgz);
 
 // 2. Install it into a throwaway project so its dependencies resolve as on a real
 //    `npm install spmc` — not from the source tree's node_modules.
-const work = mkdtempSync(join(tmpdir(), 'spmc-pack-'));
+const work = mkdtempSync(join(tmpdir(), 'honk-pack-'));
 try {
   run('npm init -y',              { cwd: work, stdio: 'ignore' });
   run(`npm install "${tarball}"`, { cwd: work, stdio: 'ignore' });
 
   // 3. Boot the installed bin over stdio with an immediate EOF. A missing shipped
   //    file fails at module load (ERR_MODULE_NOT_FOUND) *before* the server
-  //    connects; a healthy boot prints run.js's `[spmc]` startup line to stderr.
-  const entry = join(work, 'node_modules', 'spmc', 'run.js');
+  //    connects; a healthy boot prints run.js's `[honk]` startup line to stderr.
+  const entry = join(work, 'node_modules', 'honk', 'run.js');
   const res   = spawnSync(process.execPath, [entry], {
     cwd: work, input: '', encoding: 'utf8', timeout: 15000,
   });
@@ -49,7 +49,7 @@ try {
     fail('the packaged tarball is missing shipped files — server failed to load.\n' +
          'Check the `files` array in spmc-server/package.json.', err);
   }
-  if (!err.includes('[spmc]')) {
+  if (!err.includes('[honk]')) {
     fail('the packaged server did not boot.',
          `--- stderr ---\n${err}\n--- stdout ---\n${res.stdout || ''}`);
   }

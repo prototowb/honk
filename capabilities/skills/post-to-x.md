@@ -3,15 +3,15 @@ name: post-to-x
 description: >
   Use when the user says "post to X", "tweet this", "post this thread",
   "publish to Twitter", or asks to schedule or publish any content to X (Twitter).
-  Handles single tweets and multi-tweet threads via the spmc MCP server.
+  Handles single tweets and multi-tweet threads via the honk MCP server.
 metadata:
   version: "0.3.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 ## Posting to X (Twitter)
 
-Use tools from the `spmc` MCP server.
+Use tools from the `honk` MCP server.
 
 ### Craft a strong post (X-native)
 

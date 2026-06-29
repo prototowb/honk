@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "spmc": {
+    "honk": {
       "command": "node",
       "args": [
         "G:\\Projects\\_Plugins\\spmc-server\\run.js"

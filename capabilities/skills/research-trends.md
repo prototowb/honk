@@ -3,12 +3,12 @@ name: research-trends
 description: Research trending topics and turn the most promising one into a pipeline-ready brief. Agent-driven — you bring the research ability; output feeds pipeline-orchestrator. The automated alternative to idea-input.
 metadata:
   version: "0.3.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 # Trend Research → Brief
 
-Find what's worth posting about now and convert it into a brief. SPMC has no
+Find what's worth posting about now and convert it into a brief. Honk has no
 trends API — you do the research with the tools you have (web search, the user's
 sources) and bring back a *brief*, not raw links.
 

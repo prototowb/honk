@@ -5,12 +5,12 @@ description: >
   Instagram", or asks to publish image content to Instagram. Requires a public image URL.
 metadata:
   version: "0.3.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 ## Posting to Instagram
 
-Use `{{tool:instagram_post}}` from the `spmc` MCP server.
+Use `{{tool:instagram_post}}` from the `honk` MCP server.
 
 ### Craft a strong post (Instagram-native)
 

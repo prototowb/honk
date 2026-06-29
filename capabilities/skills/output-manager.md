@@ -2,13 +2,13 @@
 name: output-manager
 description: >
   Generate platform-native visuals for finished content before publishing — write
-  conversion-grade visual copy, then render a branded image with the spmc
+  conversion-grade visual copy, then render a branded image with the honk
   media_compose templates (identity pulled from the brand kit). Use after content
   is drafted and before handing it to the queue. For queue/scheduling/dispatch
   mechanics, use the manage-queue skill.
 metadata:
   version: "0.3.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 ## Output Manager — visuals before publish

@@ -1,6 +1,6 @@
-# SPMC Skill Triggers — Agent
+# Honk Skill Triggers — Agent
 
-> Trigger → tool mapping. One section per platform. All tools are on the `spmc` MCP server.
+> Trigger → tool mapping. One section per platform. All tools are on the `honk` MCP server.
 
 ---
 

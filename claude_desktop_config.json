@@ -5,20 +5,20 @@
     "Windows: %APPDATA%\\Claude\\claude_desktop_config.json",
     "macOS:   ~/Library/Application Support/Claude/claude_desktop_config.json",
     "",
-    "OPTION A — npm (after 'npm install -g spmc', or 'npm pack && npm install -g spmc-0.3.0-alpha.tgz'):",
-    "  Use the npx block below. Credentials load from ~/.claude/spmc.env automatically.",
+    "OPTION A — npm (after 'npm install -g honk', or 'npm pack && npm install -g honk-0.3.0-alpha.tgz'):",
+    "  Use the npx block below. Credentials load from ~/.claude/honk.env automatically.",
     "",
     "OPTION B — local clone (replace the path with your actual clone location):",
     "  { \"command\": \"node\", \"args\": [\"/path/to/spmc-server/run.js\"] }",
     "",
-    "Either way, store credentials in ~/.claude/spmc.env (see .env.example)."
+    "Either way, store credentials in ~/.claude/honk.env (see .env.example)."
   ],
   "mcpServers": {
-    "spmc": {
+    "honk": {
       "command": "npx",
       "args": [
         "-y",
-        "spmc"
+        "honk"
       ]
     }
   }

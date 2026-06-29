@@ -1,9 +1,9 @@
 ---
 name: pipeline-orchestrator
-description: Run the full SPMC content pipeline — concept → editorial review → platform-native variants → visuals → queue. Takes a brief (from idea-input or research-trends) and produces ready-to-publish content. Delegates per-platform craft to the platform skills; owns the cross-cutting flow.
+description: Run the full Honk content pipeline — concept → editorial review → platform-native variants → visuals → queue. Takes a brief (from idea-input or research-trends) and produces ready-to-publish content. Delegates per-platform craft to the platform skills; owns the cross-cutting flow.
 metadata:
   version: "0.3.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 # Content Pipeline Orchestrator

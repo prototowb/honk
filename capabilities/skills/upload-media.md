@@ -9,12 +9,12 @@ description: >
   the user gives a local path for a platform that needs a public URL.
 metadata:
   version: "0.1.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 ## Uploading local media
 
-Use `media_upload` from the `spmc` MCP server to get a public URL, then pass it to the posting tool.
+Use `media_upload` from the `honk` MCP server to get a public URL, then pass it to the posting tool.
 
 ### Step 1: upload
 

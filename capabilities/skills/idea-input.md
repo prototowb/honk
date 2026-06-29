@@ -1,9 +1,9 @@
 ---
 name: idea-input
-description: Capture a content idea as a structured brief to start an SPMC pipeline run — the per-run delta on top of the persistent brand kit. Feeds the pipeline-orchestrator skill.
+description: Capture a content idea as a structured brief to start an Honk pipeline run — the per-run delta on top of the persistent brand kit. Feeds the pipeline-orchestrator skill.
 metadata:
   version: "0.3.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 # Idea Input

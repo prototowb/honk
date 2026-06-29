@@ -5,12 +5,12 @@ description: >
   content on Threads. Uses the Threads API (graph.threads.net) with its own token.
 metadata:
   version: "0.3.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 ## Posting to Threads
 
-Use `{{tool:threads_post}}` from the `spmc` MCP server.
+Use `{{tool:threads_post}}` from the `honk` MCP server.
 
 ### Craft a strong post (Threads-native)
 

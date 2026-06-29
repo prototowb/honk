@@ -6,12 +6,12 @@ description: >
   Unaudited apps post as private/self-only regardless of privacy_level.
 metadata:
   version: "0.3.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 ## Posting to TikTok
 
-Use `{{tool:tiktok_post_video}}` from the `spmc` MCP server. Follow up with `{{tool:tiktok_check_publish_status}}`.
+Use `{{tool:tiktok_post_video}}` from the `honk` MCP server. Follow up with `{{tool:tiktok_check_publish_status}}`.
 
 ### Craft a strong post (TikTok-native)
 
