@@ -10,6 +10,27 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
 ## On `development` now (recently merged)
 
+- **Brand layer fixes (2026-06-29) — INIT-004** — two bugs + one missing feature
+  closed the "handle never rendered + logo missing" issue the Claude Desktop agent
+  reported after a test run:
+  1. **`media_compose` account-split fix** — `media_compose` was looking up the brand
+     kit with `brand.get(args.account ?? '')`, hitting `_default` (no profile) when
+     no explicit account is given. `brand_voice get` and `brand_schema` already use
+     `brand.getActive()` as the fallback — `media_compose` was the one missed case.
+     Fixed: `brandAccount = args.account ?? brand.getActive()`. Upload credentials
+     remain on `args.account ?? ''` (brand identity and publishing identity can differ).
+     Output now echoes which brand account was resolved via the active pointer.
+  2. **`account_info` `seed_brand_kit` flag** — `account_info` already fetched
+     `icon_url` (profile picture) + `handle` from IG/FB but had no write-back path
+     to the brand kit. New `seed_brand_kit:true` merges the fetched `handle` +
+     `icon_url` into the active brand account's `visual` block (same active-account
+     fallback as the `media_compose` fix). Call `account_info(platform:"instagram",
+     seed_brand_kit:true)` from Claude Desktop to populate `icon_url` in the brand kit.
+  ⚠️ `logo_url` (the bottom-right corner stamp, a distinct designed mark) is still
+  empty — IG profile picture goes into `icon_url` (template footer circle). If you
+  want the corner stamp, a separate hosted logo URL is needed.
+  All gates green (121 unit + 41-check smoke + build:check). **Pushed to `origin/development`.**
+
 - **@protocode_ brand kit populated + data dir moved (2026-06-28)** — brand kit
   (`~/.honk/brand.json`, key `protocode_`) now fully populated: voice do/don't,
   emoji policy, 4-color visual palette, 5 personal CTAs, 4 named hashtag sets,
