@@ -253,19 +253,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (args.seed_brand_kit && (p.handle || p.icon_url)) {
           const brandAccount = args.account ?? brand.getActive();
           const patch = { visual: {} };
-          if (p.handle)   patch.visual.handle   = p.handle;
-          if (p.icon_url) patch.visual.icon_url = p.icon_url;
-          // Use the profile picture as a logo_url placeholder when none is set —
-          // any real branded mark can overwrite it later via brand_voice set.
+          if (p.handle) patch.visual.handle = p.handle;
+          // Re-upload the profile picture to the configured image provider so
+          // the brand kit stores a permanent URL instead of the Graph API's
+          // signed CDN URL (which carries an expiry token and stops resolving
+          // after ~weeks). Falls back to the raw CDN URL if no provider is
+          // configured or the upload fails — better than nothing.
+          let permanentIconUrl = p.icon_url ?? null;
           if (p.icon_url) {
+            try {
+              const imgRes = await fetch(p.icon_url);
+              if (imgRes.ok) {
+                const buf = Buffer.from(await imgRes.arrayBuffer());
+                const up  = await media.upload(null, null, args.account ?? '', buf, 'profile-icon.png');
+                permanentIconUrl = up.url;
+              }
+            } catch { /* keep raw CDN URL as fallback */ }
+            patch.visual.icon_url = permanentIconUrl;
+            // Use as logo_url placeholder when none is set.
             const current = (brand.get(brandAccount) || {});
-            if (!current.visual?.logo_url) patch.visual.logo_url = p.icon_url;
+            if (!current.visual?.logo_url) patch.visual.logo_url = permanentIconUrl;
           }
           brand.set(patch, brandAccount);
           const label = brandAccount || 'default';
           const updated = [
-            p.handle   && `handle → ${p.handle}`,
-            p.icon_url && 'icon_url → set',
+            p.handle          && `handle → ${p.handle}`,
+            permanentIconUrl  && 'icon_url → set',
             patch.visual.logo_url && 'logo_url → set (placeholder)',
           ].filter(Boolean);
           seedNote = `\n\nBrand kit updated (account '${label}'): ${updated.join(', ')}.`;
