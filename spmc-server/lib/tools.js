@@ -184,7 +184,7 @@ export const TOOLS = [
       properties: {
         platform:       { type: 'string', description: 'Platform to query', enum: ['instagram', 'facebook'] },
         account:        { type: 'string', description: "Named account (e.g. 'brand'). Omit for the default account." },
-        seed_brand_kit: { type: 'boolean', description: "If true, fetch the profile picture, re-upload it to your configured image provider (imgbb/Cloudinary) for a permanent URL, then merge handle + icon_url into the active brand account's visual block (also sets logo_url as a placeholder when none is set). Falls back to the raw API URL if no provider is configured." },
+        seed_brand_kit: { type: 'boolean', description: "If true, fetch the profile picture, re-upload it to your configured image provider (imgbb/Cloudinary) for a permanent URL, then merge handle + icon_url into the active brand account's visual block. Falls back to the raw API URL if no provider is configured. logo_url is not touched — set it explicitly via brand_voice." },
       },
       required: ['platform'],
     },

@@ -270,16 +270,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               }
             } catch { /* keep raw CDN URL as fallback */ }
             patch.visual.icon_url = permanentIconUrl;
-            // Use as logo_url placeholder when none is set.
-            const current = (brand.get(brandAccount) || {});
-            if (!current.visual?.logo_url) patch.visual.logo_url = permanentIconUrl;
           }
           brand.set(patch, brandAccount);
           const label = brandAccount || 'default';
           const updated = [
-            p.handle          && `handle → ${p.handle}`,
-            permanentIconUrl  && 'icon_url → set',
-            patch.visual.logo_url && 'logo_url → set (placeholder)',
+            p.handle         && `handle → ${p.handle}`,
+            permanentIconUrl && 'icon_url → set',
           ].filter(Boolean);
           seedNote = `\n\nBrand kit updated (account '${label}'): ${updated.join(', ')}.`;
         }
