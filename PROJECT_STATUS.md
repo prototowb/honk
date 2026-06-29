@@ -1,4 +1,4 @@
-# PROJECT STATUS — Social Publishing Mission Control (SPMC)
+# PROJECT STATUS — Honk
 
 > Single source of truth for project state.
 
@@ -6,7 +6,7 @@
 
 ```yaml
 project_phase: "Beta-Prep"
-project_name: "Social Publishing Mission Control (SPMC)"
+project_name: "Honk"
 framework: "MCP server + Claude skills"
 project_type: "AI-native social publishing plugin"
 initialization_date: "2026-06-10"
@@ -52,7 +52,7 @@ stay gated on a scope confirmation before build.
 | ID | Title | Status |
 |----|-------|--------|
 | INIT-001 | ProtoGear Agent Framework integrated | ✅ Done |
-| MVP-001 | MCP server (`spmc-server`) with all 6 platforms + queue tools | ✅ Done |
+| MVP-001 | MCP server (`honk-server`) with all 6 platforms + queue tools | ✅ Done |
 | MVP-002 | Platform adapters: X, Instagram, TikTok, Facebook, Threads, Bluesky | ✅ Done |
 | MVP-003 | File-backed content queue (queue_add/list/update/remove/dispatch) | ✅ Done |
 | MVP-004 | Claude Code skills for all platforms + queue management | ✅ Done |
@@ -136,12 +136,12 @@ Full plans (shape · logic · surface · tests · open decisions) in
 ### Pending (next phases — in rough priority order)
 | What | Old | New | Notes |
 |------|-----|-----|-------|
-| MCP server name in configs | `"spmc"` | `"honk"` | `claude_desktop_config.json`, `.mcp.json`, `agent/mcp-config.json` — build-generated, update template in `build/generate.mjs` |
-| npm package name | `spmc` | `honk` | `spmc-server/package.json` → publish new name |
-| Binary names | `spmc`, `spmc-start` | `honk`, `honk-start` | `package.json` `bin` block |
-| Server directory | `spmc-server/` | `honk-server/` (or `server/`) | Repo rename + import paths |
-| Skill/doc references | "SPMC" throughout | "Honk" | `capabilities/`, `agent/`, `PROJECT_*.md` |
-| Claude Desktop config comment | `spmc` references | `honk` | cosmetic, build-generated |
+| MCP server name in configs | `"spmc"` | `"honk"` | ✅ Done |
+| npm package name | `spmc` | `honk` | `honk-server/package.json` → publish new name |
+| Binary names | `spmc`, `spmc-start` | `honk`, `honk-start` | ✅ Done |
+| Server directory | `honk-server/` | `honk-server/` (or `server/`) | Repo rename + import paths |
+| Skill/doc references | "SPMC" throughout | "Honk" | ✅ Done |
+| Claude Desktop config comment | `spmc` | `honk` | ✅ Done |
 
 ### Convention during transition
 - New features use **Honk** naming from the start

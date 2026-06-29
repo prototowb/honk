@@ -1,0 +1,95 @@
+[
+  {
+    "ts": "2026-06-17T13:59:43.031Z",
+    "platform": "instagram",
+    "account": null,
+    "post_id": "17955685518148410",
+    "metrics": {
+      "reach": 0,
+      "likes": 0,
+      "comments": 0,
+      "saved": 0,
+      "shares": 0
+    }
+  },
+  {
+    "ts": "2026-06-17T20:14:47.129Z",
+    "platform": "facebook",
+    "account": null,
+    "post_id": "105275157663337_1404744298346112",
+    "metrics": {}
+  },
+  {
+    "ts": "2026-06-23T18:05:32.685Z",
+    "platform": "instagram",
+    "account": null,
+    "post_id": "18111849580903330",
+    "metrics": {
+      "reach": 2,
+      "likes": 0,
+      "comments": 1,
+      "saved": 0,
+      "shares": 0
+    }
+  },
+  {
+    "ts": "2026-06-23T18:05:33.004Z",
+    "platform": "instagram",
+    "account": null,
+    "post_id": "18111849580903330",
+    "metrics": {
+      "reach": 2,
+      "likes": 0,
+      "comments": 1,
+      "saved": 0,
+      "shares": 0
+    }
+  },
+  {
+    "ts": "2026-06-23T18:05:33.167Z",
+    "platform": "facebook",
+    "account": null,
+    "post_id": "105275157663337_1409262027894339",
+    "metrics": {}
+  },
+  {
+    "ts": "2026-06-23T18:05:33.281Z",
+    "platform": "facebook",
+    "account": null,
+    "post_id": "105275157663337_1409262027894339",
+    "metrics": {}
+  },
+  {
+    "ts": "2026-06-27T08:40:32.287Z",
+    "platform": "facebook",
+    "account": null,
+    "post_id": "105275157663337_1411992160954659",
+    "metrics": {}
+  },
+  {
+    "ts": "2026-06-27T08:40:33.530Z",
+    "platform": "instagram",
+    "account": null,
+    "post_id": "17874248277652862",
+    "metrics": {
+      "reach": 0,
+      "likes": 0,
+      "comments": 0,
+      "saved": 0,
+      "shares": 0
+    }
+  },
+  {
+    "ts": "2026-06-27T08:40:33.774Z",
+    "platform": "instagram",
+    "account": null,
+    "post_id": "17874248277652862",
+    "metrics": {
+      "reach": 0,
+      "likes": 0,
+      "comments": 0,
+      "saved": 0,
+      "shares": 0
+    }
+  }
+]

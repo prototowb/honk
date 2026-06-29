@@ -9,7 +9,7 @@
     "  Use the npx block below. Credentials load from ~/.claude/honk.env automatically.",
     "",
     "OPTION B — local clone (replace the path with your actual clone location):",
-    "  { \"command\": \"node\", \"args\": [\"/path/to/spmc-server/run.js\"] }",
+    "  { \"command\": \"node\", \"args\": [\"/path/to/honk-server/run.js\"] }",
     "",
     "Either way, store credentials in ~/.claude/honk.env (see .env.example)."
   ],

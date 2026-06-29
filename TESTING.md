@@ -1,4 +1,4 @@
-# TESTING — SPMC
+# TESTING — Honk
 
 > How this project verifies itself. Zero test dependencies — Node's built-in
 > `node:test` runner only.
@@ -14,7 +14,7 @@ npm run test:smoke  # end-to-end MCP smoke test against the real server
 ```
 
 **Node floors (two, on purpose):** the *published server* runs on **Node ≥20.9**
-(`spmc-server` `engines`, driven by `sharp`). *Running the test suite* needs
+(`honk-server` `engines`, driven by `sharp`). *Running the test suite* needs
 **Node ≥21** (the repo-root dev-tooling floor): `npm test` globs `test/*.test.mjs`
 via Node's built-in runner so discovery is identical on every shell (bash, cmd,
 PowerShell) instead of depending on the shell to expand the glob — and arg-glob
@@ -40,7 +40,7 @@ is missing a credential key): run `npm run build`, stage the result, and retry.
 
 ## Two layers
 
-### 1. Unit tests — `spmc-server/test/*.test.mjs`
+### 1. Unit tests — `honk-server/test/*.test.mjs`
 Fast, pure, no network, no credentials. One file per module:
 
 | File | Covers |
@@ -57,7 +57,7 @@ Fast, pure, no network, no credentials. One file per module:
 State-writing modules (audit, ratelimit, analytics) read `SPMC_DATA_DIR` at call
 time — tests point it at a temp dir so they never touch real runtime state.
 
-### 2. Smoke test — `spmc-server/test/smoke.mjs`
+### 2. Smoke test — `honk-server/test/smoke.mjs`
 Spawns the **actual** MCP server (`index.js`) over stdio via the MCP SDK client,
 lists tools, and calls the credential-free tools (validate, adapt, config_doctor,
 dry-run publish, audit_log, schedule_check, queue round-trip, observability). This

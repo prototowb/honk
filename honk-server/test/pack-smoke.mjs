@@ -5,7 +5,7 @@
 // would, installs the tarball into a throwaway project so its deps resolve like a
 // real install, and boots the bin — turning that one-off failure into a gate.
 //
-// Run from the spmc-server package dir (npm sets cwd there):  node test/pack-smoke.mjs
+// Run from the honk-server package dir (npm sets cwd there):  node test/pack-smoke.mjs
 // Used by CI and by the `prepublishOnly` publish gate.
 
 import { execSync, spawnSync } from 'node:child_process';
@@ -25,7 +25,7 @@ function fail(msg, extra = '') {
 // deprecation. Double-quote path args so they survive a space in either shell.
 const run = (cmd, opts = {}) => execSync(cmd, { stdio: 'pipe', ...opts });
 
-// 1. Pack the tarball from the current package (cwd = spmc-server).
+// 1. Pack the tarball from the current package (cwd = honk-server).
 const tgz = run('npm pack --silent', { encoding: 'utf8' }).trim().split(/\r?\n/).pop();
 const tarball = join(process.cwd(), tgz);
 
@@ -47,7 +47,7 @@ try {
 
   if (/ERR_MODULE_NOT_FOUND|Cannot find module/.test(err)) {
     fail('the packaged tarball is missing shipped files — server failed to load.\n' +
-         'Check the `files` array in spmc-server/package.json.', err);
+         'Check the `files` array in honk-server/package.json.', err);
   }
   if (!err.includes('[honk]')) {
     fail('the packaged server did not boot.',

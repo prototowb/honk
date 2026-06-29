@@ -1,4 +1,4 @@
-# SPMC — Build System
+# Honk — Build System
 
 > **Shipped (BUILD-001, 2026-06-16).** This concept doc has been folded into the
 > authoritative reference. See **`PROJECT_ARCHITECTURE.md`**:
@@ -17,11 +17,11 @@ One home per fact. **Edit the source, never the generated artifact:**
 
 | To change… | Edit | Then |
 |---|---|---|
-| a tool (name/schema) | `spmc-server/lib/tools.js` | `npm run build` |
-| a platform limit | `spmc-server/lib/specs.js` | `npm run build` |
+| a tool (name/schema) | `honk-server/lib/tools.js` | `npm run build` |
+| a platform limit | `honk-server/lib/specs.js` | `npm run build` |
 | a credential / media-provider key | `lib/config.js` or `lib/specs.js` + document it in `.env.example` | `npm run build` |
 | skill / agent prose | `capabilities/skills/<name>.md` · `capabilities/agent/SKILLS.md` | `npm run build` |
-| version / metadata | `spmc-server/package.json` | `npm run build` |
+| version / metadata | `honk-server/package.json` | `npm run build` |
 
 ```
 npm run build         # regenerate every artifact in place

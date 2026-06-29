@@ -1,4 +1,4 @@
-# BRANCHING — SPMC
+# BRANCHING — Honk
 
 > Git workflow and commit conventions. Referenced by `AGENTS.md`.
 

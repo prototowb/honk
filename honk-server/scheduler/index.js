@@ -7,7 +7,7 @@ import { fileURLToPath }           from 'url';
 const __dir = dirname(fileURLToPath(import.meta.url));
 
 if (!existsSync(join(__dir, '..', 'node_modules', '@modelcontextprotocol'))) {
-  process.stderr.write('[spmc-scheduler] Installing dependencies...\n');
+  process.stderr.write('[honk-scheduler] Installing dependencies...\n');
   execSync('npm install --silent', { cwd: join(__dir, '..'), stdio: 'pipe' });
 }
 

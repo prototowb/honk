@@ -2,7 +2,7 @@ name: CI
 
 # Single-origin gate: every generated distribution artifact (skills, MCP configs,
 # tool tables, plugin manifest) must match what build/generate.mjs emits from the
-# spmc-server origin. `build:check` fails on any drift — a hand-edited generated
+# honk-server origin. `build:check` fails on any drift — a hand-edited generated
 # file, a tool/limit/credential added without rebuilding, or a stray prose token.
 on:
   push:
@@ -21,10 +21,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: spmc-server/package-lock.json
+          cache-dependency-path: honk-server/package-lock.json
 
       - name: Install server deps
-        run: npm --prefix spmc-server ci
+        run: npm --prefix honk-server ci
 
       # Verifies generated artifacts are in sync with the origin and that
       # .env.example documents every credential the server reads. The machine-
@@ -38,11 +38,11 @@ jobs:
         run: npm test
 
       - name: MCP smoke test
-        run: npm --prefix spmc-server run test:smoke
+        run: npm --prefix honk-server run test:smoke
 
       # Packs the tarball exactly as `npm publish` would, installs it into a
       # throwaway project, and boots the bin — catches a `files`-array omission
       # (e.g. a missing lib/) that build:check and the unit/smoke tests can't see,
       # because they run against the source tree, not the packaged artifact.
       - name: Package smoke (tarball installs and boots)
-        run: npm --prefix spmc-server run pack:smoke
+        run: npm --prefix honk-server run pack:smoke

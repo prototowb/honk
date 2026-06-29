@@ -6,7 +6,7 @@
 // author's TZ, so naive input means exactly what the user intended. We therefore
 // accept it and canonicalize to absolute UTC, but flag it (see
 // hasExplicitTimezone) so callers can warn: a naive time becomes ambiguous the
-// moment SPMC runs hosted/multi-tenant, where it would fire at the wrong instant.
+// moment Honk runs hosted/multi-tenant, where it would fire at the wrong instant.
 // Only genuinely invalid datetimes are rejected.
 
 const HAS_TZ = /(?:Z|[+-]\d{2}:?\d{2})$/;

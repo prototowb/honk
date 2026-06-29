@@ -1,0 +1,40 @@
+[
+  {
+    "id": "q_1782756496619_8jvu1",
+    "platform": "facebook",
+    "content": {
+      "image_url": "https://i.ibb.co/7J28j1fd/b130dba1cbee.png",
+      "message": "\"Software engineering hiring is back!\" Technically true. Also kind of misleading.\n\nThe Pragmatic Engineer's 2026 jobs market deepdive (data from TrueUp and Workforce.ai) found that top tech companies are hiring 20% more engineers than last year, and Google's engineering postings are up 62% year-over-year. Good news, right?\n\nLook closer and the growth is lumpy. Ramp grew engineering headcount 94% in two years. Wiz grew 84%. Datadog grew 68%. Fintech, security, and observability are absorbing most of the new demand. Meanwhile Meta laid off 10% of staff last week, Oracle is cutting up to 30,000 roles, and entry-level postings are still 28% below their 2022 peak.\n\nAggregate hiring numbers make a great headline but a bad personal career strategy. The real question isn't \"is the market up\" — it's \"is my specific lane one of the ones growing.\"\n\nSource: The Pragmatic Engineer, \"State of the software engineering job market in 2026\" (newsletter.pragmaticengineer.com/p/state-of-the-job-market-2026)\n\nWhat's your experience been? Been sitting with this. What do you think?"
+    },
+    "account": "",
+    "status": "draft",
+    "scheduled_at": "2026-06-30T14:00:00.000Z",
+    "created_at": "2026-06-29T18:08:16.619Z",
+    "published_at": null,
+    "result": null,
+    "error": null
+  },
+  {
+    "id": "q_1782757822000_474ag",
+    "platform": "instagram",
+    "content": {
+      "image_urls": [
+        "https://i.ibb.co/k62hGq9v/e92536265d31.png",
+        "https://i.ibb.co/8gZLXSBN/9a0017c624fe.png",
+        "https://i.ibb.co/5xwTKdQC/25d817440671.png",
+        "https://i.ibb.co/zWXRvrSv/301ba958f2b3.png",
+        "https://i.ibb.co/1G4PRnvw/e2aa30c267b3.png",
+        "https://i.ibb.co/m5Sxn76G/e27493dd234e.png"
+      ],
+      "caption": "\"The job market is back!\" — sure, if you're reading one headline.\n\nSwipe through — the data tells a messier story than the stat everyone's quoting.\n\nThe Pragmatic Engineer's 2026 jobs deepdive (TrueUp + Workforce.ai data) shows real growth, but it's lumpy: fintech, security, and observability are absorbing it. Entry-level and several Big Tech orgs are going the other way.\n\nThe market isn't one market. It's a sorting mechanism — and which lane you're in matters more than the aggregate number on the headline.\n\nAm I wrong? Tell me. Save this one.\n\n(Source in comments 👇)\n\n#Software #AI #DevSecOps #FutureOfWork #TechJobs #CareerGrowth",
+      "first_comment": "Source: The Pragmatic Engineer, \"State of the software engineering job market in 2026\" (May 26, 2026) — data via TrueUp and Workforce.ai. https://newsletter.pragmaticengineer.com/p/state-of-the-job-market-2026"
+    },
+    "account": "",
+    "status": "draft",
+    "scheduled_at": "2026-06-30T15:00:00.000Z",
+    "created_at": "2026-06-29T18:30:22.000Z",
+    "published_at": null,
+    "result": null,
+    "error": null
+  }
+]

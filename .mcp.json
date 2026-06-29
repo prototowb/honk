@@ -3,7 +3,7 @@
     "honk": {
       "command": "node",
       "args": [
-        "${CLAUDE_PLUGIN_ROOT}/spmc-server/run.js"
+        "${CLAUDE_PLUGIN_ROOT}/honk-server/run.js"
       ],
       "env": {
         "X_API_KEY": "${X_API_KEY}",

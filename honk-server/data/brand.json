@@ -1,0 +1,65 @@
+{
+  "protocode_": {
+    "voice": {
+      "tone": "authoritative but accessible, direct, opinionated, developer-first",
+      "audience": "developers, builders, and tech-curious professionals",
+      "register": "casual-professional",
+      "emoji_policy": "sparing — only where it adds punch, never for decoration",
+      "banned_words": [],
+      "do": ["technical depth", "mentor and empower", "call out BS"],
+      "dont": ["hype over substance", "gatekeep"]
+    },
+    "hashtags": {
+      "default": ["#Software", "#AI", "#DevSecOps"],
+      "sets": {
+        "ai-tools": ["#MachineLearning", "#LLM", "#GenAI", "#AITools"],
+        "coding": ["#BuildInPublic", "#DeveloperLife", "#OpenSource"],
+        "job-safety": ["#FutureOfWork", "#TechJobs", "#CareerGrowth"],
+        "industry": ["#TechNews", "#BigTech", "#StartupLife"]
+      }
+    },
+    "cta": [
+      "Am I wrong? Tell me.",
+      "Save this one.",
+      "What's your experience been?",
+      "Been sitting with this. What do you think?",
+      "More like this at @protocode_."
+    ],
+    "visual": {
+      "accent": "#1df7ed",
+      "bg_color": "#05091e",
+      "surface": "#121b33",
+      "heading_color": "#f4f8ff",
+      "body_color": "",
+      "logo_url": "",
+      "icon_url": "",
+      "handle": "@protocode_",
+      "default_template": "square-tall"
+    },
+    "links": {
+      "utm_defaults": {},
+      "shortener": null
+    },
+    "platforms": {
+      "instagram": {
+        "hashtags": ["#Software", "#AI", "#DevSecOps", "#BuildInPublic", "#DeveloperLife", "#MachineLearning"],
+        "cta": ["Save this one.", "Am I wrong? Tell me."]
+      },
+      "facebook": {
+        "register": "conversational",
+        "hashtags": ["#Software", "#AI", "#DevSecOps"],
+        "cta": ["What's your experience been?", "Been sitting with this. What do you think?"]
+      }
+    },
+    "audiences": {},
+    "policy": {
+      "banned_topics": [],
+      "disclosures": {
+        "always": [],
+        "sponsored": []
+      },
+      "auto_publish": false
+    },
+    "notes": "Niche: AI tools, coding productivity, job safety, industry news. Angle: always the implication for professionals and builders — not the stat itself but what it means for people building things. Content structure: alternate between fact-driven posts (high-signal research, stats, announcements) and reframe posts (a contrarian or underexplored take on a known topic). Voice: talk like a senior dev who reads everything and cuts through the noise, not like a brand."
+  }
+}

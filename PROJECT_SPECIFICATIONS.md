@@ -1,4 +1,4 @@
-# Social Publishing Mission Control (SPMC)
+# Honk
 
 > AI-native social publishing infrastructure. Built as a plugin system first, designed from the ground up for agent-driven workflows. No UI required to ship value.
 
@@ -6,7 +6,7 @@
 
 ## Vision
 
-Competitors like Blotato bolt AI onto a traditional scheduling dashboard. SPMC inverts that: the agent _is_ the interface. Publishing flows through Claude, Hermes, and any MCP-compatible agent. A UI gets added on top of a working system, not before it.
+Competitors like Blotato bolt AI onto a traditional scheduling dashboard. Honk inverts that: the agent _is_ the interface. Publishing flows through Claude, Hermes, and any MCP-compatible agent. A UI gets added on top of a working system, not before it.
 
 Late-stage target: a multi-tenant SaaS that leaves Blotato, Buffer-AI, and Taplio behind by being the only tool that natively lives inside the agent's context rather than requiring the agent to call out to a separate product.
 
@@ -27,7 +27,7 @@ Late-stage target: a multi-tenant SaaS that leaves Blotato, Buffer-AI, and Tapli
 ### Phase 0 — MVP (current focus)
 **Goal:** Working plugin for Claude Code + Claude Desktop App + Hermes. No UI.
 
-- [ ] Consolidated MCP server (`spmc-server`) with all current platforms: X, Instagram, TikTok, Facebook, Threads, Bluesky
+- [ ] Consolidated MCP server (`honk-server`) with all current platforms: X, Instagram, TikTok, Facebook, Threads, Bluesky
 - [ ] Content queue: MCP tools to add, list, update, and clear queued posts
 - [ ] Scheduling: queue items with `scheduled_at` timestamps; a poll-or-push dispatch mechanism
 - [ ] Claude Code skills for each platform (ported from `_bkp`)
@@ -86,7 +86,7 @@ Late-stage target: a multi-tenant SaaS that leaves Blotato, Buffer-AI, and Tapli
 
 ```
 G:\Projects\_Plugins\
-├── spmc-server/              ← MCP server (Node.js ESM)
+├── honk-server/              ← MCP server (Node.js ESM)
 │   ├── index.js              ← server entrypoint + tool dispatcher
 │   ├── adapters/             ← one file per platform
 │   │   ├── x.js

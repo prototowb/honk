@@ -3,14 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "Honk repo root — build tooling that generates per-surface artifacts from the spmc-server origin (lib/tools.js + lib/specs.js). See BUILD_CONCEPT.md.",
+  "description": "Honk repo root — build tooling that generates per-surface artifacts from the honk-server origin (lib/tools.js + lib/specs.js). See BUILD_CONCEPT.md.",
   "workspaces": [
-    "spmc-server"
+    "honk-server"
   ],
   "scripts": {
     "build": "node build/generate.mjs",
     "build:check": "node build/generate.mjs --check",
-    "test": "npm --prefix spmc-server test"
+    "test": "npm --prefix honk-server test"
   },
   "engines": {
     "node": ">=21.0.0"

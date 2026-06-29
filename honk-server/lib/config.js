@@ -99,7 +99,7 @@ export function formatAccounts(o) {
 }
 
 export function formatReport(r) {
-  const lines = ['SPMC configuration:', ''];
+  const lines = ['Honk configuration:', ''];
   let ready = 0;
 
   for (const [, p] of Object.entries(r.platforms)) {

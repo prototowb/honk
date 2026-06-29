@@ -1,11 +1,11 @@
 # Changelog
 
-All notable changes to SPMC are recorded here.
+All notable changes to Honk are recorded here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the
 project uses [Semantic Versioning](https://semver.org/) (pre-1.0, `-alpha` while
 the surface stabilizes: minor = features, patch = fixes). The version lives once
-in `spmc-server/package.json` and flows into every generated artifact via
+in `honk-server/package.json` and flows into every generated artifact via
 `npm run build` — see [RELEASING.md](RELEASING.md).
 
 ## [Unreleased]
@@ -39,7 +39,7 @@ in `spmc-server/package.json` and flows into every generated artifact via
 - **`spmc-start` bin** — launches the MCP server **and** the scheduler daemon, so
   npm-installed users get scheduled-post auto-dispatch and the ~24h auto-analytics
   follow-up. The `spmc` bin stays MCP-only.
-- **Package-smoke gate** (`spmc-server/test/pack-smoke.mjs`, `npm run pack:smoke`)
+- **Package-smoke gate** (`honk-server/test/pack-smoke.mjs`, `npm run pack:smoke`)
   — packs, installs, and boots the tarball; a `files`-array omission now fails CI
   and `prepublishOnly` instead of reaching a user's install.
 - **`prepublishOnly` publish guard** — `test` + `build:check` + `pack:smoke` must

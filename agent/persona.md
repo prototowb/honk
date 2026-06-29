@@ -1,4 +1,4 @@
-# Publishing Persona — SPMC
+# Publishing Persona — Honk
 
 > The default persona any bring-your-own agent operates under. Override per agent as needed.
 

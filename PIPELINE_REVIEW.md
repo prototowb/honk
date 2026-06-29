@@ -20,7 +20,7 @@ check that, done by hand, just caught a dead-on-arrival package.*
 ## P0 — ship blockers
 
 ### 1. npm tarball omitted `lib/` → every npm/npx surface dead on arrival ✅ FIXED
-`spmc-server/package.json` `files` allowlist did not include `lib/`, but
+`honk-server/package.json` `files` allowlist did not include `lib/`, but
 `index.js` imports 13 modules from `./lib/` (dispatch, validate, adapt, config,
 schedule, audit, hash, ratelimit, analytics, brand, links, besttime, tools).
 Proven by packing + loading the tarball:
@@ -51,7 +51,7 @@ so the integration branch (and feature work) now runs the full gate on every pus
 ## P1 — the missing gate (closes the P0 class permanently) ✅ DONE
 
 ### 3. No "does the shipped artifact run?" check ✅ DONE
-Added `spmc-server/test/pack-smoke.mjs` — a portable (Node, no bash) script that
+Added `honk-server/test/pack-smoke.mjs` — a portable (Node, no bash) script that
 packs the tarball exactly as `npm publish` would, installs it into a throwaway
 project so its deps resolve like a real install, and boots the bin; a `files`-array
 omission fails at module load (`ERR_MODULE_NOT_FOUND`) with a clear message.
@@ -95,7 +95,7 @@ the server (`add spmc … 32 packages`). CI can later drop the `--prefix` dance.
 expanding the glob (bash does, Windows `cmd` doesn't). The real fix is the quoted
 `"test/*.test.mjs"` so **Node's** built-in runner globs it identically on every
 shell. Verified 65/65. **Two floors, on purpose** (don't narrow the install base
-to fix test tooling): the *published* `spmc-server` `engines` is **`>=20.9`** (the
+to fix test tooling): the *published* `honk-server` `engines` is **`>=20.9`** (the
 true runtime floor — `sharp` 0.35 needs 20.9; the SDK only 18), so Node 20 LTS
 users can still install; the **`>=21`** floor lives only at the private repo root
 as the *dev-tooling* requirement (arg-glob landed in Node 21). `TESTING.md` spells

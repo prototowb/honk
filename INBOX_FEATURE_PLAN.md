@@ -11,8 +11,8 @@
 How do we learn a new comment arrived?
 - **Webhooks (push, real-time):** Meta Graph API can push `comments` events for a
   Page / IG account. **Blocker:** webhooks need a **public HTTPS callback URL**.
-  SPMC is a **local stdio MCP server** — it has no hosted web endpoint. Webhooks
-  are off the table until SPMC gains a hosted component (ties to the BETA-011 UI /
+  Honk is a **local stdio MCP server** — it has no hosted web endpoint. Webhooks
+  are off the table until Honk gains a hosted component (ties to the BETA-011 UI /
   any server deployment).
 - **Polling (pull, scheduler-driven):** periodically `GET /{media-id}/comments`
   (IG) / `GET /{post-id}/comments` (FB), track seen comment IDs, match keywords.
@@ -49,7 +49,7 @@ Meta App Review.
 - **Phase 2 — files.** A "file" = a hosted link. Reuse the media pipeline
   (`media_upload` → Cloudinary/imgbb) to host the asset, then deliver its URL. True
   DM file *attachments* are separately gated — link-to-hosted-file first.
-- **Phase 3 — webhooks.** If/when SPMC has a hosted component, swap polling for
+- **Phase 3 — webhooks.** If/when Honk has a hosted component, swap polling for
   webhooks for real-time + scale. Rule engine unchanged.
 
 ## Sketch (Phase 0)

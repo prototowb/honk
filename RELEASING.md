@@ -1,6 +1,6 @@
-# Releasing SPMC
+# Releasing Honk
 
-The version lives once in `spmc-server/package.json` and flows into every
+The version lives once in `honk-server/package.json` and flows into every
 generated artifact (`TOOLS.md`, `.claude-plugin/plugin.json`,
 `claude_desktop_config.json`) through `npm run build`. **Never hand-edit the
 version in a generated file** — `build:check` will reject it.

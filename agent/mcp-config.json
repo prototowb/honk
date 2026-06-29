@@ -3,7 +3,7 @@
     "honk": {
       "command": "node",
       "args": [
-        "G:\\Projects\\_Plugins\\spmc-server\\run.js"
+        "G:\\Projects\\_Plugins\\honk-server\\run.js"
       ]
     }
   }

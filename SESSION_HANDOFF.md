@@ -1,4 +1,4 @@
-# SESSION_HANDOFF — SPMC (→ Honk)
+# SESSION_HANDOFF — Honk
 
 > Read this before anything else. Replace entirely at session end — this is current state, not a log.
 
@@ -37,7 +37,7 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
   per-platform deltas (IG: save-worthy CTAs + 6 hashtags; FB: conversational
   register + discussion CTAs), notes capturing niche/angle/alternating structure.
   `brand-active.json` created → `brand_voice(action:"get")` now resolves correctly
-  from Claude Desktop. Data dir moved from `spmc-server/data/` to `~/.honk/`
+  from Claude Desktop. Data dir moved from `~/.spmc/` to `~/.honk/`
   (`lib/paths.js` uses `os.homedir()`). `SPMC_DATA_DIR` → `HONK_DATA_DIR`
   (paths.js + test files + .env.example). `brand-setup` skill fixed: guided
   walkthrough now completes all 5 groups before offering to stop (was stopping
@@ -93,7 +93,7 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 - **Individualization P1–P3 (INDIV-001/002/003)** — visual brand kit + 5 rebuilt templates;
   `brand_schema` + guided `brand-setup`; per-platform voice tailoring (`resolveVoice`).
 - **Build/install pipeline hardening** — `lib/` ships, **pack-smoke gate**, CI gates
-  `development` + `feature/**`, npm workspace, engines split, `spmc-start` bin. Critique:
+  `development` + `feature/**`, npm workspace, engines split, `honk-start` bin. Critique:
   `PIPELINE_REVIEW.md`. ⚠️ `hermes/` → `agent/` (any `hermes/*` config moves to `agent/*`).
 - **Alt-text + first-comment (ALPHA-014/015)** — IG verified live; **FB alt-text UNVERIFIED**;
   **FB first-comment needs `pages_manage_engagement`**; IG first-comment needs
@@ -136,10 +136,10 @@ smoke + `build:check` + `pack:smoke`** all green. (Pushed to `origin/development
 
 - **Build origin:** tool → `lib/tools.js`; limit → `lib/specs.js`; credential/media key →
   `lib/config.js` (+ `.env.example`); skill/agent prose → `capabilities/`; template →
-  `media/templates/<id>/`; version → `spmc-server/package.json`. Then `npm run build`.
+  `media/templates/<id>/`; version → `honk-server/package.json`. Then `npm run build`.
   Adding `capabilities/skills/<x>.md` auto-registers `skills/<x>/SKILL.md` (build discovers
   the tree). **Never hand-edit generated artifacts** (`build:check` rejects it).
-- **Gates (green at every commit):** `npm test` · `npm run build:check` · (in `spmc-server`)
+- **Gates (green at every commit):** `npm test` · `npm run build:check` · (in `honk-server`)
   `npm run test:smoke` · `npm run pack:smoke`. CI runs all on push to `main` / `development` /
   `feature/**` + PRs; `prepublishOnly` re-runs them; the opt-in pre-commit hook runs
   `build:check`. ⚠️ The Bash tool here is git-bash (not PowerShell); commit via `git commit -F
