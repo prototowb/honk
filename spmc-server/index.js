@@ -450,15 +450,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         // Resolve identity/visual fields from the brand kit so callers don't
         // re-specify colors/logo/handle every call: explicit arg ▸ kit.visual ▸
         // template default. The brand kit is the individualization layer.
-        const visual = (brand.get(args.account ?? '') || {}).visual || {};
+        // Brand visual resolution follows the same active-account fallback as
+        // brand_voice get / brand_schema — explicit arg wins, else the active
+        // account's kit. Upload credentials remain on the default (credential)
+        // account: brand identity and publishing identity can differ.
+        const brandAccount = args.account ?? brand.getActive();
+        const visual = (brand.get(brandAccount) || {}).visual || {};
         const { template, variables, appliedFromKit } = compose.resolveVisualVars(args, visual);
         if (!template) throw new Error('media_compose needs a `template` (or set visual.default_template in the brand kit via brand_voice).');
         const result = await compose.compose(template, variables, { provider: args.provider ?? null, account: args.account ?? '' });
+        const activeNote = brandAccount && !args.account
+          ? `\n(brand kit from active account '${brandAccount}')` : '';
         return ok(
           `Composed ${result.template} (${result.dimensions.width}×${result.dimensions.height})\n`
           + `Uploaded to ${result.provider}!\nPublic URL: ${result.url}`
           + (result.public_id ? `\nPublic ID: ${result.public_id}` : '')
           + (appliedFromKit.length ? `\n(brand kit applied: ${appliedFromKit.join(', ')})` : '')
+          + activeNote
         );
       }
       case 'media_upload': {
