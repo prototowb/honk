@@ -184,7 +184,7 @@ export const TOOLS = [
       properties: {
         platform:       { type: 'string', description: 'Platform to query', enum: ['instagram', 'facebook'] },
         account:        { type: 'string', description: "Named account (e.g. 'brand'). Omit for the default account." },
-        seed_brand_kit: { type: 'boolean', description: "If true, merge the fetched handle and avatar URL into the active brand account's visual block (icon_url and handle). The target brand account is the active account when no explicit account is given." },
+        seed_brand_kit: { type: 'boolean', description: "If true, merge the fetched handle and avatar URL into the active brand account's visual block (icon_url, handle, and logo_url as a placeholder when none is set). The target brand account is the active account when no explicit account is given." },
       },
       required: ['platform'],
     },

@@ -255,10 +255,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           const patch = { visual: {} };
           if (p.handle)   patch.visual.handle   = p.handle;
           if (p.icon_url) patch.visual.icon_url = p.icon_url;
+          // Use the profile picture as a logo_url placeholder when none is set —
+          // any real branded mark can overwrite it later via brand_voice set.
+          if (p.icon_url) {
+            const current = (brand.get(brandAccount) || {});
+            if (!current.visual?.logo_url) patch.visual.logo_url = p.icon_url;
+          }
           brand.set(patch, brandAccount);
           const label = brandAccount || 'default';
-          seedNote = `\n\nBrand kit updated (account '${label}'): `
-            + [p.handle && `handle → ${p.handle}`, p.icon_url && 'icon_url → set'].filter(Boolean).join(', ') + '.';
+          const updated = [
+            p.handle   && `handle → ${p.handle}`,
+            p.icon_url && 'icon_url → set',
+            patch.visual.logo_url && 'logo_url → set (placeholder)',
+          ].filter(Boolean);
+          seedNote = `\n\nBrand kit updated (account '${label}'): ${updated.join(', ')}.`;
         }
         return ok(
           `${p.platform}${args.account ? `/${args.account}` : ''} profile:\n`
