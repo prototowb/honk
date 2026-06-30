@@ -1,0 +1,44 @@
+import { env } from '../lib/env.js';
+
+const BASE = 'https://graph.threads.net/v1.0';
+
+export async function post(text: string, imageUrl: string | null = null, account = '', opts: { alt_text?: string } = {}): Promise<{ id: string }> {
+  const userId      = env('THREADS_USER_ID', account)!;
+  const accessToken = env('THREADS_ACCESS_TOKEN', account)!;
+
+  const containerParams = new URLSearchParams({
+    access_token: accessToken,
+    ...(imageUrl
+      ? { media_type: 'IMAGE', image_url: imageUrl, text, ...(opts.alt_text ? { alt_text: opts.alt_text } : {}) }
+      : { media_type: 'TEXT', text }),
+  });
+
+  const containerRes = await fetch(`${BASE}/${userId}/threads?${containerParams}`, {
+    method: 'POST',
+  });
+  if (!containerRes.ok)
+    throw new Error(`Threads container ${containerRes.status}: ${await containerRes.text()}`);
+
+  const { id: creationId } = await containerRes.json() as { id: string };
+
+  const publishParams = new URLSearchParams({ creation_id: creationId, access_token: accessToken });
+  const publishRes = await fetch(`${BASE}/${userId}/threads_publish?${publishParams}`, {
+    method: 'POST',
+  });
+  if (!publishRes.ok)
+    throw new Error(`Threads publish ${publishRes.status}: ${await publishRes.text()}`);
+
+  return publishRes.json() as Promise<{ id: string }>;
+}
+
+export async function getMetrics(mediaId: string, account = ''): Promise<Record<string, unknown>> {
+  const accessToken = env('THREADS_ACCESS_TOKEN', account)!;
+  const metrics = 'views,likes,replies,reposts,quotes';
+  const res = await fetch(`${BASE}/${mediaId}/insights?metric=${metrics}&access_token=${accessToken}`);
+  if (!res.ok) throw new Error(`Threads insights ${res.status}: ${await res.text()}`);
+
+  const json = await res.json() as { data?: Array<{ name: string; values?: Array<{ value: unknown }>; total_value?: { value: unknown } }> };
+  const out: Record<string, unknown> = {};
+  for (const d of json.data ?? []) out[d.name] = d.values?.[0]?.value ?? d.total_value?.value;
+  return out;
+}

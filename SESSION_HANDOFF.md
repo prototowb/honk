@@ -134,9 +134,17 @@ smoke + `build:check` + `pack:smoke`** all green. (Pushed to `origin/development
 
 ## Conventions In Force
 
-- **Build origin:** tool → `lib/tools.js`; limit → `lib/specs.js`; credential/media key →
-  `lib/config.js` (+ `.env.example`); skill/agent prose → `capabilities/`; template →
-  `media/templates/<id>/`; version → `honk-server/package.json`. Then `npm run build`.
+- **TypeScript — default from now on.** All new source files in `honk-server/` are `.ts` in
+  `src/` (compiled by `tsc` via `tsconfig.json`; `rootDir: src`, `outDir: .` so compiled JS
+  lands at existing paths — test and build imports unchanged). The old `.js` source files in
+  `lib/`, `adapters/`, `media/`, `queue/`, `scheduler/`, `index.js`, `run.js`, `start.js` are
+  now **generated** outputs — do not edit them, edit `src/` instead. Run `npm run build:ts`
+  (or `npm run pretest`) to compile; `npm run type-check` for type-check without emit.
+  `pretest` runs `tsc` automatically before `npm test`. `prepublishOnly` runs `type-check`
+  before the full gate suite. Strict mode + NodeNext module resolution + `esModuleInterop`.
+- **Build origin:** tool → `src/lib/tools.ts`; limit → `src/lib/specs.ts`; credential/media key →
+  `src/lib/config.ts` (+ `.env.example`); skill/agent prose → `capabilities/`; template →
+  `media/templates/<id>/`; version → `honk-server/package.json`. Then `npm run build:ts && npm run build`.
   Adding `capabilities/skills/<x>.md` auto-registers `skills/<x>/SKILL.md` (build discovers
   the tree). **Never hand-edit generated artifacts** (`build:check` rejects it).
 - **Gates (green at every commit):** `npm test` · `npm run build:check` · (in `honk-server`)

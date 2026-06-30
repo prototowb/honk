@@ -10,3 +10,11 @@ This project uses Proto Gear for AI agent coordination.
 | `.proto-gear/INDEX.md` | Capabilities: commands, skills, workflows | When starting a task (if exists) |
 
 Rules: run `pg status` before starting work · MCP server is the spine — never call platform APIs directly · always confirm post content with user before publishing · update queue status after every dispatch
+
+## TypeScript — default from here on
+
+All new source files in `honk-server/` must be `.ts` under `honk-server/src/`. The `tsconfig.json` compiles `src/` → the existing output paths (rootDir: `src`, outDir: `.`), so tests and the build generator import paths are unchanged. **Never edit the compiled `.js` files directly — edit the `.ts` sources in `src/` instead.** Key commands:
+
+- `npm run build:ts` — compile TypeScript
+- `npm run type-check` — type-check without emit
+- `npm test` — runs `tsc` first (via `pretest`), then the full test suite
