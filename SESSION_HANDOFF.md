@@ -129,7 +129,7 @@ smoke + `build:check` + `pack:smoke`** all green. (Pushed to `origin/development
    (`pages_manage_engagement` first-comment; re-test FB alt-text two-step set).
 3. **INBOX-001** — decide Phase 0 (public reply) vs Phase 1 (DM, needs Meta App Review). Plan
    in `INBOX_FEATURE_PLAN.md`.
-4. **Deferred:** publish story (#4 — unclaimed `spmc` npm name); ALPHA-016 delete
+4. **Deferred:** publish story (#4 — `honk` npm name, check availability); ALPHA-016 delete
    (destructive, scope-paused); Mastodon (017) / LinkedIn (018) creds; X 402; BETA-011 UI.
 
 ## Conventions In Force
@@ -144,14 +144,15 @@ smoke + `build:check` + `pack:smoke`** all green. (Pushed to `origin/development
   `feature/**` + PRs; `prepublishOnly` re-runs them; the opt-in pre-commit hook runs
   `build:check`. ⚠️ The Bash tool here is git-bash (not PowerShell); commit via `git commit -F
   <msgfile>` to dodge here-string/apostrophe breakage.
-- **Bins:** `spmc` = `run.js` (MCP only) · `spmc-start` = `start.js` (MCP + scheduler).
+- **Bins:** `honk` = `run.js` (MCP only) · `honk-start` = `start.js` (MCP + scheduler).
 - **Document permission scopes:** every feature touching a platform documents the scope it
   needs (`.env.example` + the skill) — AGENTS.md rule #7.
-- **Credentials** in `~/.claude/spmc.env`; multi-account `KEY__ACCOUNT`. **Always confirm post
-  content with the user before publishing** (no un-publish; `duplicate_check` guards reposts).
+- **Credentials** in `~/.claude/honk.env` (falls back to `spmc.env` during transition);
+  multi-account `KEY__ACCOUNT`. **Always confirm post content with the user before publishing**
+  (no un-publish; `duplicate_check` guards reposts).
 - **Git flow:** branch off `development`, merge `--no-ff` (no PR), push; `main` via PR only.
   ⚠️ `pg`'s ticket counter is out of sync with git's ticket IDs — confirm the next free ID
   against git history (it re-echoed INIT-002, already used by the IG fix → this work is INIT-003).
-- **Rename in progress — SPMC → Honk:** data dir already `~/.honk/`. Remaining phases
-  (package name, bin, server dir, env var, docs) tracked in `PROJECT_STATUS.md` → *Rename* section.
-  New features use Honk naming; existing `SPMC_*` identifiers stay until their phase.
+- **Rename SPMC → Honk: COMPLETE.** All phases done: data dir `~/.honk/`, package `honk`,
+  bins `honk`/`honk-start`, MCP key `honk`, server dir `honk-server/`, all docs swept.
+  Existing `SPMC_*` env var names inside `honk.env` are unchanged (platform creds, not product naming).
