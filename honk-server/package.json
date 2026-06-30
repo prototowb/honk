@@ -21,14 +21,17 @@
     "env.example"
   ],
   "scripts": {
+    "build:ts": "tsc",
+    "type-check": "tsc --noEmit",
     "start": "node run.js",
     "dev": "node --watch index.js",
     "scheduler": "node scheduler/index.js",
     "scheduler:dev": "node --watch scheduler/index.js",
+    "pretest": "tsc",
     "test": "node --test \"test/*.test.mjs\"",
     "test:smoke": "node test/smoke.mjs",
     "pack:smoke": "node test/pack-smoke.mjs",
-    "prepublishOnly": "npm test && npm --prefix .. run build:check && npm run pack:smoke",
+    "prepublishOnly": "npm run type-check && npm test && npm --prefix .. run build:check && npm run pack:smoke",
     "version": "npm --prefix .. run build && git -C .. add -u"
   },
   "dependencies": {
@@ -39,8 +42,22 @@
     "node": ">=20.9.0"
   },
   "keywords": [
-    "mcp", "social-media", "publishing", "x", "twitter", "instagram",
-    "tiktok", "facebook", "threads", "bluesky", "ai-native", "queue"
+    "mcp",
+    "social-media",
+    "publishing",
+    "x",
+    "twitter",
+    "instagram",
+    "tiktok",
+    "facebook",
+    "threads",
+    "bluesky",
+    "ai-native",
+    "queue"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "typescript": "^6.0.3"
+  }
 }
