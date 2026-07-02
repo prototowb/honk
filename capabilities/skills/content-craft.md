@@ -15,8 +15,8 @@ metadata:
 ## Content Craft — how a post earns engagement
 
 The craft baseline **every draft starts from**, independent of brand. The brand kit
-(`brand_voice`) carries *who* the brand is — tone, audience, banned words, hashtag
-sets. This skill carries *how a post earns attention* — the same craft regardless of
+(`brand_voice`) carries *who* the brand is — tone, audience, banned words, a few niche
+hashtags. This skill carries *how a post earns attention* — the same craft regardless of
 brand. Read the brand kit first, then draft against these fundamentals; the platform
 skills add the channel specifics (limits, native format) on top.
 
@@ -101,14 +101,25 @@ Reuse the channel each platform actually supports (no new plumbing):
 Rule of thumb: **if the post makes a factual claim and a reader couldn't find where it came
 from without asking you, it's not done.**
 
-### 4. Hashtag intent
+### 4. Hashtags & CTA — generated per post, not pasted from a list
 
-Hashtags are *discovery*, not decoration. Fewer and intentional beats a wall.
+Hashtags and CTAs are *discovery and action*, not decoration — and they're **written to
+match the specific post**, not pulled wholesale from a stored rotation.
 
-- Prefer niche/topic tags the right audience follows over broad high-volume tags (which bury you).
-- **Per-platform counts live in the platform skills** (X: 0–2; IG: 3–8; …) and the
-  **brand kit's hashtag sets** (`brand_voice`) — pull from those; don't invent a count here.
-- Keep them out of a clean caption with `first_comment` (IG/FB) when the post reads better without them inline.
+- **The brand kit holds identity, not a content library.** `brand_voice` carries only a
+  *few* stable niche/identity hashtags (`hashtags.default`) — the tags that say *whose* post
+  this is. Treat those as anchors, not the finished set.
+- **Generate the rest on the fly.** Most of a post's hashtags should come from *its* topic:
+  read the content, prefer niche/topic tags the right audience follows over broad
+  high-volume tags (which bury you), and combine them with the kit's anchors. Two posts
+  about different things should not carry an identical tag wall.
+- **CTAs are written per post too.** A real CTA names the one next step *this* post earns
+  (reply to this question, save this framework, read this source) — don't paste a generic
+  line from a list. A fixed CTA in the kit (a legal or brand sign-off) is the exception,
+  not the default.
+- **Counts live in the platform skills** (X: 0–2; IG: 3–8; …) — pull the count from there;
+  don't invent one here.
+- Keep tags out of a clean caption with `first_comment` (IG/FB) when the post reads better without them inline.
 
 ### 5. Carousels & multi-slide (Instagram)
 

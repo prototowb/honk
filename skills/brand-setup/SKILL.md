@@ -35,8 +35,11 @@ after group 3 (hashtags/CTAs done) if the user is short on time:
    surface/heading/body colors, logo URL, icon URL, default template. Colors are
    hex (e.g. `#1df7ed`). Leave heading/body blank to auto-derive legible colors
    from the background. If the user has a brand style guide, ask for its palette.
-3. **Hashtags & CTA** — default hashtags, named hashtag sets by topic, reusable
-   calls-to-action. *(Offer to stop here if the user is short on time.)*
+3. **Hashtags & niche anchors** — a *few* stable niche/identity hashtags only (the tags
+   that say whose post this is). Don't build big topic sets or canned CTA lists: per-post
+   hashtags and CTAs are generated on the fly to match each post's content, not stored in
+   the kit. Only capture a fixed CTA if every post must carry the same legal/brand line.
+   *(Offer to stop here if the user is short on time.)*
 4. **Content policy** — banned topics, required disclosures (always/sponsored),
    auto-publish. Optional but high-value; see below.
 5. **Notes** — niche, content angle, post structure, and anything else the agent
