@@ -4,13 +4,24 @@ description: >
   Use when the user says "post to Instagram", "publish this to IG", "share this on
   Instagram", or asks to publish image content to Instagram. Requires a public image URL.
 metadata:
-  version: "0.2.0"
-  mcp_server: spmc
+  version: "0.3.0"
+  mcp_server: honk
 ---
 
 ## Posting to Instagram
 
-Use `{{tool:instagram_post}}` from the `spmc` MCP server.
+Use `{{tool:instagram_post}}` from the `honk` MCP server.
+
+### Craft a strong post (Instagram-native)
+
+- **The first 125 chars are the visible preview** (before "...more") — put the hook there.
+- **Hashtags: 3–8 relevant tags** — either at the end of the caption or kept out of it via `first_comment` (see below). Mix reach + niche; avoid banned/overused tags.
+- **Caption voice carries it** — a story, POV, or specific claim beats a flat description.
+- **Carousels: structure the arc.** Slide 1 = the promise (a hook + a clear promise of the payoff — it earns the swipe); middle slides = one beat each, in sequence; final slide = CTA + source credit. One idea per slide — add a slide rather than crowd one. Strong save/share driver. Pass `image_urls` (2–10) for a carousel, `image_url` for a single image; see `content-craft` §5 and the `output-manager` skill for the slide-by-slide render.
+
+> Weak: "Excited to share our journey and what we've learned along the way!" → Strong: "We almost shut down in month 3. Swipe for the email that saved us →"
+
+Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (IG captions aren't clickable — put any source link in `first_comment` or credit it on the image). Then pull the brand kit with `brand_voice(action:"get", platform:"instagram")` — the voice resolved for Instagram, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words; draw hashtags from its sets. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
 ### Requirements
 
@@ -26,10 +37,14 @@ If the user provides a local file or no image, tell them:
 instagram_post(image_url: "<public URL>", caption: "<caption>")
 ```
 
-### Caption tips
+### Accessibility & first comment
 
-- Keep the hook in the first 125 chars (truncated in feed preview).
-- Hashtags at the end or in the first comment.
+- **`alt_text`** — describe the image for screen readers (and reach). One sentence on what's in the image and any text it contains. For a **carousel**, pass `alt_texts` instead: one entry per `image_urls` slide, in order. Offer alt text by default; it's an accessibility win and costs nothing.
+- **`first_comment`** — text auto-posted as the first comment right after publishing, to keep hashtags or a link out of a clean caption. **Needs the `instagram_manage_comments` scope** on the token. It's **best-effort**: if the scope is missing (or it otherwise fails), the post stays live and you'll see a `⚠ First comment failed` note — never repost because of it.
+
+```
+instagram_post(image_url, caption, alt_text: "<description>", first_comment: "#tag1 #tag2")
+```
 
 ### Preview before posting (optional)
 

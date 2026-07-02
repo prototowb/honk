@@ -1,0 +1,47 @@
+{
+  "_default": {
+    "voice": {
+      "tone": "",
+      "audience": "",
+      "register": "",
+      "emoji_policy": "",
+      "banned_words": [],
+      "do": [],
+      "dont": []
+    },
+    "hashtags": {
+      "default": [
+        "#YourNiche",
+        "#YourTopic"
+      ],
+      "sets": {}
+    },
+    "cta": [],
+    "visual": {
+      "accent": "",
+      "bg_color": "",
+      "surface": "",
+      "heading_color": "",
+      "body_color": "",
+      "logo_url": "",
+      "icon_url": "",
+      "handle": "",
+      "default_template": "square-tall"
+    },
+    "links": {
+      "utm_defaults": {},
+      "shortener": null
+    },
+    "platforms": {},
+    "audiences": {},
+    "policy": {
+      "banned_topics": [],
+      "disclosures": {
+        "always": [],
+        "sponsored": []
+      },
+      "auto_publish": false
+    },
+    "notes": "Example brand kit (generic — no real user data lives in the repo). The kit carries brand IDENTITY: voice, visual system, a FEW stable niche/identity hashtags, and policy. It is NOT a content library: per-post hashtags and CTAs are generated on the fly to match each post's content, not pasted from stored lists. Keep `hashtags.default` to a couple of niche anchors; leave `cta` empty unless you have a fixed legal/brand line every post must carry. Real kits live in the server data dir (~/.honk/brand.json), never here."
+  }
+}

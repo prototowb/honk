@@ -4,13 +4,24 @@ description: >
   Use when the user says "post to Threads", "publish on Threads", or asks to share
   content on Threads. Uses the Threads API (graph.threads.net) with its own token.
 metadata:
-  version: "0.2.0"
-  mcp_server: spmc
+  version: "0.3.0"
+  mcp_server: honk
 ---
 
 ## Posting to Threads
 
-Use `{{tool:threads_post}}` from the `spmc` MCP server.
+Use `{{tool:threads_post}}` from the `honk` MCP server.
+
+### Craft a strong post (Threads-native)
+
+- **Replies drive distribution.** End with a genuine question or an opening that invites a response — Threads surfaces posts that spark conversation.
+- **Front-load the hook.** The {{limit:threads.text.max}}-char cap rewards tightness; say the interesting thing first.
+- **Conversational register** — closer to Bluesky than to a brand feed. 1–3 topic hashtags max.
+- **Attach an image when it adds** — image posts earn more dwell time.
+
+> Weak: "New episode is out now, go listen!" → Strong: "Most 'productivity' advice is procrastination with extra steps. What actually moved the needle for you?"
+
+Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (on Threads, drop any source link inline or in a reply). Then pull the brand kit with `brand_voice(action:"get", platform:"threads")` — the voice resolved for Threads, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
 ### Requirements
 
@@ -29,7 +40,11 @@ Image post:
 threads_post(text: "<post text>", image_url: "<public image URL>")
 ```
 
-Max {{limit:threads.text.max}} characters for text.
+Max {{limit:threads.text.max}} characters for text. On image posts, add **`alt_text`** — an accessibility description of the image — by default.
+
+```
+threads_post(text, image_url, alt_text: "<description>")
+```
 
 ### Preview before posting (optional)
 

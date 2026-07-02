@@ -5,13 +5,23 @@ description: >
   publish video content to TikTok. Requires a publicly accessible video URL.
   Unaudited apps post as private/self-only regardless of privacy_level.
 metadata:
-  version: "0.2.0"
-  mcp_server: spmc
+  version: "0.3.0"
+  mcp_server: honk
 ---
 
 ## Posting to TikTok
 
-Use `{{tool:tiktok_post_video}}` from the `spmc` MCP server. Follow up with `{{tool:tiktok_check_publish_status}}`.
+Use `{{tool:tiktok_post_video}}` from the `honk` MCP server. Follow up with `{{tool:tiktok_check_publish_status}}`.
+
+### Craft a strong post (TikTok-native)
+
+- **The caption is a hook, not a description.** First line should create curiosity or stakes — the video carries the rest.
+- **3–5 specific hashtags** (one broad + a few niche) help categorization; skip generic #fyp spam.
+- **The video's first 2 seconds decide retention.** If you're advising on the video itself, push the user to open on the payoff, not a slow intro.
+
+> Weak caption: "Our app helps you save time ✨" → Strong: "POV: you automated the thing your boss still does by hand 👀"
+
+Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (TikTok captions can't carry clickable links — name the source in the caption or on-screen and point to bio). Then pull the brand kit with `brand_voice(action:"get", platform:"tiktok")` — the voice resolved for TikTok, with any per-platform deltas already applied — and match its tone, audience, and hashtag sets. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
 ### Requirements
 

@@ -41,17 +41,19 @@ links:
    - **On first session**: extract architecture into `PROJECT_ARCHITECTURE.md` (see below)
    - If the file is a stub (brief description only), expand it with the user before extracting
 
-5. **`TESTING.md`** (RECOMMENDED) - Test-Driven Development workflow
+5. **`PROJECT_PRINCIPLES.md`** (REQUIRED IF EXISTS) - Delegation layer: guided/un-guided mode model, workflow library concept, schema-symmetry principle, autonomous self-direction checklist. Read before designing any agent delegation or initiation flow.
+
+6. **`TESTING.md`** (RECOMMENDED) - Test-Driven Development workflow
    - Follow: Red-Green-Refactor cycle, test pyramid, coverage targets
    - **Write tests before implementation** when following TDD
 
-6. **`.proto-gear/INDEX.md`** (OPTIONAL) - Available capabilities and workflows
+7. **`.proto-gear/INDEX.md`** (OPTIONAL) - Available capabilities and workflows
    - Check: available skills, workflows, slash commands, and specialized agents
 
-7. **`CONTRIBUTING.md`** (OPTIONAL) - Contribution guidelines
-8. **`SECURITY.md`** (OPTIONAL) - Security policy and vulnerability reporting
-9. **`PROJECT_ARCHITECTURE.md`** (OPTIONAL) - Project-specific architecture (agent-generated from PROJECT_SPECIFICATIONS.md)
-10. **`CODE_OF_CONDUCT.md`** (OPTIONAL) - Community guidelines
+8. **`CONTRIBUTING.md`** (OPTIONAL) - Contribution guidelines
+9. **`SECURITY.md`** (OPTIONAL) - Security policy and vulnerability reporting
+10. **`PROJECT_ARCHITECTURE.md`** (OPTIONAL) - Project-specific architecture (agent-generated from PROJECT_SPECIFICATIONS.md)
+11. **`CODE_OF_CONDUCT.md`** (OPTIONAL) - Community guidelines
 
 ### Architecture Extraction Task
 
@@ -83,6 +85,8 @@ Before starting ANY development task, verify:
 4. **ALWAYS follow branch naming**: `feature/TICKET-XXX-description` or `bugfix/TICKET-XXX-description`
 5. **ALWAYS follow commit format**: `type(scope): subject` (see BRANCHING.md)
 6. **ALWAYS read existing files before modifying** - use Read tool first
+7. **ALWAYS document a feature's permission/scope requirements for user setup** - any feature that depends on a platform/API permission (OAuth scope, app-review item, account tier) must list what the user's token/app needs, where they configure it. Put the scopes in `.env.example` next to the relevant credential **and** in the feature's skill. Credential *presence* (a key is set) is not the same as the right *scopes* - a token can publish but lack, say, comment permission, so the feature fails at runtime. Document the dependency so setup is self-serve.
+8. **TypeScript is the default for all new `honk-server/` source files.** New files go in `honk-server/src/` as `.ts`. The `tsconfig.json` compiles `src/` → existing output paths (`rootDir: src`, `outDir: .`), so tests and the build generator import paths are unchanged. **Never edit compiled `.js` files directly — edit `.ts` sources in `src/` instead.** Key commands: `npm run build:ts` (compile), `npm run type-check` (check without emit), `npm test` (runs `tsc` via `pretest` then the full suite).
 
 ### Agent Self-Configuration Protocol
 

@@ -3,17 +3,17 @@ name: manage-queue
 description: >
   Use when the user says "add to queue", "schedule a post", "show my queue",
   "what's queued", "dispatch this post", "publish queued item", or asks to manage
-  the SPMC content queue. The queue is file-backed and persists between sessions.
+  the Honk content queue. The queue is file-backed and persists between sessions.
   The scheduler (spmc-server/scheduler/index.js) auto-dispatches items when their
   scheduled_at time arrives — run it as a background process alongside the MCP server.
 metadata:
   version: "0.2.0"
-  mcp_server: spmc
+  mcp_server: honk
 ---
 
 ## Managing the Content Queue
 
-Use queue tools from the `spmc` MCP server. All tools work without platform credentials
+Use queue tools from the `honk` MCP server. All tools work without platform credentials
 (only `queue_dispatch` requires them, at publish time).
 
 ### Adding to queue
@@ -44,6 +44,23 @@ Examples by platform:
 - Bluesky: `content: { text: "text" }`
 - TikTok: `content: { video_url: "https://...", caption: "caption", privacy_level?: "SELF_ONLY" }`
 
+### Drafts
+
+Save a post without committing to publish it — held for review, **never
+auto-dispatched** (the scheduler only touches `pending`):
+
+```
+queue_add(platform, content, draft: true)     // status: "draft"
+queue_list(status: "draft")                    // review your drafts
+```
+
+When a draft is ready, promote it:
+
+- `queue_update(id, updates: { status: "pending", scheduled_at: "..." })` — schedule it, or
+- `queue_dispatch(id)` — publish it now.
+
+Drafts are the safe staging area for pipeline output before the user signs off.
+
 ### Viewing the queue
 
 ```
@@ -52,7 +69,7 @@ queue_list(status: "pending")           // filter by status
 queue_list(platform: "x")              // filter by platform
 ```
 
-Statuses: `pending` → `dispatched` → `published` | `failed`
+Statuses: `draft` (held) · `pending` → `dispatched` → `published` | `failed`
 
 ### Updating a queued item
 

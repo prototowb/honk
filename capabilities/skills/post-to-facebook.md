@@ -4,13 +4,24 @@ description: >
   Use when the user says "post to Facebook", "publish to my Facebook Page", or asks to
   publish content to a Facebook Page feed. Uses the same Meta Graph API token as Instagram.
 metadata:
-  version: "0.2.0"
-  mcp_server: spmc
+  version: "0.3.0"
+  mcp_server: honk
 ---
 
 ## Posting to Facebook
 
-Use `{{tool:facebook_post}}` from the `spmc` MCP server.
+Use `{{tool:facebook_post}}` from the `honk` MCP server.
+
+### Craft a strong post (Facebook-native)
+
+- **The first sentence is the whole post.** Page reach is limited and only the opening line shows before "See more" — make it stand alone.
+- **Native photos beat link posts.** Attach `image_url` rather than dropping a bare link; if you must link, put the URL in `message` with a line of context.
+- **Keep it to 1–2 short paragraphs.** Emoji sparingly; a wall of text kills it.
+- **Hashtags add little here** — skip them or use one.
+
+> Weak: "We are thrilled to share an update with our community." → Strong: "We rebuilt onboarding from scratch. New users hit 'aha' in 2 minutes, down from 11."
+
+Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (on Facebook, put any source link in the caption with a line of context, or in `first_comment`). Then pull the brand kit with `brand_voice(action:"get", platform:"facebook")` — the voice resolved for Facebook, with any per-platform deltas already applied — and match its tone, audience, and emoji policy. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
 ### Requirements
 
@@ -27,6 +38,15 @@ facebook_post(message: "<post text>")
 Photo post (image with caption):
 ```
 facebook_post(message: "<caption>", image_url: "<public image URL>")
+```
+
+### Accessibility & first comment
+
+- **`alt_text`** — accessibility description for an attached photo (only when `image_url` is set; it's a photo field). **Unverified live** — it didn't read back off the photo in testing; send it, but don't promise it stuck.
+- **`first_comment`** — text auto-posted as the first comment right after publishing (e.g. a link or context kept out of the post body). **Needs the `pages_manage_engagement` scope** on the Page token. **Best-effort**: if the scope is missing (or it otherwise fails), the post stays live and you'll see a `⚠ First comment failed` note — never repost because of it.
+
+```
+facebook_post(message, image_url, alt_text: "<description>", first_comment: "<link or note>")
 ```
 
 ### Preview before posting (optional)

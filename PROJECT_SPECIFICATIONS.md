@@ -1,4 +1,4 @@
-# Social Publishing Mission Control (SPMC)
+# Honk
 
 > AI-native social publishing infrastructure. Built as a plugin system first, designed from the ground up for agent-driven workflows. No UI required to ship value.
 
@@ -6,7 +6,7 @@
 
 ## Vision
 
-Competitors like Blotato bolt AI onto a traditional scheduling dashboard. SPMC inverts that: the agent _is_ the interface. Publishing flows through Claude, Hermes, and any MCP-compatible agent. A UI gets added on top of a working system, not before it.
+Competitors like Blotato bolt AI onto a traditional scheduling dashboard. Honk inverts that: the agent _is_ the interface. Publishing flows through Claude, Hermes, and any MCP-compatible agent. A UI gets added on top of a working system, not before it.
 
 Late-stage target: a multi-tenant SaaS that leaves Blotato, Buffer-AI, and Taplio behind by being the only tool that natively lives inside the agent's context rather than requiring the agent to call out to a separate product.
 
@@ -27,7 +27,7 @@ Late-stage target: a multi-tenant SaaS that leaves Blotato, Buffer-AI, and Tapli
 ### Phase 0 — MVP (current focus)
 **Goal:** Working plugin for Claude Code + Claude Desktop App + Hermes. No UI.
 
-- [ ] Consolidated MCP server (`spmc-server`) with all current platforms: X, Instagram, TikTok, Facebook, Threads, Bluesky
+- [ ] Consolidated MCP server (`honk-server`) with all current platforms: X, Instagram, TikTok, Facebook, Threads, Bluesky
 - [ ] Content queue: MCP tools to add, list, update, and clear queued posts
 - [ ] Scheduling: queue items with `scheduled_at` timestamps; a poll-or-push dispatch mechanism
 - [ ] Claude Code skills for each platform (ported from `_bkp`)
@@ -86,7 +86,7 @@ Late-stage target: a multi-tenant SaaS that leaves Blotato, Buffer-AI, and Tapli
 
 ```
 G:\Projects\_Plugins\
-├── spmc-server/              ← MCP server (Node.js ESM)
+├── honk-server/              ← MCP server (Node.js ESM)
 │   ├── index.js              ← server entrypoint + tool dispatcher
 │   ├── adapters/             ← one file per platform
 │   │   ├── x.js
@@ -197,3 +197,205 @@ Any agent (Claude, Hermes, future) MUST:
 | Team workspaces | Phase 3 | ✅ | ✅ | Partial |
 
 The moat is the MCP layer + agent-native workflow. Blotato can add AI to a dashboard; they cannot become an agent plugin without a rewrite.
+
+## Individualization (Phases 1 & 2 shipped — backlog remains)
+
+> **Status (2026-06-23):** Phase 1 (visual identity in the kit) and Phase 2
+> (`brand_schema` + guided `brand-setup`) are **built + merged-ready** on
+> `feature/INDIV-visual-brand-kit`. The five `media_compose` templates were
+> rebuilt on one editorial design system (brand row · hero headline on a layered
+> surface · body · accent footer), colors derived from the brand palette with a
+> background-luminance legibility fallback, and now default every visual field
+> from the kit's `visual` block. The **Backlog** below is what's left.
+
+
+**Goal:** every output reflects the specific brand/account *without re-specifying it
+each time.* The brand kit (`brand_voice` / `lib/brand.js`) is individualization v1 —
+the **voice** layer (tone, audience, hashtags, banned words, CTA, UTM). Extend it to
+the other dimensions an output varies on.
+
+**Architecture through-line — schema symmetry.** Mirror the guided-mode work:
+`brief_schema` is the *per-run delta*; a new **`brand_schema`** is the *persistent
+layer*. The kit's `emptyProfile()` already *is* the schema — expose its shape as a
+field spec so **one source** drives both a guided "set up your brand" flow (reusing
+guided mode) and the future web-UI settings form (BETA-011).
+
+### Phase 1 — Visual identity in the kit ✅ shipped
+The kit holds **zero** visual identity today, so `media_compose` needs colors/logo
+passed on every call (observed friction — today's live test had no kit at all). Add a
+`visual` block to `emptyProfile()` — `accent`, `bg_color`, `logo_url`, `default_template`
+— and have `media_compose` + the `output-manager`/platform skills **default from it**.
+Self-contained; wires the kit ↔ media pipeline; highest concrete value.
+
+### Phase 2 — `brand_schema` + guided brand setup (the adoption gate) ✅ shipped
+Individualization is worthless if the kit stays empty — so onboarding is the **gate,
+not a nice-to-have.** Add `brand_schema` (the kit's field spec) + a guided intake that
+populates the kit; the web UI later renders the same spec as a settings form.
+
+### Backlog — planned (2026-06-24)
+
+Per-platform voice tailoring shipped as **INDIV-003** (`brand.resolveVoice` +
+`PLATFORM_OVERRIDE_FIELDS`, replace semantics, superset platform-scoped get —
+merged to `development`). The four items below are planned for next-session
+implementation, in **recommended build order**. Each is credential-free and
+self-contained unless noted. The conventions in force (build origin → `npm run
+build`; gates `npm test` · `build:check` · `test:smoke` · `pack:smoke` green at
+every commit; branch off `development`, merge `--no-ff`) apply throughout.
+
+---
+
+#### INDIV-004 — Content policies / guardrails  ✅ shipped (2026-06-24, on `development`)
+
+**Shipped as built:** `policy` block on the kit (`banned_topics`,
+`disclosures.always/sponsored`, `auto_publish`); pure `checkPolicy(platform,
+content, policy, {sponsored})` in `validate.js` merged into the validate path via
+a `validateWithPolicy` handler helper (loads policy via `brand.getOrEmpty` — the
+link_tag pattern, validate stays disk-free). `always`→warn, `sponsored`→error
+(escalated by a per-call `sponsored` flag on the 7 publish tools + `content_validate`);
+`banned_topics`→drafting-reminder note; disclosures echoed ✓ in dry-run/validate.
+Disclosure matching is **word-boundary token containment** (not plain substring —
+"#ad" is not satisfied by "#advanced", "Ad" not by "had"). `auto_publish` is
+agent-guided (documented in persona/skills), no deterministic dispatch gate.
+**Enforcement boundary:** direct publish hard-blocks; `queue_add` is advisory and
+the real dispatch/scheduler path does not re-validate (deferred follow-up). Tools
+stay 30 (folds into validate). 110 unit + 33-check smoke. *Original plan below.*
+
+**Intent:** let a brand encode what it must *not* say and what it must *always*
+say, and how freely it may publish — the safety layer a publishing tool needs.
+
+**Data shape** — add a `policy` block to `emptyProfile()`:
+```
+policy: {
+  banned_topics: [],                 // semantic no-go themes (agent-judged), e.g. "competitor comparisons"
+  disclosures:   { always: [], sponsored: [] },  // strings appended/required, e.g. sponsored:["#ad"]
+  auto_publish:  false,              // false = always confirm before publishing (the project default)
+}
+```
+
+**Logic / surface** (mix of deterministic + agent-guided):
+- **Required disclosures (deterministic).** **Warns** when a configured
+  `disclosures.always` token is absent from the text; a publish tool gains a
+  `sponsored:true` flag that escalates the `disclosures.sponsored` tokens from
+  warn → **error** (you may not ship a sponsored post missing `#ad`). **Keep
+  `validate(platform, content)` pure** — do *not* have it read the kit from disk
+  (that would break its no-data-dir unit tests). Mirror the `link_tag` pattern:
+  the **handler** (`index.js`) loads `policy` via `brand.getOrEmpty(account)` and
+  passes it in as data. *Real open question:* whether the check is
+  `validate(platform, content, policy)` (extra pure arg) or a sibling pure
+  `checkPolicy(content, policy)` whose result the handler merges into the validation
+  output — lean to the latter to keep `validate`'s signature stable. Echo the
+  applied/missing disclosures in the dry-run preview.
+- **Banned topics (agent-guided).** Not regex-detectable; surface them in the
+  brand-kit view and the drafting prose (content-intelligence + platform skills +
+  persona) as hard "do not write about" guidance, and list them in the dry-run
+  preview as a reminder. `banned_words` stays the deterministic string check.
+- **auto_publish (agent-guided, with a deterministic seam).** Default `false`
+  keeps the "always confirm" rule. Document it in the persona/skills so a brand
+  that opts in (`true`) can let the agent publish without a per-post confirm.
+  *Deterministic enforcement (dispatch refuses un-confirmed direct publishes when
+  `false`) is a stretch — note as a follow-up, don't block v1 on it.*
+
+**Tests:** validate warns on missing `always` disclosure; `sponsored:true` errors
+on missing sponsored disclosure; passes when present; banned_topics surfaced in
+preview. **Open decisions:** warn-vs-error thresholds; exactly how `sponsored` is
+signaled (per-call flag — leaning yes); whether `auto_publish` gets the
+deterministic dispatch gate now or later. *No new tool (folds into kit +
+validate); if a standalone `policy_check` reads cleaner, add it — but validate is
+the natural home.*
+
+#### INDIV-005 — Audience segments  ✅ shipped (2026-06-24, on `development`)
+
+**Shipped as built:** `audiences{}` on the kit; the override field list generalized
+to one `OVERRIDE_FIELDS` (`PLATFORM_OVERRIDE_FIELDS` aliases it — all six; a new
+`SEGMENT_OVERRIDE_FIELDS` is it **minus `audience`**). `resolveVoice(profile,
+{platform, audience})` (bare-string platform still accepted) layers
+**base ▸ audience ▸ platform** — platform wins last, so a platform delta fully
+shadows an audience delta on the same field (replace semantics). Selecting a known
+segment sets the effective `audience` to its name; per-field `sources` provenance.
+**Unknown audience name does NOT silently apply** — values stay base and
+`unknownAudience` is set + surfaced (the advisor-caught correctness property).
+Exposed via `brand_voice(action:"get", platform?, audience?)` (resolves when either
+is given). `brief.js`'s `audience_delta` became a single `audience` field (segment
+name or ad-hoc). `audiences` stays out of `BRAND_FIELDS` (advanced step, symmetric
+with `platforms`). Tools stay 30. 117 unit + 36-check smoke. *Original plan below.*
+
+**Intent:** a second tailoring axis — the same brand speaks differently to
+"enterprise buyers" vs "indie devs," independent of platform.
+
+**Data shape** — `audiences: { <name>: { …overridable fields } }` on the kit.
+**Heads-up — the field sets are NOT identical:** `audience` is *already* one of the
+INDIV-003 override fields (`basePath: voice.audience`), and a named segment can't
+carry `audience` as one of its own fields (circular). So generalize
+`PLATFORM_OVERRIDE_FIELDS` into a shared base, but the **segment** field set is
+that base **minus `audience`** (segment fields = tone/register/emoji_policy/
+hashtags/cta; platform fields keep all six). Decide how a segment relates to
+`voice.audience`: cleanest is **selecting a segment sets the effective
+`audience`** to the segment name/descriptor, with `voice.audience` as the fallback
+when no segment is chosen.
+
+**Logic / surface:** extend the resolver to `resolveVoice(profile, { platform,
+audience })`. **Precedence (decide + pin with a test):** base ▸ audience ▸
+platform — platform is the hardest channel constraint so it wins last; provenance
+(`overridden[]`) gains a per-field source tag (`platform` | `audience`). Expose
+via `brand_voice(action:"get", platform, audience)`. Audience selection is also a
+**per-run** choice → add an `audience` field to `lib/brief.js` (`brief_schema`),
+closing the schema-symmetry loop.
+
+**Tests:** audience-only override; platform-over-audience precedence; both unset =
+base; provenance source tags. **Open decision:** the precedence order above
+(platform-wins) vs audience-wins — confirm before building.
+
+#### INDIV-006 — Multi-brand management  ✅ shipped (2026-06-24, on `development`)
+
+**Shipped as built:** `brand_voice` gains `action:"list"` (joins brand profiles +
+credentialed accounts via `config.accountsOverview()`, lowercase-normalized union,
+active marked), `action:"use"` (sets an **active pointer**), `action:"clone"` (+`to`
+— deep-copy a profile to a new key; refuses to clobber). **Decision: active pointer,
+not agent-carried** (chosen for UI groundwork — a UI needs persisted selection state;
+the pointer subsumes agent-carried since an explicit `account:` always overrides).
+Stored in its **own file** (`brand-active.json`), NOT in `brand.json` — the flat
+brand map stays single-concern and the pointer file is the **seed of a future
+account registry** (no migration). **Reads** (`brand_voice get` / `brand_schema`
+with no account) default to the active account and **echo** it; **writes + publishing
++ `media_compose` stay explicit** — the active pointer never silently redirects a
+post (the hidden-global-state footgun applies to brand-dependent output). `brand.json`
+stays flat. Tools stay 30. 121 unit + 41-check smoke. *Architecture note below: keep
+`brand.json` flat; evolve toward a separate account registry (seeded by this pointer),
+not a nested mega-account object. Original plan follows.*
+
+**Intent:** run several brands/accounts from one install without hand-editing
+`brand.json`. `brand.list()` and per-account isolation already exist.
+
+**Logic / surface:** add `brand_voice(action:"list")` (enumerate accounts with a
+one-line summary each) and `action:"clone"` (+ a `to` arg — copy a profile to a
+new account key as a starting point). **"Switch"** = decide whether there's a
+stored *active account* pointer (e.g. `_active` in the store, used when no
+`account` is passed) or it stays purely agent-carried context (the agent says
+"using the 'brand' account"). Leaning: keep it agent-carried for now, revisit
+with the UI. Update `brand-setup` / a short manage-brands note.
+
+**Tests:** list reports all accounts; clone copies then diverges independently.
+**Open decision:** stored active-account pointer vs agent-context only.
+
+#### INDIV-007 — Learned / adaptive  ▸ build last (data-gated; likely premature)
+
+**Intent:** the kit improves itself from real results.
+
+**Two parts, both dependent on accrued history:**
+- **Voice few-shots** — `voice.examples: [{ text, platform, why }]`; the agent
+  uses them as style exemplars. Capture is the open question: a manual "mark this
+  post as exemplar" tool vs auto-promote from high-engagement analytics.
+- **Observed best-times** — wire `best_time`'s existing `observedWindows` seam to
+  read the account's `analytics_report` history and blend with the research
+  baseline once enough snapshots exist.
+
+**Gate:** both need analytics history that **has not accrued** (live analytics is
+still unverified pending creds). Plan it, but expect to defer until there's data.
+**Open decisions:** example-capture mechanism; the history threshold before
+`best_time` blends observed over baseline.
+
+---
+
+#### Deferred — UI export/import (BETA-011 phase)
+Folder-copy works today (the kit is portable user data). A `brand_export` /
+`brand_import` pair (or a CLI bundle) belongs with the UI work, not before it.

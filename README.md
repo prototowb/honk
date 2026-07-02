@@ -131,20 +131,23 @@ Restart Claude Desktop after editing the config. The `spmc` server appears in th
 
 ---
 
-## Hermes
+## Bring-Your-Own Agent (Hermes, OpenClaw, CLI agents)
 
-Hermes has its own self-contained integration pack in `hermes/`:
+Any LLM agent outside the Claude plugin ecosystem gets a self-contained,
+**generic** integration pack in `agent/` — an operating briefing, a skill-trigger
+map, and a default persona. Hermes is the reference instance; the same pack drives
+any BYO agent (point your own at these files).
 
 | File | Purpose |
 |------|---------|
-| `hermes/mcp-config.json` | Drop-in MCP server connection block |
-| `hermes/CONTEXT.md` | Full operational briefing: the full tool catalog (publishing, content-intelligence, queue, observability, media — generator-injected), return values, platform gotchas, credential loading |
-| `hermes/SKILLS.md` | Trigger → tool reference for every platform + queue management + multi-platform campaigns |
-| `hermes/persona.md` | Pre-publish checklist, voice/tone defaults, confirmation vs. autonomous behavior rules |
+| `agent/mcp-config.json` | Drop-in MCP server connection block |
+| `agent/CONTEXT.md` | Full operational briefing: the full tool catalog (publishing, content-intelligence, queue, observability, media — generator-injected), return values, platform gotchas, credential loading |
+| `agent/SKILLS.md` | Trigger → tool reference for every platform + queue management + multi-platform campaigns |
+| `agent/persona.md` | Pre-publish checklist, voice/tone defaults, confirmation vs. autonomous behavior rules (the default persona; override per agent) |
 
 **Connect:**
 
-Drop this into your Hermes MCP config (update the path to match your clone):
+Drop this into your agent's MCP config (update the path to match your clone):
 
 ```json
 {
@@ -157,12 +160,12 @@ Drop this into your Hermes MCP config (update the path to match your clone):
 }
 ```
 
-Or reference `hermes/mcp-config.json` directly if your Hermes setup supports file-based MCP configs.
+Or reference `agent/mcp-config.json` directly if your agent supports file-based MCP configs.
 
 **Onboarding:**  
-On first contact, point Hermes at `hermes/CONTEXT.md`. It's written to be read once and then operated from — no external files required during a session. `hermes/SKILLS.md` gives Hermes its trigger mappings; `hermes/persona.md` defines the publishing persona and what requires user confirmation.
+On first contact, point the agent at `agent/CONTEXT.md`. It's written to be read once and then operated from — no external files required during a session. `agent/SKILLS.md` gives the agent its trigger mappings; `agent/persona.md` defines the publishing persona and what requires user confirmation.
 
-**What Hermes operates autonomously (no confirmation needed):**
+**What the agent operates autonomously (no confirmation needed):**
 - Reading the queue (`queue_list`)
 - Checking TikTok publish status
 - Adding to queue without dispatching
@@ -191,6 +194,8 @@ Any MCP client supporting stdio transport connects with a standard config block:
 
 Server name: `spmc`. All SPMC tools are listed on `tools/list` with full JSON Schema definitions.
 
+If your client is itself an **agent** (not just a raw tool caller), give it the same briefing as any BYO agent — `agent/CONTEXT.md` + `agent/SKILLS.md` — so it knows the platform gotchas, return shapes, and trigger phrases, not just the raw tool list.
+
 **Credentials:** three options in priority order:
 1. `~/.claude/spmc.env` — file-based, auto-loaded on startup
 2. `spmc-server/.env` — local dev fallback
@@ -218,10 +223,11 @@ npm install -g .           # install from local clone
 npm install -g spmc
 ```
 
-**Run:**
+**Run** (two bins):
 ```bash
-spmc                       # MCP server (stdio)
-npx -y spmc                # without global install
+spmc                       # MCP server only (stdio)
+spmc-start                 # MCP server + scheduler daemon (auto-dispatch + auto-analytics)
+npx -y spmc                # MCP server, without a global install
 ```
 
 **Config block (any client):**
@@ -234,17 +240,14 @@ npx -y spmc                # without global install
 
 Credentials load from `~/.claude/spmc.env` automatically. No path hardcoding needed.
 
-**Scheduler** is not started by the npm bin (`run.js`). Run it separately if needed:
-```bash
-node $(npm root -g)/spmc/scheduler/index.js
-```
-Or use `start.js` as the entry point:
+**Scheduler:** the `spmc` bin runs the MCP server only. For auto-dispatch of
+scheduled posts **and** the ~24h auto-analytics follow-up to fire, use the
+**`spmc-start`** bin (MCP server + scheduler daemon) as the entry point instead:
 ```json
-{
-  "command": "node",
-  "args": ["$(npm root -g)/spmc/start.js"]
-}
+{ "command": "spmc-start" }
 ```
+Without a global install: `{ "command": "npx", "args": ["-y", "-p", "spmc", "spmc-start"] }`.
+The scheduler logs to `~/.claude/spmc-scheduler.log` (that directory must exist).
 
 ---
 
@@ -254,41 +257,47 @@ Or use `start.js` as the entry point:
 |---------|------------|--------|-------------|
 | Claude Code plugin | `.mcp.json` → `run.js` | `skills/` (auto-loaded) | `.mcp.json` `${VAR}` → env |
 | Claude Desktop | `claude_desktop_config.json` | — | `~/.claude/spmc.env` |
-| Hermes | `hermes/mcp-config.json` | `hermes/SKILLS.md` | `~/.claude/spmc.env` or env |
-| OpenClaw / other | stdio `node run.js` | — | `~/.claude/spmc.env` or env |
+| BYO agent (Hermes, etc.) | `agent/mcp-config.json` | `agent/SKILLS.md` | `~/.claude/spmc.env` or env |
+| OpenClaw / other | stdio `node run.js` | `agent/SKILLS.md` (if agent) | `~/.claude/spmc.env` or env |
 | CLI / npm | `npx spmc` | — | `~/.claude/spmc.env` or env |
 
-**`run.js`** — MCP server only  
-**`start.js`** — MCP server + scheduler daemon (use this for always-on surfaces like Claude Desktop)
+**`run.js`** (bin: `spmc`) — MCP server only  
+**`start.js`** (bin: `spmc-start`) — MCP server + scheduler daemon (use this for always-on surfaces like Claude Desktop)
 
 ---
 
 ## MCP Tools
 
 <!-- gen:tools:start -->
-_24 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit between these markers; run `npm run build`._
+_30 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit between these markers; run `npm run build`._
 
 ### Publishing & status
 
 | Tool | Required | Optional | Platform limit | Description |
 |------|----------|----------|----------------|-------------|
-| `x_post_tweet` | `text` (string) | `account` (string), `dry_run` (boolean) | 280 chars | Post a single tweet to X (Twitter). Max 280 characters. |
-| `x_post_thread` | `tweets` (array) | `account` (string), `dry_run` (boolean) | — | Post a thread of tweets to X. Each array item is one tweet, chained as replies. |
-| `instagram_post` | `caption` (string) | `image_url` (string), `image_urls` (array), `account` (string), `dry_run` (boolean) | 2200 chars | Post to Instagram. Provide image_url for a single image, OR image_urls (2–10 public URLs) for a carousel. Requires publicly accessible image URL(s). |
-| `tiktok_post_video` | `video_url` (string), `caption` (string) | `privacy_level` (string), `account` (string), `dry_run` (boolean) | 2200 chars | Post a video to TikTok (PULL_FROM_URL). Until your app passes audit, posts land as private/self-only regardless of privacy_level. |
+| `x_post_tweet` | `text` (string) | `account` (string), `dry_run` (boolean), `sponsored` (boolean) | 280 chars | Post a single tweet to X (Twitter). Max 280 characters. |
+| `x_post_thread` | `tweets` (array) | `account` (string), `dry_run` (boolean), `sponsored` (boolean) | — | Post a thread of tweets to X. Each array item is one tweet, chained as replies. |
+| `instagram_post` | `caption` (string) | `image_url` (string), `image_urls` (array), `alt_text` (string), `alt_texts` (array), `first_comment` (string), `account` (string), `dry_run` (boolean), `sponsored` (boolean) | 2200 chars | Post to Instagram. Provide image_url for a single image, OR image_urls (2–10 public URLs) for a carousel. Requires publicly accessible image URL(s). |
+| `tiktok_post_video` | `video_url` (string), `caption` (string) | `privacy_level` (string), `account` (string), `dry_run` (boolean), `sponsored` (boolean) | 2200 chars | Post a video to TikTok (PULL_FROM_URL). Until your app passes audit, posts land as private/self-only regardless of privacy_level. |
 | `tiktok_check_publish_status` | `publish_id` (string) | `account` (string) | — | Check the async publish status of a TikTok video post. |
-| `facebook_post` | `message` (string) | `image_url` (string), `account` (string), `dry_run` (boolean) | 63206 chars | Post to a Facebook Page feed. Optionally attach a public image URL to post as a photo. |
-| `threads_post` | `text` (string) | `image_url` (string), `account` (string), `dry_run` (boolean) | 500 chars | Post text (optionally with an image) to Threads. |
-| `bluesky_post` | `text` (string) | `account` (string), `dry_run` (boolean) | 300 graphemes | Post text to Bluesky via the AT Protocol. No OAuth — just an app password. |
+| `facebook_post` | `message` (string) | `image_url` (string), `alt_text` (string), `first_comment` (string), `account` (string), `dry_run` (boolean), `sponsored` (boolean) | 63206 chars | Post to a Facebook Page feed. Optionally attach a public image URL to post as a photo. |
+| `threads_post` | `text` (string) | `image_url` (string), `alt_text` (string), `account` (string), `dry_run` (boolean), `sponsored` (boolean) | 500 chars | Post text (optionally with an image) to Threads. |
+| `bluesky_post` | `text` (string) | `account` (string), `dry_run` (boolean), `sponsored` (boolean) | 300 graphemes | Post text to Bluesky via the AT Protocol. No OAuth — just an app password. |
 
 ### Content intelligence
 
 | Tool | Required | Optional | Platform limit | Description |
 |------|----------|----------|----------------|-------------|
-| `content_validate` | `platform` (string), `content` (object) | — | — | Validate a post payload against a platform's rules (length, required fields, media) without publishing. Returns errors that would block publishing and warnings. Use before queuing or posting. |
+| `content_validate` | `platform` (string), `content` (object) | `account` (string), `sponsored` (boolean) | — | Validate a post payload against a platform's rules (length, required fields, media) AND the brand kit's content policy (required disclosures, banned-topic reminders) without publishing. Returns blocking errors, warnings, and policy notes. Use before queuing or posting. |
 | `content_adapt` | `text` (string) | `platforms` (array) | — | Fit one source text to multiple platforms' hard limits: auto-splits a long post into an X thread, grapheme-truncates for Bluesky, etc. Returns ready-to-post content per platform plus warnings. This handles the deterministic length-fitting only — rewrite tone/hashtags yourself before posting. |
 | `config_doctor` | — | — | — | Report which platforms and named accounts have credentials configured (by env-var presence only — never reveals values), plus media providers. Use to check setup before publishing. |
-| `account_info` | `platform` (string) | `account` (string) | — | Fetch the connected account profile (handle, display name, avatar URL) for a platform. Read-only — confirms which account is wired up and supplies branding assets. Supported: instagram, facebook (Graph API). |
+| `account_info` | `platform` (string) | `account` (string), `seed_brand_kit` (boolean) | — | Fetch the connected account profile (handle, display name, avatar URL) for a platform. Read-only — confirms which account is wired up and supplies branding assets. Supported: instagram, facebook (Graph API). Pass seed_brand_kit:true to merge the fetched handle + avatar URL into the active brand account's visual block. |
+| `brand_voice` | — | `action` (string), `profile` (object), `replace` (boolean), `account` (string), `to` (string), `platform` (string), `audience` (string) | — | Get or set the brand kit, and manage multiple brand accounts — a persistent profile (voice: tone, audience, hashtag sets, emoji/banned-word policy, CTA library, UTM rules; plus a visual identity block: accent/bg/surface/heading/body colors, logo, icon, handle, default template; plus per-platform voice deltas; plus named audience segments; plus a content policy: banned topics, required disclosures, auto-publish) that the content skills read so drafts match your voice, composed images match your look, and posts respect your guardrails without re-specifying it each time. Per account (omit account for the default). Content config, not secrets. Call with action:"get" first to see the current profile; if it is empty, offer guided setup (see brand_schema / the brand-setup skill). Pass a platform and/or audience with action:"get" to see the effective voice resolved for it (base merged with audience-segment, then per-platform, overrides — precedence base ▸ audience ▸ platform). Multi-brand: action:"list" enumerates accounts (brand profiles + credentialed accounts) and marks the active one; action:"use" sets the active account (reads default to it — get/brand_schema — but publishing stays explicit, so always confirm the brand before posting); action:"clone" copies a profile to a new account key (to:) as a starting point. |
+| `link_tag` | `url` (string) | `params` (object), `platform` (string), `account` (string) | — | Add UTM/campaign query params to a URL for click attribution. Merges the brand kit's links.utm_defaults under your overrides; a value containing {platform} is substituted with the given platform. Returns the tagged URL. Deterministic, credential-free. |
+| `duplicate_check` | `platform` (string), `content` (object) | `within_hours` (number) | — | Check whether identical content was already published to a platform recently — matches the content hash against the audit log of successful publishes. Returns the prior publish if found. Run before publishing to avoid an accidental repost (there is no un-publish). |
+| `best_time` | `platform` (string) | `count` (number), `account` (string) | — | Suggest the best times to post on a platform, ranked, in audience-local time with a short rationale per window. Credential-free. Uses research-backed engagement windows as a baseline and will blend in the account's own analytics history once enough accrues. Schedule a suggestion via queue_add with an explicit timezone offset. |
+| `brief_schema` | — | `account` (string) | — | Return the per-run content-brief field schema — the single source for guided-mode intake and the future web-UI form. The brief is the per-run delta on top of the persistent brand kit (voice/audience/hashtags); this lists only what a run needs (angle, goal, platforms, schedule, references, constraints) with each field's type, required-ness, options, and which fields the brand kit pre-fills. Pass an account to annotate its brand-kit pre-fills. Use it to drive an optional guided intake instead of asking for everything at once. |
+| `brand_schema` | — | `account` (string) | — | Return the brand-kit field schema with the current values for an account — the single source for guided brand setup (the brand-setup skill) and the future web-UI settings form. Lists the persistent fields a brand kit holds (voice tone/audience, visual identity: accent/bg/surface/heading/body colors + logo/icon/handle/default-template, hashtags, CTAs, notes) grouped, with type/options/help, which are recommended, and what is already set. Call it to drive guided setup (collect the empty recommended fields one at a time) or to show a brand-settings overview. Writes go through brand_voice(action:"set"). The companion to brief_schema (per-run) — this is the persistent layer. |
 | `audit_log` | — | `platform` (string), `status` (string), `source` (string), `limit` (number) | — | Read the publish audit trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, and result. Filter by platform/status/source. |
 | `schedule_check` | `scheduled_at` (string) | — | — | Validate and normalize a scheduled_at timestamp to canonical UTC ISO 8601. A timestamp without an explicit timezone is interpreted as the server's local time and flagged with a warning (it becomes ambiguous under hosted/multi-user deployment). Returns the normalized value and whether it is in the past. |
 
@@ -304,7 +313,7 @@ _24 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 
 | Tool | Required | Optional | Platform limit | Description |
 |------|----------|----------|----------------|-------------|
-| `queue_add` | `platform` (string), `content` (object) | `scheduled_at` (string), `account` (string) | — | Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing. |
+| `queue_add` | `platform` (string), `content` (object) | `scheduled_at` (string), `account` (string), `draft` (boolean) | — | Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing. |
 | `queue_list` | — | `status` (string), `platform` (string) | — | List queued posts. Optionally filter by status or platform. |
 | `queue_update` | `id` (string), `updates` (object) | — | — | Update a queue item — change its content, scheduled_at, or status. |
 | `queue_remove` | `id` (string) | — | — | Remove a post from the queue. |
@@ -314,7 +323,7 @@ _24 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 
 | Tool | Required | Optional | Platform limit | Description |
 |------|----------|----------|----------------|-------------|
-| `media_compose` | `template` (string), `headline` (string) | `subtext` (string), `bg_color` (string), `accent` (string), `bg_image_url` (string), `handle` (string), `icon_url` (string), `provider` (string), `account` (string) | — | Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. Templates: square-dark (1080×1080), story-dark (1080×1920), banner-wide (1200×628), square-news (1080×1080 branded carousel slide with wrapped body + handle/icon footer). |
+| `media_compose` | `headline` (string) | `template` (string), `subtext` (string), `kicker` (string), `bg_color` (string), `surface` (string), `accent` (string), `heading_color` (string), `body_color` (string), `bg_image_url` (string), `handle` (string), `icon_url` (string), `logo_url` (string), `provider` (string), `account` (string) | — | Render a branded image from a template using local sharp compositing (no external service). Returns a public URL after auto-uploading. All five templates share one editorial design system (brand row, hero headline on a layered surface, body, accent footer). Templates: square-dark (1080×1080 feed), square-tall (1080×1350, IG 4:5 feed — highest reach), story-dark (1080×1920 story, safe-zone aware), banner-wide (1200×628 link/OG card), square-news (1080×1080 carousel slide with circular icon footer). Identity + colors (accent/bg/surface/heading/body colors, logo, icon, handle, default template) default from the brand kit's visual block (brand_voice) — set them once instead of per call; explicit args override. Heading/body colors not set anywhere are derived from the background for legibility. |
 | `media_upload` | `file_path` (string) | `provider` (string), `account` (string) | — | Upload a local image or video file to a CDN and get back a public URL. Use this before posting to Instagram (requires image URL) or TikTok (requires video URL). Supported providers: cloudinary (images + videos), imgbb (images only). Provider is auto-selected from available credentials. |
 
 <!-- gen:tools:end -->
@@ -369,7 +378,7 @@ claude_desktop_config.json  Drop-in Claude Desktop config
 .env.example              All credential keys + multi-account examples
 
 skills/                   Claude Code SKILL.md files (13 total: 9 publishing + 4 pipeline)
-hermes/                   Hermes integration pack
+agent/                    Bring-your-own-agent integration pack (Hermes, OpenClaw, …)
   mcp-config.json
   CONTEXT.md
   SKILLS.md
