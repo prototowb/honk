@@ -130,6 +130,10 @@ export interface QueueItem {
   platform: string;
   content: Record<string, unknown>;
   account: string;
+  // Whether this post is sponsored/paid — persisted so the dispatch-time policy
+  // gate can enforce the brand kit's sponsored disclosures (INIT-005). Optional:
+  // items queued before this field existed deserialize as undefined = not sponsored.
+  sponsored?: boolean;
   status: QueueStatus;
   scheduled_at: string | null;
   created_at: string;

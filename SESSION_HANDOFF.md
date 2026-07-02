@@ -104,6 +104,25 @@ smoke + `build:check` + `pack:smoke`** all green. (Pushed to `origin/development
 
 ## On `development` now (recently merged — this session)
 
+- **Dispatch-time policy gate (2026-07-02) — INIT-005** — closes the INDIV-004 deferral
+  flagged in three places ("queue/scheduler dispatch does NOT re-validate"). `queue_dispatch`
+  and the scheduler called `publishAudited` directly, so a **sponsored post could be queued
+  and later dispatched without its required disclosure** — the hard block only existed on the
+  direct-publish path, and the unattended scheduler has no agent to catch it. Fix:
+  `validateWithPolicy` extracted to a shared **`lib/policy-gate.ts`** and enforced **inside
+  `publishAudited`** — the single chokepoint every publish path (direct, `queue_dispatch`,
+  scheduler) already goes through, so a future dispatch path can't forget it. A failure throws
+  **before `publish()`** (no network call), the existing catch records a **`failed` audit
+  entry**, and the caller marks the queue item `failed` (no silent publish, no silent drop).
+  `sponsored` is now **persisted on the queue item** (optional `QueueItem.sponsored`, threaded
+  through `queue.add` + the `queue_add` tool + both `queue_dispatch` paths + scheduler);
+  pre-existing `~/.honk/queue.json` items deserialize as not-sponsored — **no migration**.
+  Tools stay 30. **127 unit + 43-check smoke + build:check + pack:smoke green.** Pushed to
+  `origin/development`. ⚠️ **Known boundary (backlog):** the gate loads policy via
+  `brand.getOrEmpty(account)` with **no active-account fallback** — a post queued without an
+  explicit `account:` gets no policy enforcement. Consistent with the direct path + the
+  "publishing is always explicit about account" convention, so **not a regression**; noted for
+  the account-registry follow-up.
 - **PROJECT_PRINCIPLES.md + ROADMAP_NOTES.md created (2026-06-30)** — steering layer
   established. PRINCIPLES is normative: two-axis mode model (input × authority), guided mode
   minimum input surface, workflow library concept (build deferred), schema-symmetry as
@@ -148,8 +167,10 @@ smoke + `build:check` + `pack:smoke`** all green. (Pushed to `origin/development
    (`best_time` `observedWindows`). **Data-gated** — needs accrued analytics history (still
    unverified). Plan it, expect to defer; natural point to pause Individualization and start
    the **UI phase (BETA-011)**. Carry-forward follow-ups (deferred, for the UI phase):
-   INDIV-006 account registry; INDIV-005 segment enumeration in guided mode; INDIV-004
-   deterministic dispatch/`auto_publish` gate.
+   INDIV-006 account registry (**incl. the INIT-005 boundary** — dispatch policy gate has no
+   active-account fallback, so a post queued without an explicit `account:` isn't enforced);
+   INDIV-005 segment enumeration in guided mode. (INDIV-004 deterministic dispatch gate —
+   **DONE, shipped as INIT-005**; the `auto_publish` deterministic gate remains agent-guided.)
 2. **Live verification (needs valid creds — read scopes).** Turnkey steps in
    `ANALYTICS_VERIFICATION.md`. Analytics path de-risked 2026-06-25 (metric sets re-verified,
    no drift); remaining = the live end-to-end run + Threads (never had creds). **FB re-verify**

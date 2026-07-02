@@ -22,13 +22,14 @@ function uid(): string {
   return `q_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
-export function add(platform: string, content: Record<string, unknown>, scheduledAt: string | null = null, account = '', status: QueueItem['status'] = 'pending'): QueueItem {
+export function add(platform: string, content: Record<string, unknown>, scheduledAt: string | null = null, account = '', status: QueueItem['status'] = 'pending', sponsored = false): QueueItem {
   const items = load();
   const item: QueueItem = {
     id:           uid(),
     platform,
     content,
     account,
+    sponsored,
     status,
     scheduled_at: scheduledAt,
     created_at:   new Date().toISOString(),

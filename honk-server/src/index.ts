@@ -10,7 +10,8 @@ import * as media     from './media/upload.js';
 import * as compose   from './media/compose.js';
 
 import { publishAudited }                 from './lib/dispatch.js';
-import { validate, checkPolicy, formatValidation } from './lib/validate.js';
+import { formatValidation } from './lib/validate.js';
+import { validateWithPolicy } from './lib/policy-gate.js';
 import { adapt, formatAdaptation }        from './lib/adapt.js';
 import { report as configReport, formatReport, accountsOverview, formatAccounts } from './lib/config.js';
 import { normalizeScheduledAt, isPast, timezoneWarning } from './lib/schedule.js';
@@ -128,21 +129,6 @@ function formatResolvedVoice(r: ResolvedVoice, label: string, profile: BrandProf
   return lines.join('\n');
 }
 
-type WithNotes = ValidationResult & { notes?: string[] };
-
-function validateWithPolicy(platform: string, content: Record<string, unknown>, account: string, { sponsored = false } = {}): WithNotes {
-  const v = validate(platform, content);
-  const policy = (brand.getOrEmpty(account) || {}).policy || {} as Partial<PolicyConfig>;
-  const pol = checkPolicy(platform, content, policy, { sponsored });
-  return {
-    ...v,
-    errors:   [...v.errors, ...pol.errors],
-    warnings: [...v.warnings, ...pol.warnings],
-    notes:    pol.notes,
-    ok:       v.ok && pol.errors.length === 0,
-  };
-}
-
 async function doPublish(platform: string, content: Record<string, unknown>, account: string, dryRun: boolean, { sponsored = false } = {}): Promise<string> {
   const v = validateWithPolicy(platform, content, account, { sponsored });
   if (!v.ok) {
@@ -163,7 +149,7 @@ async function doPublish(platform: string, content: Record<string, unknown>, acc
     return `DRY RUN — ${v.label} payload is valid; nothing was published.${extraNote}${warn}${notes}`;
   }
 
-  const { summary } = await publishAudited(platform, content, account, { source: 'direct' });
+  const { summary } = await publishAudited(platform, content, account, { source: 'direct', sponsored });
   return summary + warn;
 }
 
@@ -392,8 +378,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // ── Queue ────────────────────────────────────────────────────────────
       case 'queue_add': {
         const scheduledAt = normalizeScheduledAt((a.scheduled_at as string | null) ?? null);
-        const v = validateWithPolicy(String(a.platform), a.content as Record<string, unknown>, String(a.account ?? ''));
-        const item = queue.add(String(a.platform), a.content as Record<string, unknown>, scheduledAt, String(a.account ?? ''), a.draft ? 'draft' : 'pending');
+        const sponsored = Boolean(a.sponsored);
+        const v = validateWithPolicy(String(a.platform), a.content as Record<string, unknown>, String(a.account ?? ''), { sponsored });
+        const item = queue.add(String(a.platform), a.content as Record<string, unknown>, scheduledAt, String(a.account ?? ''), a.draft ? 'draft' : 'pending', sponsored);
         const note = v.notes && v.notes.length ? `\n${v.notes.map(n => `  - ${n}`).join('\n')}` : '';
         const warn = (v.ok
           ? (v.warnings.length ? `\n⚠ ${v.warnings.join('; ')}` : '')
@@ -422,14 +409,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'queue_dispatch': {
         const item = queue.get(String(a.id));
         if (a.dry_run) {
-          const v = validateWithPolicy(item.platform, item.content, item.account ?? '');
+          const v = validateWithPolicy(item.platform, item.content, item.account ?? '', { sponsored: item.sponsored ?? false });
           auditRecord({ platform: item.platform, account: item.account || null, source: 'queue', status: 'dry_run', content_hash: hashContent(item.content) });
           const note = v.notes && v.notes.length ? `\nPolicy:\n` + v.notes.map(n => `  - ${n}`).join('\n') : '';
           return ok(`DRY RUN — ${item.id} (${item.platform}) ${v.ok ? 'is valid; not published.' : 'has errors:\n' + v.errors.map(e => `  - ${e}`).join('\n')}${note}`);
         }
         queue.update(String(a.id), { status: 'dispatched' });
         try {
-          const { summary } = await publishAudited(item.platform, item.content, item.account ?? '', { source: 'queue' });
+          const { summary } = await publishAudited(item.platform, item.content, item.account ?? '', { source: 'queue', sponsored: item.sponsored ?? false });
           queue.update(String(a.id), { status: 'published', published_at: new Date().toISOString(), result: summary });
           return ok(`Dispatched!\n${summary}`);
         } catch (e) {

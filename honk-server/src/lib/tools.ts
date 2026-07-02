@@ -315,7 +315,7 @@ export const TOOLS: ToolDefinition[] = [
   // ── Queue ─────────────────────────────────────────────────────────────────
   {
     name: 'queue_add',
-    description: 'Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing.',
+    description: 'Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing. A sponsored post stores its flag and is re-checked against the brand policy at dispatch — a missing sponsored disclosure blocks the dispatch (queue_dispatch and the scheduler), not just the direct tools.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -323,6 +323,7 @@ export const TOOLS: ToolDefinition[] = [
         content:      { type: 'object', description: 'Platform-specific content fields (same as the direct posting tools)' },
         scheduled_at: { type: 'string', description: 'Optional ISO 8601 datetime to schedule publishing. Prefer an explicit timezone (e.g. ...Z or -04:00); a naive time is interpreted as server-local.' },
         account:      { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
+        sponsored:    SPONSORED_PROP,
         draft:        { type: 'boolean', description: 'Save as a draft (status "draft") — held for review and never auto-dispatched by the scheduler. Promote later with queue_update(status:"pending") or publish directly with queue_dispatch.' },
       },
       required: ['platform', 'content'],
