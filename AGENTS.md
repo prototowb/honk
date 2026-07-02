@@ -41,17 +41,19 @@ links:
    - **On first session**: extract architecture into `PROJECT_ARCHITECTURE.md` (see below)
    - If the file is a stub (brief description only), expand it with the user before extracting
 
-5. **`TESTING.md`** (RECOMMENDED) - Test-Driven Development workflow
+5. **`PROJECT_PRINCIPLES.md`** (REQUIRED IF EXISTS) - Delegation layer: guided/un-guided mode model, workflow library concept, schema-symmetry principle, autonomous self-direction checklist. Read before designing any agent delegation or initiation flow.
+
+6. **`TESTING.md`** (RECOMMENDED) - Test-Driven Development workflow
    - Follow: Red-Green-Refactor cycle, test pyramid, coverage targets
    - **Write tests before implementation** when following TDD
 
-6. **`.proto-gear/INDEX.md`** (OPTIONAL) - Available capabilities and workflows
+7. **`.proto-gear/INDEX.md`** (OPTIONAL) - Available capabilities and workflows
    - Check: available skills, workflows, slash commands, and specialized agents
 
-7. **`CONTRIBUTING.md`** (OPTIONAL) - Contribution guidelines
-8. **`SECURITY.md`** (OPTIONAL) - Security policy and vulnerability reporting
-9. **`PROJECT_ARCHITECTURE.md`** (OPTIONAL) - Project-specific architecture (agent-generated from PROJECT_SPECIFICATIONS.md)
-10. **`CODE_OF_CONDUCT.md`** (OPTIONAL) - Community guidelines
+8. **`CONTRIBUTING.md`** (OPTIONAL) - Contribution guidelines
+9. **`SECURITY.md`** (OPTIONAL) - Security policy and vulnerability reporting
+10. **`PROJECT_ARCHITECTURE.md`** (OPTIONAL) - Project-specific architecture (agent-generated from PROJECT_SPECIFICATIONS.md)
+11. **`CODE_OF_CONDUCT.md`** (OPTIONAL) - Community guidelines
 
 ### Architecture Extraction Task
 

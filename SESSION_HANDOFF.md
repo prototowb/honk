@@ -102,6 +102,33 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 **State:** 30 tools · **15 skills** · 5 templates · 2 runtime deps · **121 unit + 41-check
 smoke + `build:check` + `pack:smoke`** all green. (Pushed to `origin/development`.)
 
+## On `development` now (recently merged — this session)
+
+- **PROJECT_PRINCIPLES.md + ROADMAP_NOTES.md created (2026-06-30)** — steering layer
+  established. PRINCIPLES is normative: two-axis mode model (input × authority), guided mode
+  minimum input surface, workflow library concept (build deferred), schema-symmetry as
+  guided→UI bridge, autonomous self-direction checklist, delegation rule. ROADMAP_NOTES is
+  living: research on Zapier templates, scaffolding CLIs, command palettes, API→CLI→UI parity.
+  Both wired into CLAUDE.md table + AGENTS.md reading list (item 5, items 6–11 renumbered).
+  **No code changed. No gates needed.**
+- **Brand model → per-post hashtags/CTA + repo data hygiene (2026-07-01)** — supersedes the
+  "@protocode_ brand kit populated" entry above. Hashtags and CTAs are now **generated per
+  post to match content**; the kit holds **only a few stable niche hashtags** as identity
+  anchors, not a canned content library. Live `~/.honk/brand.json` (`protocode_`) slimmed:
+  `#DevSecOps`, the four hashtag `sets`, the CTA rotation, and the per-platform hashtag/CTA
+  lists all removed; `hashtags.default` retuned to niche anchors (`#BuildInPublic`,
+  `#DevTools`, `#AITools`). The model is encoded in prose: `content-craft` §4 + `brand-setup`
+  group 3 (regen via `npm run build`).
+- **Runtime state out of the repo (2026-07-01)** — `.gitignore` still pointed at the
+  pre-rename `spmc-server/` path, so runtime user-data had silently become tracked. Repointed
+  to `honk-server/`; untracked live `queue.json` + the stale-orphan `analytics.json` /
+  `followups.json`; kept `honk-server/data/brand.json` as a **generic committed sample** (no
+  real handle/tags). **Queue store relocated** `src/queue/store.ts` → `dataFile('queue.json')`
+  (→ `~/.honk`), now consistent with brand/analytics/followups/audit; existing drafts migrated
+  to `~/.honk/queue.json`. All four gates green.
+- **proto-gear v0.10.0 capability package** merged from `chore/proto-gear-update` (`--no-ff`):
+  `.proto-gear/` (commands/skills/workflows/agents) + editor rule mirrors + root doc scaffolds.
+
 ## NEXT
 
 0. **Content quality — fundamentals SHIPPED (INIT-003); now prove + extend.** The
@@ -112,8 +139,8 @@ smoke + `build:check` + `pack:smoke`** all green. (Pushed to `origin/development
      facts. A before/after draft was produced this session; a live publish wasn't.
    - **Brand layer (SECONDARY — suggest INIT-004).** Logo on-image (`logo_url`/`icon_url`),
      palette, visual identity → brand kit (`brand-setup`/`brand_schema`). Complements the
-     fundamentals; does **not** gate them. There's no `brand.json` for @protocode_ yet —
-     setting one up is the natural next concrete step before the next real post.
+     fundamentals; does **not** gate them. The `protocode_` brand kit exists and now follows
+     the per-post model (niche anchors only); `logo_url` (corner stamp) is still the open gap.
    - **Templates beyond the floor (optional).** The carousel *structure* is now documented;
      new multi-slide *templates* (vs. the current 5) are a possible follow-up, not required.
    See memory `post-quality-standards`.
