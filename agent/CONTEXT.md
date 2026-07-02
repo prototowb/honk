@@ -72,7 +72,7 @@ _30 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 
 | Tool | Required | Optional | Platform limit | Description |
 |------|----------|----------|----------------|-------------|
-| `queue_add` | `platform` (string), `content` (object) | `scheduled_at` (string), `account` (string), `draft` (boolean) | — | Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing. |
+| `queue_add` | `platform` (string), `content` (object) | `scheduled_at` (string), `account` (string), `sponsored` (boolean), `draft` (boolean) | — | Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing. A sponsored post stores its flag and is re-checked against the brand policy at dispatch — a missing sponsored disclosure blocks the dispatch (queue_dispatch and the scheduler), not just the direct tools. |
 | `queue_list` | — | `status` (string), `platform` (string) | — | List queued posts. Optionally filter by status or platform. |
 | `queue_update` | `id` (string), `updates` (object) | — | — | Update a queue item — change its content, scheduled_at, or status. |
 | `queue_remove` | `id` (string) | — | — | Remove a post from the queue. |

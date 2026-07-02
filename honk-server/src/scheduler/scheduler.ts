@@ -23,7 +23,7 @@ async function dispatchDueQueueItems(): Promise<void> {
   for (const item of due) {
     queue.update(item.id, { status: 'dispatched' });
     try {
-      const result = await publishAudited(item.platform, item.content, item.account ?? '', { source: 'scheduler' });
+      const result = await publishAudited(item.platform, item.content, item.account ?? '', { source: 'scheduler', sponsored: item.sponsored ?? false });
       queue.update(item.id, {
         status:       'published',
         published_at: new Date().toISOString(),

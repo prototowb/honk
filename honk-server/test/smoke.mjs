@@ -167,6 +167,18 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   const sOk = await client.callTool({ name: 'content_validate', arguments: { platform: 'x', content: { text: 'buy now Ad #ad' }, sponsored: true } });
   check('content_validate passes a sponsored post with the disclosure present', !sOk.isError && /Valid/i.test(text(sOk)));
 
+  // Dispatch-time policy gate (INIT-005): a sponsored post queued without its
+  // disclosure is blocked when dispatched, not only at the direct tools. The gate
+  // fires before any network call, so this is deterministic without credentials.
+  const q = await client.callTool({ name: 'queue_add', arguments: { platform: 'bluesky', content: { text: 'buy now' }, sponsored: true } });
+  const qid = (text(q).match(/ID:\s*(\S+)/) || [])[1];
+  const disp = await client.callTool({ name: 'queue_dispatch', arguments: { id: qid } });
+  check('queue_dispatch blocks a sponsored post missing its disclosure',
+    disp.isError && /Blocked before publish/i.test(text(disp)) && /disclosure "#ad"/i.test(text(disp)));
+  const dispDry = await client.callTool({ name: 'queue_dispatch', arguments: { id: qid, dry_run: true } });
+  check('queue_dispatch dry_run reports the sponsored policy error',
+    !dispDry.isError && /has errors/i.test(text(dispDry)) && /disclosure "#ad"/i.test(text(dispDry)));
+
   // Restore a policy-free default profile so later checks (queue, drafts) are unaffected.
   await client.callTool({ name: 'brand_voice', arguments: { action: 'set', profile: { policy: { disclosures: { always: [], sponsored: [] }, banned_topics: [] } } } });
 }
