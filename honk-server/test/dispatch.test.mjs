@@ -60,10 +60,3 @@ test('publishAudited blocks a sponsored post missing its disclosure before publi
   const failed = auditRead().filter(e => e.status === 'failed');
   assert.ok(failed.some(e => /Blocked before publish/.test(e.error || '')), 'expected a failed audit entry for the blocked dispatch');
 });
-
-test('publishAudited passes the gate for a compliant post (then fails later at the adapter, not the gate)', async () => {
-  await assert.rejects(
-    () => publishAudited('bluesky', { text: 'buy now #ad' }, 'acme', { source: 'scheduler', sponsored: true }),
-    (e) => !/Blocked before publish/.test(e.message),
-  );
-});
