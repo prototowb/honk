@@ -22,12 +22,12 @@ interface CloudinaryResponse { secure_url: string; public_id: string; format: st
 interface ImgbbResponse { success: boolean; data: { url: string }; error?: { message: string } }
 
 export function cloudinaryCreds(account = ''): CloudinaryCreds | null {
-  const sfx = account ? `__${account.toUpperCase()}` : '';
-  let cloudName = process.env[`CLOUDINARY_CLOUD_NAME${sfx}`];
-  let apiKey    = process.env[`CLOUDINARY_API_KEY${sfx}`];
-  let apiSecret = process.env[`CLOUDINARY_API_SECRET${sfx}`];
+  const pfx = account ? `${account.toUpperCase()}__` : '';
+  let cloudName = process.env[`${pfx}CLOUDINARY_CLOUD_NAME`];
+  let apiKey    = process.env[`${pfx}CLOUDINARY_API_KEY`];
+  let apiSecret = process.env[`${pfx}CLOUDINARY_API_SECRET`];
 
-  const url = process.env[`CLOUDINARY_URL${sfx}`];
+  const url = process.env[`${pfx}CLOUDINARY_URL`];
   if (url && (!cloudName || !apiKey || !apiSecret)) {
     const m = url.trim().match(/^cloudinary:\/\/([^:]+):([^@]+)@(.+)$/);
     if (m) {
@@ -69,8 +69,8 @@ export async function uploadCloudinary(filePathOrBuffer: string | Buffer, accoun
 }
 
 export async function uploadImgbb(filePathOrBuffer: string | Buffer, account = '', filename?: string): Promise<UploadResult> {
-  const sfx    = account ? `__${account.toUpperCase()}` : '';
-  const apiKey = process.env[`IMGBB_API_KEY${sfx}`];
+  const pfx    = account ? `${account.toUpperCase()}__` : '';
+  const apiKey = process.env[`${pfx}IMGBB_API_KEY`];
 
   if (!apiKey)
     throw new Error(`imgbb credentials missing${account ? ` for account "${account}"` : ''}. Set IMGBB_API_KEY.`);
@@ -100,9 +100,9 @@ export async function upload(filePathOrBuffer: string | Buffer | null, provider:
   const fname = _filename ?? (typeof filePathOrBuffer === 'string' ? basename(filePathOrBuffer) : undefined);
   const name  = fname ?? 'upload';
 
-  const sfx = account ? `__${account.toUpperCase()}` : '';
+  const pfx = account ? `${account.toUpperCase()}__` : '';
   const hasCloudinary = !!cloudinaryCreds(account);
-  const hasImgbb      = !!process.env[`IMGBB_API_KEY${sfx}`];
+  const hasImgbb      = !!process.env[`${pfx}IMGBB_API_KEY`];
 
   let order: string[];
   if (provider) {

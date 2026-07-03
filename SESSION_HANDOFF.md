@@ -10,6 +10,23 @@ merge into it (`--no-ff`, no PR), push; `main` only via PR.
 
 ## On `development` now (recently merged)
 
+- **Credential convention flip (2026-07-03) — suffix ➜ prefix** — named-account
+  creds are now keyed **`ACCOUNT__KEY`** (e.g. `PROTOCODE__X_API_KEY`), not the old
+  suffix `KEY__ACCOUNT`. Prefix groups all of an account's creds under one scan —
+  UI-friendly (per-account enumeration) and they sort together in the env. Touched
+  `lib/env.ts` (`env`/`hasAll`/`discoverAccounts`), `media/upload.ts` (3 affix sites,
+  Cloudinary/imgbb), `env.example`, `tools.ts` cred-tool description, `config.ts`
+  comments; tests updated in `config.test.mjs` (+ new prefix-resolution test) and
+  `brand.test.mjs`. ⚠️ **Breaking**: any existing `KEY__ACCOUNT` env vars stop
+  resolving — re-key them as `ACCOUNT__KEY`. Blast radius was nil (only one named
+  account in play). Default account is unchanged (bare, unprefixed keys); default is
+  **not** a fallback — a named account resolves only its own `ACCOUNT__` keys.
+  Fixed the desktop-agent credential error: mirrored @protocode_'s X/IG/FB creds
+  under `PROTOCODE__*` in `honk.env`, and migrated the brand profile key + active
+  pointer `protocode_` ➜ **`protocode`** (the trailing `_` is IG-handle-only) so the
+  active account, its brand kit, and its creds all align. Verified: active=protocode
+  resolves X/IG/FB. Gates green (128 unit / smoke / build:check / pack:smoke).
+
 - **Brand layer fixes (2026-06-29) — INIT-004** — two bugs + one missing feature
   closed the "handle never rendered + logo missing" issue the Claude Desktop agent
   reported after a test run:

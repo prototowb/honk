@@ -209,16 +209,16 @@ test('clone refuses to clobber an existing target and needs a real source + targ
 });
 
 test('accountsOverview unions credentialed accounts that have no brand profile', () => {
-  process.env.X_API_KEY__ACME            = 'k';
-  process.env.X_API_SECRET__ACME         = 's';
-  process.env.X_ACCESS_TOKEN__ACME       = 't';
-  process.env.X_ACCESS_TOKEN_SECRET__ACME = 'ts';
+  process.env.ACME__X_API_KEY             = 'k';
+  process.env.ACME__X_API_SECRET          = 's';
+  process.env.ACME__X_ACCESS_TOKEN        = 't';
+  process.env.ACME__X_ACCESS_TOKEN_SECRET = 'ts';
   try {
     const acme = accountsOverview().rows.find(r => r.account === 'acme');
     assert.ok(acme, 'a creds-only account should appear in the overview');
     assert.equal(acme.brandProfile, false);
     assert.ok(acme.platforms.includes('x'));
   } finally {
-    for (const k of ['X_API_KEY__ACME', 'X_API_SECRET__ACME', 'X_ACCESS_TOKEN__ACME', 'X_ACCESS_TOKEN_SECRET__ACME']) delete process.env[k];
+    for (const k of ['ACME__X_API_KEY', 'ACME__X_API_SECRET', 'ACME__X_ACCESS_TOKEN', 'ACME__X_ACCESS_TOKEN_SECRET']) delete process.env[k];
   }
 });
