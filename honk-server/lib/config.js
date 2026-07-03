@@ -42,11 +42,11 @@ export function report() {
     return { platforms, media };
 }
 // Account overview (INDIV-006): join the two account axes — brand profiles
-// (brand.json) and credentials (env __ACCOUNT suffixes) — into one list for
+// (brand.json) and credentials (env ACCOUNT__ prefixes) — into one list for
 // multi-brand management and a future UI. The default account is always present;
 // named accounts are the union of profile keys and fully-credentialed accounts,
 // **lowercase-normalized** so a profile saved under "Brand" and creds under
-// __BRAND don't double-count. A half-credentialed account with no profile is not
+// BRAND__ don't double-count. A half-credentialed account with no profile is not
 // "usable" yet, so it's omitted (config_doctor shows partial creds). Marks which
 // account the active pointer selects. Reads env + the brand store; pure of args.
 export function accountsOverview() {

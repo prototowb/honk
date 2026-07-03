@@ -14,11 +14,11 @@ function resolveInput(filePathOrBuffer, filename) {
     return { buf: readFileSync(filePathOrBuffer), name: basename(filePathOrBuffer) };
 }
 export function cloudinaryCreds(account = '') {
-    const sfx = account ? `__${account.toUpperCase()}` : '';
-    let cloudName = process.env[`CLOUDINARY_CLOUD_NAME${sfx}`];
-    let apiKey = process.env[`CLOUDINARY_API_KEY${sfx}`];
-    let apiSecret = process.env[`CLOUDINARY_API_SECRET${sfx}`];
-    const url = process.env[`CLOUDINARY_URL${sfx}`];
+    const pfx = account ? `${account.toUpperCase()}__` : '';
+    let cloudName = process.env[`${pfx}CLOUDINARY_CLOUD_NAME`];
+    let apiKey = process.env[`${pfx}CLOUDINARY_API_KEY`];
+    let apiSecret = process.env[`${pfx}CLOUDINARY_API_SECRET`];
+    const url = process.env[`${pfx}CLOUDINARY_URL`];
     if (url && (!cloudName || !apiKey || !apiSecret)) {
         const m = url.trim().match(/^cloudinary:\/\/([^:]+):([^@]+)@(.+)$/);
         if (m) {
@@ -52,8 +52,8 @@ export async function uploadCloudinary(filePathOrBuffer, account = '', filename)
     return { url: data.secure_url, provider: 'cloudinary', public_id: data.public_id, resource: type, format: data.format, bytes: data.bytes };
 }
 export async function uploadImgbb(filePathOrBuffer, account = '', filename) {
-    const sfx = account ? `__${account.toUpperCase()}` : '';
-    const apiKey = process.env[`IMGBB_API_KEY${sfx}`];
+    const pfx = account ? `${account.toUpperCase()}__` : '';
+    const apiKey = process.env[`${pfx}IMGBB_API_KEY`];
     if (!apiKey)
         throw new Error(`imgbb credentials missing${account ? ` for account "${account}"` : ''}. Set IMGBB_API_KEY.`);
     const { buf, name } = resolveInput(filePathOrBuffer, filename);
@@ -76,9 +76,9 @@ export async function upload(filePathOrBuffer, provider = null, account = '', _b
     const input = filePathOrBuffer ?? _buf;
     const fname = _filename ?? (typeof filePathOrBuffer === 'string' ? basename(filePathOrBuffer) : undefined);
     const name = fname ?? 'upload';
-    const sfx = account ? `__${account.toUpperCase()}` : '';
+    const pfx = account ? `${account.toUpperCase()}__` : '';
     const hasCloudinary = !!cloudinaryCreds(account);
-    const hasImgbb = !!process.env[`IMGBB_API_KEY${sfx}`];
+    const hasImgbb = !!process.env[`${pfx}IMGBB_API_KEY`];
     let order;
     if (provider) {
         order = [provider];

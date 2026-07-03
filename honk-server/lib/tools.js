@@ -404,7 +404,7 @@ export const TOOLS = [
             properties: {
                 file_path: { type: 'string', description: 'Absolute local path to the image or video file' },
                 provider: { type: 'string', description: 'CDN provider to use. Omit to auto-select from configured credentials.', enum: ['cloudinary', 'imgbb'] },
-                account: { type: 'string', description: "Named account (e.g. 'brand'). Resolves CLOUDINARY_*__BRAND or IMGBB_API_KEY__BRAND." },
+                account: { type: 'string', description: "Named account (e.g. 'brand'). Resolves BRAND__CLOUDINARY_* or BRAND__IMGBB_API_KEY." },
             },
             required: ['file_path'],
         },
