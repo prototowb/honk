@@ -72,7 +72,15 @@ harden concept/vision/architecture/approach for existing, planned and unplanned 
 - ⚠️ Root `ARCHITECTURE.md` is an unfilled proto-gear template ({{FRAMEWORK}} placeholders) —
   doc rot; either fill via `pg` or point it at PROJECT_ARCHITECTURE.md next `pg` session.
 
-**State:** 30 tools · 15 skills · 5 templates · 2 runtime deps · **143 unit (+15) + 43-check
+**INIT-008 Store versioning + workflow library v1 (same branch)** — first build off the new
+horizon roadmap: (1) tracking stores persist as `{schema_version, items}` (legacy shapes read
+transparently, upgraded on next save; newer versions read best-effort with warning; brand
+stores deliberately stay flat per the INDIV-006 portability contract); (2) `lib/workflows.ts`
++ `workflow_list` tool (**tools 30→31**) with 3 seed entries, `brief.workflow` field,
+idea-input leads guided mode with the workflow pick-list, orchestrator honors the entry as the
+run's contract; PRINCIPLES §3/§4 amended (machine spec in code; §4 workflow row → shipped).
+
+**State:** **31 tools** · 15 skills · 5 templates · 2 runtime deps · **154 unit + 45-check
 smoke + build:check + pack:smoke** all green at every commit.
 
 ⚠️ Session notes:
