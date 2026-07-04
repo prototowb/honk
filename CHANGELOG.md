@@ -11,6 +11,34 @@ in `honk-server/package.json` and flows into every generated artifact via
 ## [Unreleased]
 
 ### Fixed
+- **Queued posts without an explicit `account:` bypassed brand policy** (INIT-006,
+  closing the boundary flagged in INIT-005). The dispatch policy gate now falls
+  back to the **active brand account** for the policy lookup — the same precedent
+  `media_compose` set: brand identity follows the active pointer, publish
+  credentials stay explicit. The fallback is surfaced as a provenance note in
+  previews/dry-runs.
+- **A corrupt store file could silently wipe user data.** A torn `queue.json`
+  parsed as an empty queue and the next save destroyed every draft. Store writes
+  are now atomic (write-tmp + rename), and corrupt user-authored stores (queue,
+  brand kit) are backed up beside the store (`.corrupt-<ts>`) before falling back.
+- **env.example drift healed** — the repo-root `.env.example` still documented the
+  pre-flip `KEY__ACCOUNT` suffix convention and the SPMC-era header while the
+  shipped `honk-server/env.example` had stale scope/provider prose. One canonical
+  content in both places now.
+
+### Added
+- **Outbound HTTP timeouts** (INIT-006) — every platform/API call goes through
+  `fetchWithTimeout` (default 30s, `HONK_HTTP_TIMEOUT_MS` override), so a hung
+  Graph call can no longer hang an MCP tool response or a scheduler tick.
+- **Credential redaction at the audit boundary** — `redactSecrets` scrubs
+  token-shaped material (query-string tokens, bearer/OAuth headers, JSON-embedded
+  credentials) from error text before it is persisted to the audit log or surfaced
+  to the agent.
+- **LICENSE (MIT) + publish metadata** — `repository` / `bugs` / `homepage` in
+  `package.json`; the tarball now ships a license file (previously declared MIT
+  with no file — a publish blocker).
+- **`PROJECT_HISTORY.md`** — narrative session history moved out of
+  `PROJECT_STATUS.md`, which returns to being a lean current-state snapshot.
 - **Published package was dead on arrival.** `lib/` was missing from the npm
   `files` allowlist, but `index.js` imports 13 modules from it — the tarball
   crashed at load with `ERR_MODULE_NOT_FOUND`. Latent (the name was unpublished)
