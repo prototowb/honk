@@ -31,6 +31,7 @@ links:
 
 2. **`PROJECT_STATUS.md`** (REQUIRED) - Current project state, active tickets, sprint info
    - **Update this file** when completing tickets or changing project state
+   - Narrative session history goes to **`PROJECT_HISTORY.md`** (newest first) — STATUS stays a lean snapshot
 
 3. **`BRANCHING.md`** (REQUIRED if git repo) - Git workflow and commit conventions
    - Follow: branch naming (`feature/TICKET-XXX-description`)

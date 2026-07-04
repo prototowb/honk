@@ -1,4 +1,5 @@
 import { appendFileSync, readFileSync, existsSync } from 'fs';
+import { redactSecrets } from './http.js';
 import { dataFile } from './paths.js';
 // Append-only audit trail. One JSON object per line (JSONL) so it is trivially
 // appendable and survives partial writes. Records every publish attempt
@@ -7,7 +8,9 @@ function file() {
     return dataFile('audit.log');
 }
 export function record(entry) {
-    const line = JSON.stringify({ ts: new Date().toISOString(), ...entry });
+    // Redact at the persistence boundary: platform error bodies / URLs can echo
+    // credentials, and the audit log is durable (INIT-006).
+    const line = redactSecrets(JSON.stringify({ ts: new Date().toISOString(), ...entry }));
     try {
         appendFileSync(file(), line + '\n');
     }

@@ -4,228 +4,134 @@
 
 ## Where We Are
 
-**`v0.3.0-alpha` is on `main`.** **`development`** is the default/integration branch
-and is **green on CI** with everything below merged + pushed. Branch off `development`,
-merge into it (`--no-ff`, no PR), push; `main` only via PR.
+**`v0.3.0-alpha` is on `main`.** `development` is the default/integration branch (green on CI).
+**`feature/INIT-006-release-hardening` is complete but UNMERGED and UNPUSHED** — this session ran
+local-only by user choice. First action next session: review, then merge `--no-ff` into
+`development` and push, per BRANCHING.md.
 
-## On `development` now (recently merged)
+## On `feature/INIT-006-release-hardening` (this session — 5 commits)
 
-- **Credential convention flip (2026-07-03) — suffix ➜ prefix** — named-account
-  creds are now keyed **`ACCOUNT__KEY`** (e.g. `PROTOCODE__X_API_KEY`), not the old
-  suffix `KEY__ACCOUNT`. Prefix groups all of an account's creds under one scan —
-  UI-friendly (per-account enumeration) and they sort together in the env. Touched
-  `lib/env.ts` (`env`/`hasAll`/`discoverAccounts`), `media/upload.ts` (3 affix sites,
-  Cloudinary/imgbb), `env.example`, `tools.ts` cred-tool description, `config.ts`
-  comments; tests updated in `config.test.mjs` (+ new prefix-resolution test) and
-  `brand.test.mjs`. ⚠️ **Breaking**: any existing `KEY__ACCOUNT` env vars stop
-  resolving — re-key them as `ACCOUNT__KEY`. Blast radius was nil (only one named
-  account in play). Default account is unchanged (bare, unprefixed keys); default is
-  **not** a fallback — a named account resolves only its own `ACCOUNT__` keys.
-  Fixed the desktop-agent credential error: mirrored @protocode_'s X/IG/FB creds
-  under `PROTOCODE__*` in `honk.env`, and migrated the brand profile key + active
-  pointer `protocode_` ➜ **`protocode`** (the trailing `_` is IG-handle-only) so the
-  active account, its brand kit, and its creds all align. Verified: active=protocode
-  resolves X/IG/FB. Gates green (128 unit / smoke / build:check / pack:smoke).
+**INIT-006 Production-release hardening** — the iteration toward a first production release.
+User direction: "get it and its SDLC in shape for a first production release; optimize and
+streamline." Focus confirmed: hardening over new features; UI phase (BETA-011) still the stop-line.
 
-- **Brand layer fixes (2026-06-29) — INIT-004** — two bugs + one missing feature
-  closed the "handle never rendered + logo missing" issue the Claude Desktop agent
-  reported after a test run:
-  1. **`media_compose` account-split fix** — `media_compose` was looking up the brand
-     kit with `brand.get(args.account ?? '')`, hitting `_default` (no profile) when
-     no explicit account is given. `brand_voice get` and `brand_schema` already use
-     `brand.getActive()` as the fallback — `media_compose` was the one missed case.
-     Fixed: `brandAccount = args.account ?? brand.getActive()`. Upload credentials
-     remain on `args.account ?? ''` (brand identity and publishing identity can differ).
-     Output now echoes which brand account was resolved via the active pointer.
-  2. **`account_info` `seed_brand_kit` flag** — `account_info` already fetched
-     `icon_url` (profile picture) + `handle` from IG/FB but had no write-back path
-     to the brand kit. New `seed_brand_kit:true` merges the fetched `handle` +
-     `icon_url` into the active brand account's `visual` block (same active-account
-     fallback as the `media_compose` fix). Call `account_info(platform:"instagram",
-     seed_brand_kit:true)` from Claude Desktop to populate `icon_url` in the brand kit.
-  ⚠️ `logo_url` (the bottom-right corner stamp, a distinct designed mark) is still
-  empty — IG profile picture goes into `icon_url` (template footer circle). If you
-  want the corner stamp, a separate hosted logo URL is needed.
-  All gates green (121 unit + 41-check smoke + build:check). **Pushed to `origin/development`.**
+1. **Policy-gate active-account fallback** (`fix(policy)`) — closes the INIT-005 boundary flagged
+   in three places: a post queued without an explicit `account:` was dispatched against the empty
+   `_default` policy — no enforcement. `validateWithPolicy` now resolves the POLICY lookup via
+   `account || brand.getActive()` (the INIT-004 `media_compose` precedent: brand identity follows
+   the active pointer, publish CREDENTIALS stay explicit — the pointer never redirects a post).
+   Fallback surfaced as a provenance note in previews/dry-runs. +3 unit tests, incl. "explicit
+   account is never overridden by the pointer".
+2. **HTTP timeouts + secret redaction + durable stores** (`feat(robustness)`) —
+   - `lib/http.ts` `fetchWithTimeout`, imported **aliased as `fetch`** by all 6 adapters +
+     `media/upload` (call sites untouched; new call sites in those files inherit it). Default 30s,
+     `HONK_HTTP_TIMEOUT_MS` override. Before: no outbound call had ANY timeout — a hung Graph call
+     hung the MCP tool response or a scheduler tick forever.
+   - `redactSecrets` scrubs token-shaped material (query `access_token=`/`api_key=`/`signature=`,
+     Bearer/OAuth headers, JSON-embedded creds) at the **audit/throw boundary** (`audit.record` +
+     `publishAudited` catch) — scrub-at-boundary so a new adapter can't forget it. Graph request
+     URLs carry tokens in the query string and error text is persisted to the durable audit log.
+   - `lib/jsonstore.ts` — `writeJsonAtomic` (tmp+rename) for queue/brand/followups/ratelimit/
+     analytics stores; `readJsonOr` backs corrupt user-authored stores (queue, brand kit, active
+     pointer) up beside the store (`.corrupt-<ts>`) before falling back. Before: a torn
+     `queue.json` parsed as empty and the next save wiped every draft.
+   - +12 unit tests (redaction patterns; a REAL timeout against a hanging local HTTP server;
+     atomic round-trip; corrupt-backup preserves original bytes).
+3. **Release engineering** (`chore(release)`) — LICENSE (MIT) at root + in `honk-server/` (npm now
+   ships it; `"license": "MIT"` was declared with NO file — publish blocker); `repository` (with
+   monorepo `directory`), `bugs`, `homepage` in package.json; **env.example drift healed**: root
+   `.env.example` still documented the pre-flip `KEY__ACCOUNT` suffix convention + SPMC header,
+   while `honk-server/env.example` had the new prefix convention but stale scope/provider prose —
+   reconciled into ONE canonical content in both places, plus a new *Operational settings* section
+   documenting `HONK_DATA_DIR` + `HONK_HTTP_TIMEOUT_MS`.
+4. **SDLC docs streamline** (`docs(sdlc)`) — `PROJECT_STATUS.md` 44KB → 19KB: narrative *Recent
+   Updates* moved to **`PROJECT_HISTORY.md`** (newest first — new convention, wired into AGENTS.md
+   reading list); the "Deferred stop-lines" section had the rename tables committed INSIDE it,
+   orphaning the stop-lines table — untangled; completed rename compacted to a summary; INIT-006
+   recorded in the Completed table; metrics refreshed.
+5. **CHANGELOG** — Unreleased section updated with all of the above (in the final docs commit).
 
-- **@protocode_ brand kit populated + data dir moved (2026-06-28)** — brand kit
-  (`~/.honk/brand.json`, key `protocode_`) now fully populated: voice do/don't,
-  emoji policy, 4-color visual palette, 5 personal CTAs, 4 named hashtag sets,
-  per-platform deltas (IG: save-worthy CTAs + 6 hashtags; FB: conversational
-  register + discussion CTAs), notes capturing niche/angle/alternating structure.
-  `brand-active.json` created → `brand_voice(action:"get")` now resolves correctly
-  from Claude Desktop. Data dir moved from `~/.spmc/` to `~/.honk/`
-  (`lib/paths.js` uses `os.homedir()`). `SPMC_DATA_DIR` → `HONK_DATA_DIR`
-  (paths.js + test files + .env.example). `brand-setup` skill fixed: guided
-  walkthrough now completes all 5 groups before offering to stop (was stopping
-  after group 2), and platform deltas are proactively offered not skipped.
-  **Rename SPMC → Honk** started: done items tracked in `PROJECT_STATUS.md` →
-  *Rename* section; pending = MCP server name, npm package, bins, server dir, docs.
-  ⚠️ Restart Claude Desktop for the new `~/.honk/` data path to take effect.
+**INIT-007 Steering-layer hardening (same branch, after INIT-006)** — user directive: also
+harden concept/vision/architecture/approach for existing, planned and unplanned features.
+- `PROJECT_SPECIFICATIONS.md` restructured: north star (publishing automation + assets &
+  digital brand management platform), 4 pillars (Publish · Brand OS · Intelligence & Engage ·
+  Delegation), non-goals, an explicit **1.0 definition**, and a **horizon roadmap H0–H3 with
+  entry criteria** placing every existing/planned/proposed feature (workflow library v1,
+  account registry, store `schema_version`, asset registry/DAM seed, blog + newsletter
+  channels, campaigns, evergreen recycling, hosted HTTP MCP, brand-portal export,
+  `content_check` report). Stale MVP tables removed (cross-link, don't duplicate);
+  Individualization record + agent contract preserved.
+- `PROJECT_ARCHITECTURE.md` + **Target Architecture & Evolution**: layering law, channel SPI
+  (platforms→channels with capability flags — absorbs the hard-coded IG/FB first-comment
+  list), storage trigger JSON→`node:sqlite` (engines≥22 cost recorded, adopt at H1),
+  transport milestone (hosted Streamable-HTTP MCP at H2), **security doctrine** (deterministic
+  vs agent-judged gates; fetched web content is data, never instructions), account registry.
+- `ROADMAP_NOTES.md` + Research Round 2: DAM patterns (Frontify portal, Bynder rights/expiry),
+  Ghost/WordPress/Buttondown/Sanity → one `long_form` content shape, MeetEdgar-class
+  recycling as query+suggestion, guardian = CI-for-content.
+- ⚠️ Root `ARCHITECTURE.md` is an unfilled proto-gear template ({{FRAMEWORK}} placeholders) —
+  doc rot; either fill via `pg` or point it at PROJECT_ARCHITECTURE.md next `pg` session.
 
-- **★ Content-quality fundamentals (INIT-003)** — closes the user-set top priority: the
-  2026-06-26 IG+FB post was **too basic** (1–3 flat facts, no copy structure, sources
-  only in chat, guided mode never offered). The fix is **fundamental and brand-agnostic**,
-  not brand polish. New **`content-craft`** skill (single-concern, auto-discovered) is the
-  craft layer every draft starts from:
-    - **Engagement philosophy** — one idea per post, specificity over vagueness, open a gap
-      early, value density, design for saves/shares, native format, action-inviting CTA.
-    - **Layered copy structure** — hook → context/tension → payoff/insight → CTA, mapped
-      onto single post / caption / carousel / thread (**hook + payoff non-negotiable**).
-    - **Accessible source attribution** — every fact-bearing post puts the source where the
-      reader can follow it (caption link / `first_comment` / on-image). **Distinct from the
-      pipeline's primary-source *verification*** (`pipeline-orchestrator`): verify it's true,
-      *then* make it followable. Reuses existing mechanisms (`link_tag`, `first_comment`,
-      `media_compose` subtext, `alt_text`) — **no new plumbing**.
-    - **Hashtag intent** — fewer/intentional; **defers per-platform counts** to the platform
-      skills + brand-kit sets (no contradiction).
-    - **Carousel arc** — slide-1 promise → one beat per slide → CTA/source.
-  ⚠️ **Anti-orphan design:** a consulted skill only earns its place if something loads it —
-  so content-craft has **real trigger phrases AND is explicitly invoked** by the 6 platform
-  skills' Craft sections + `pipeline-orchestrator` Phase 1/3 + `output-manager` (not a passive
-  "see also"). The hard **accessible-sourcing + copy-structure checks live in the persona
-  checklist** (the always-run, non-skippable pre-publish gate — prose alone is skippable).
-  Guided mode reframed buried-opt-in → **offered up front** (idea-input/research-trends).
-  **Deferred (advisor-confirmed):** a deterministic "stat-without-URL" `content_validate`
-  nudge — false-positives on "3× faster"/"month 3", doesn't enforce; the real deterministic
-  gap is the already-deferred INDIV-004 dispatch re-validation. **Prose-first** on the
-  single-origin build (1 new capability + 10 edited; **no `lib/` change**). **Tools stay 30,
-  skills 14→15.** All four gates green at every commit.
-- **Instagram publish race fixed (INIT-002)** — `adapters/instagram.js` created the media
-  container and called `media_publish` on the next line, **never polling `status_code`**;
-  under real timing IG returns `9007`/`2207027` ("media can't be published yet") and **live
-  IG posts fail**. Added `waitForContainer` — polls until `FINISHED` before publish, on both
-  the single-image and carousel paths. Because `lib/dispatch.js` + `lib/analytics.js` import
-  the same adapter, this **also closes the race on the queue/scheduler dispatch path**.
-  **Live-confirmed** on @protocode_ (IG media `17874248277652862`, FB `…_1411992160954659`).
-- **Multi-brand management (INDIV-006)** — `brand_voice` `list` / `use` (active-account
-  pointer in its own `brand-active.json`, brand.json stays flat) / `clone`. Reads default to
-  active + echo; **writes/publishing/compose stay explicit** (pointer never redirects a post).
-- **Audience segments (INDIV-005)** — `audiences{}` second tailoring axis; `resolveVoice`
-  layers **base ▸ audience ▸ platform** (platform wins; replace semantics; provenance);
-  unknown audience flagged, not silently applied.
-- **Content policies / guardrails (INDIV-004)** — `policy` block + pure `checkPolicy`; always→
-  warn, sponsored→error (per-call `sponsored` flag), **word-boundary** disclosure matching.
-  ⚠️ **Direct publish hard-blocks; queue/scheduler dispatch does NOT re-validate** (deferred).
-- **Individualization P1–P3 (INDIV-001/002/003)** — visual brand kit + 5 rebuilt templates;
-  `brand_schema` + guided `brand-setup`; per-platform voice tailoring (`resolveVoice`).
-- **Build/install pipeline hardening** — `lib/` ships, **pack-smoke gate**, CI gates
-  `development` + `feature/**`, npm workspace, engines split, `honk-start` bin. Critique:
-  `PIPELINE_REVIEW.md`. ⚠️ `hermes/` → `agent/` (any `hermes/*` config moves to `agent/*`).
-- **Alt-text + first-comment (ALPHA-014/015)** — IG verified live; **FB alt-text UNVERIFIED**;
-  **FB first-comment needs `pages_manage_engagement`**; IG first-comment needs
-  `instagram_manage_comments`.
+**INIT-008 Store versioning + workflow library v1 (same branch)** — first build off the new
+horizon roadmap: (1) tracking stores persist as `{schema_version, items}` (legacy shapes read
+transparently, upgraded on next save; newer versions read best-effort with warning; brand
+stores deliberately stay flat per the INDIV-006 portability contract); (2) `lib/workflows.ts`
++ `workflow_list` tool (**tools 30→31**) with 3 seed entries, `brief.workflow` field,
+idea-input leads guided mode with the workflow pick-list, orchestrator honors the entry as the
+run's contract; PRINCIPLES §3/§4 amended (machine spec in code; §4 workflow row → shipped).
 
-**State:** 30 tools · **15 skills** · 5 templates · 2 runtime deps · **121 unit + 41-check
-smoke + `build:check` + `pack:smoke`** all green. (Pushed to `origin/development`.)
+**State:** **31 tools** · 15 skills · 5 templates · 2 runtime deps · **154 unit + 45-check
+smoke + build:check + pack:smoke** all green at every commit.
 
-## On `development` now (recently merged — this session)
-
-- **Dispatch-time policy gate (2026-07-02) — INIT-005** — closes the INDIV-004 deferral
-  flagged in three places ("queue/scheduler dispatch does NOT re-validate"). `queue_dispatch`
-  and the scheduler called `publishAudited` directly, so a **sponsored post could be queued
-  and later dispatched without its required disclosure** — the hard block only existed on the
-  direct-publish path, and the unattended scheduler has no agent to catch it. Fix:
-  `validateWithPolicy` extracted to a shared **`lib/policy-gate.ts`** and enforced **inside
-  `publishAudited`** — the single chokepoint every publish path (direct, `queue_dispatch`,
-  scheduler) already goes through, so a future dispatch path can't forget it. A failure throws
-  **before `publish()`** (no network call), the existing catch records a **`failed` audit
-  entry**, and the caller marks the queue item `failed` (no silent publish, no silent drop).
-  `sponsored` is now **persisted on the queue item** (optional `QueueItem.sponsored`, threaded
-  through `queue.add` + the `queue_add` tool + both `queue_dispatch` paths + scheduler);
-  pre-existing `~/.honk/queue.json` items deserialize as not-sponsored — **no migration**.
-  Tools stay 30. **127 unit + 43-check smoke + build:check + pack:smoke green.** Pushed to
-  `origin/development`. ⚠️ **Known boundary (backlog):** the gate loads policy via
-  `brand.getOrEmpty(account)` with **no active-account fallback** — a post queued without an
-  explicit `account:` gets no policy enforcement. Consistent with the direct path + the
-  "publishing is always explicit about account" convention, so **not a regression**; noted for
-  the account-registry follow-up.
-- **PROJECT_PRINCIPLES.md + ROADMAP_NOTES.md created (2026-06-30)** — steering layer
-  established. PRINCIPLES is normative: two-axis mode model (input × authority), guided mode
-  minimum input surface, workflow library concept (build deferred), schema-symmetry as
-  guided→UI bridge, autonomous self-direction checklist, delegation rule. ROADMAP_NOTES is
-  living: research on Zapier templates, scaffolding CLIs, command palettes, API→CLI→UI parity.
-  Both wired into CLAUDE.md table + AGENTS.md reading list (item 5, items 6–11 renumbered).
-  **No code changed. No gates needed.**
-- **Brand model → per-post hashtags/CTA + repo data hygiene (2026-07-01)** — supersedes the
-  "@protocode_ brand kit populated" entry above. Hashtags and CTAs are now **generated per
-  post to match content**; the kit holds **only a few stable niche hashtags** as identity
-  anchors, not a canned content library. Live `~/.honk/brand.json` (`protocode_`) slimmed:
-  `#DevSecOps`, the four hashtag `sets`, the CTA rotation, and the per-platform hashtag/CTA
-  lists all removed; `hashtags.default` retuned to niche anchors (`#BuildInPublic`,
-  `#DevTools`, `#AITools`). The model is encoded in prose: `content-craft` §4 + `brand-setup`
-  group 3 (regen via `npm run build`).
-- **Runtime state out of the repo (2026-07-01)** — `.gitignore` still pointed at the
-  pre-rename `spmc-server/` path, so runtime user-data had silently become tracked. Repointed
-  to `honk-server/`; untracked live `queue.json` + the stale-orphan `analytics.json` /
-  `followups.json`; kept `honk-server/data/brand.json` as a **generic committed sample** (no
-  real handle/tags). **Queue store relocated** `src/queue/store.ts` → `dataFile('queue.json')`
-  (→ `~/.honk`), now consistent with brand/analytics/followups/audit; existing drafts migrated
-  to `~/.honk/queue.json`. All four gates green.
-- **proto-gear v0.10.0 capability package** merged from `chore/proto-gear-update` (`--no-ff`):
-  `.proto-gear/` (commands/skills/workflows/agents) + editor rule mirrors + root doc scaffolds.
+⚠️ Session notes:
+- Sandbox test-run artifact: `@img/sharp-linux-x64` + `@img/sharp-libvips-linux-x64` were copied
+  into `honk-server/node_modules/@img/` so the Linux sandbox could run the compose tests
+  (Windows-installed sharp binaries don't load there). **No lockfile change**; harmless on
+  Windows; a fresh `npm install` normalizes it.
+- An untracked `.claude/` dir exists at repo root (Cowork session artifact) — ignore or gitignore.
 
 ## NEXT
 
-0. **Content quality — fundamentals SHIPPED (INIT-003); now prove + extend.** The
-   brand-agnostic craft layer is in place. Remaining content-quality work:
-   - **Live-prove it.** The real test is a real post going out **materially better** — draft
-     the next fact-bearing post through `content-craft` + the persona gates and confirm
-     hook→payoff→CTA + a **followable** source (caption link / `first_comment`), not flat
-     facts. A before/after draft was produced this session; a live publish wasn't.
-   - **Brand layer (SECONDARY — suggest INIT-004).** Logo on-image (`logo_url`/`icon_url`),
-     palette, visual identity → brand kit (`brand-setup`/`brand_schema`). Complements the
-     fundamentals; does **not** gate them. The `protocode_` brand kit exists and now follows
-     the per-post model (niche anchors only); `logo_url` (corner stamp) is still the open gap.
-   - **Templates beyond the floor (optional).** The carousel *structure* is now documented;
-     new multi-slide *templates* (vs. the current 5) are a possible follow-up, not required.
-   See memory `post-quality-standards`.
-1. **INDIV-007 Learned/adaptive** — voice few-shot examples + observed best-times
-   (`best_time` `observedWindows`). **Data-gated** — needs accrued analytics history (still
-   unverified). Plan it, expect to defer; natural point to pause Individualization and start
-   the **UI phase (BETA-011)**. Carry-forward follow-ups (deferred, for the UI phase):
-   INDIV-006 account registry (**incl. the INIT-005 boundary** — dispatch policy gate has no
-   active-account fallback, so a post queued without an explicit `account:` isn't enforced);
-   INDIV-005 segment enumeration in guided mode. (INDIV-004 deterministic dispatch gate —
-   **DONE, shipped as INIT-005**; the `auto_publish` deterministic gate remains agent-guided.)
-2. **Live verification (needs valid creds — read scopes).** Turnkey steps in
-   `ANALYTICS_VERIFICATION.md`. Analytics path de-risked 2026-06-25 (metric sets re-verified,
-   no drift); remaining = the live end-to-end run + Threads (never had creds). **FB re-verify**
-   (`pages_manage_engagement` first-comment; re-test FB alt-text two-step set).
-3. **INBOX-001** — decide Phase 0 (public reply) vs Phase 1 (DM, needs Meta App Review). Plan
-   in `INBOX_FEATURE_PLAN.md`.
-4. **Deferred:** publish story (#4 — `honk` npm name, check availability); ALPHA-016 delete
-   (destructive, scope-paused); Mastodon (017) / LinkedIn (018) creds; X 402; BETA-011 UI.
+0. **Merge + push INIT-006** (review first). Then the npm **publish story** is nearly unblocked:
+   LICENSE + metadata done; remaining = check `honk` name availability on the registry (was
+   deliberately out of scope for this local-only session), then RELEASING.md flow.
+1. **Content quality — live-prove INIT-003.** Draft the next fact-bearing post through
+   `content-craft` + persona gates; confirm hook→payoff→CTA + a followable source lands
+   materially better. A before/after draft exists; a live publish doesn't.
+2. **INDIV-007 Learned/adaptive** — data-gated on accrued analytics; natural pause point to start
+   the **UI phase (BETA-011)**. Carry-forward for the UI phase: full account registry
+   (brand-active.json is its seed), INDIV-005 segment enumeration in guided mode.
+3. **Live verification (needs valid creds — read scopes).** `ANALYTICS_VERIFICATION.md` runbook;
+   FB re-verify (`pages_manage_engagement` first-comment, FB alt-text read-back); Threads never
+   had creds.
+4. **INBOX-001** — Phase 0 (public reply) vs Phase 1 (DM, Meta App Review) decision;
+   plan in `INBOX_FEATURE_PLAN.md`.
+5. **Deferred:** ALPHA-016 delete (destructive, scope-paused); Mastodon (017) / LinkedIn (018)
+   creds; X 402; BETA-011 UI (stop-line).
 
 ## Conventions In Force
 
-- **TypeScript — default from now on.** All new source files in `honk-server/` are `.ts` in
-  `src/` (compiled by `tsc` via `tsconfig.json`; `rootDir: src`, `outDir: .` so compiled JS
-  lands at existing paths — test and build imports unchanged). The old `.js` source files in
-  `lib/`, `adapters/`, `media/`, `queue/`, `scheduler/`, `index.js`, `run.js`, `start.js` are
-  now **generated** outputs — do not edit them, edit `src/` instead. Run `npm run build:ts`
-  (or `npm run pretest`) to compile; `npm run type-check` for type-check without emit.
-  `pretest` runs `tsc` automatically before `npm test`. `prepublishOnly` runs `type-check`
-  before the full gate suite. Strict mode + NodeNext module resolution + `esModuleInterop`.
+- **TypeScript default** — new source in `honk-server/src/*.ts`; compiled JS at existing paths is
+  GENERATED (never hand-edit; `npm run build:ts`, `pretest` compiles automatically).
+- **Outbound HTTP** — never call bare `fetch` in adapters/media: import
+  `{ fetchWithTimeout as fetch } from '../lib/http.js'`. Secrets are scrubbed at the audit
+  boundary, but don't put tokens in error text anyway.
+- **JSON state writes** — use `lib/jsonstore.ts` (`writeJsonAtomic` / `readJsonOr`), not bare
+  `writeFileSync`, for anything under `~/.honk/`.
 - **Build origin:** tool → `src/lib/tools.ts`; limit → `src/lib/specs.ts`; credential/media key →
-  `src/lib/config.ts` (+ `.env.example`); skill/agent prose → `capabilities/`; template →
-  `media/templates/<id>/`; version → `honk-server/package.json`. Then `npm run build:ts && npm run build`.
-  Adding `capabilities/skills/<x>.md` auto-registers `skills/<x>/SKILL.md` (build discovers
-  the tree). **Never hand-edit generated artifacts** (`build:check` rejects it).
+  `src/lib/config.ts` (+ `.env.example` — root and `honk-server/env.example` are ONE canonical
+  content, keep both in sync); skill/agent prose → `capabilities/`; template →
+  `media/templates/<id>/`; version → `honk-server/package.json`. Then `npm run build:ts && npm run
+  build`. **Never hand-edit generated artifacts** (`build:check` rejects it).
 - **Gates (green at every commit):** `npm test` · `npm run build:check` · (in `honk-server`)
-  `npm run test:smoke` · `npm run pack:smoke`. CI runs all on push to `main` / `development` /
-  `feature/**` + PRs; `prepublishOnly` re-runs them; the opt-in pre-commit hook runs
-  `build:check`. ⚠️ The Bash tool here is git-bash (not PowerShell); commit via `git commit -F
-  <msgfile>` to dodge here-string/apostrophe breakage.
+  `npm run test:smoke` · `npm run pack:smoke`. CI gates `main`/`development`/`feature/**` + PRs.
+- **Narrative history → `PROJECT_HISTORY.md`** (newest first); `PROJECT_STATUS.md` stays a lean
+  snapshot (tables + current state only).
 - **Bins:** `honk` = `run.js` (MCP only) · `honk-start` = `start.js` (MCP + scheduler).
-- **Document permission scopes:** every feature touching a platform documents the scope it
-  needs (`.env.example` + the skill) — AGENTS.md rule #7.
-- **Credentials** in `~/.claude/honk.env` (falls back to `spmc.env` during transition);
-  multi-account `KEY__ACCOUNT`. **Always confirm post content with the user before publishing**
-  (no un-publish; `duplicate_check` guards reposts).
+- **Credentials** in `~/.claude/honk.env` (`spmc.env` read as transition fallback); named accounts
+  are **`ACCOUNT__KEY`** prefix; default account = bare keys, NOT a fallback. **Always confirm
+  post content with the user before publishing.**
 - **Git flow:** branch off `development`, merge `--no-ff` (no PR), push; `main` via PR only.
-  ⚠️ `pg`'s ticket counter is out of sync with git's ticket IDs — confirm the next free ID
-  against git history (it re-echoed INIT-002, already used by the IG fix → this work is INIT-003).
-- **Rename SPMC → Honk: COMPLETE.** All phases done: data dir `~/.honk/`, package `honk`,
-  bins `honk`/`honk-start`, MCP key `honk`, server dir `honk-server/`, all docs swept.
-  Existing `SPMC_*` env var names inside `honk.env` are unchanged (platform creds, not product naming).
+  Commit via `git commit -F <msgfile>` (git-bash quoting). `pg`'s ticket counter is out of sync
+  with git — confirm next free ID against git history (INIT-006 was this session's).
+- **Document permission scopes** for every platform-touching feature (`.env.example` + skill).

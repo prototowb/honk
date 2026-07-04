@@ -11,6 +11,7 @@ import { hashContent }                  from './hash.js';
 import { schedule as scheduleFollowup } from './followups.js';
 import { extractPostId }                from './analytics.js';
 import { validateWithPolicy }           from './policy-gate.js';
+import { redactSecrets }                from './http.js';
 import type { PublishResult, AuditSource } from './types.js';
 
 // Routes to the right adapter and returns a structured result:
@@ -117,8 +118,13 @@ export async function publishAudited(platform: string, content: Record<string, u
     catch { /* analytics follow-up is best-effort */ }
     return result;
   } catch (e) {
-    auditRecord({ ...base, status: 'failed', error: (e as Error).message });
-    noteFromError(platform, e);
-    throw e;
+    // Scrub token-shaped material before the message is persisted (audit) or
+    // surfaced to the agent (INIT-006). noteFromError only pattern-matches
+    // rate-limit shapes, so it sees the redacted text unchanged.
+    const err = e as Error;
+    err.message = redactSecrets(err.message);
+    auditRecord({ ...base, status: 'failed', error: err.message });
+    noteFromError(platform, err);
+    throw err;
   }
 }

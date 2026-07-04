@@ -7,6 +7,7 @@
 // per-run delta. Credential-free; no adapter touched.
 
 import type { BriefField, BrandProfile } from './types.js';
+import { WORKFLOWS } from './workflows.js';
 
 // Each field carries: a stable `key`, a human `label`, a `type`
 // (text | enum | multiselect | datetime | list), `required`, `help`, optional
@@ -15,6 +16,12 @@ import type { BriefField, BrandProfile } from './types.js';
 // answers. `requiredIf` is a conditional requirement that prose/UI enforces (a
 // static schema can't express the condition itself).
 export const BRIEF_FIELDS: BriefField[] = [
+  {
+    key: 'workflow', label: 'Workflow starter', type: 'enum', required: false,
+    options: [...WORKFLOWS.map(w => w.name), 'none'],
+    help: 'Pick a pre-configured workflow starter (see workflow_list) — it pre-answers goal/platforms/format so you only supply what it requires. "none" = free-form run.',
+    brandKitPath: null,
+  },
   {
     key: 'angle', label: 'Angle / message', type: 'text', required: true,
     help: 'The one thing this piece says — the specific claim or story, not a vague topic.',

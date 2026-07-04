@@ -10,6 +10,7 @@ import { hashContent } from './hash.js';
 import { schedule as scheduleFollowup } from './followups.js';
 import { extractPostId } from './analytics.js';
 import { validateWithPolicy } from './policy-gate.js';
+import { redactSecrets } from './http.js';
 // Routes to the right adapter and returns a structured result:
 //   { summary, raw }  — summary is the human-readable line shown to the agent.
 export async function publish(platform, content, account = '') {
@@ -119,8 +120,13 @@ export async function publishAudited(platform, content, account = '', meta = {})
         return result;
     }
     catch (e) {
-        auditRecord({ ...base, status: 'failed', error: e.message });
-        noteFromError(platform, e);
-        throw e;
+        // Scrub token-shaped material before the message is persisted (audit) or
+        // surfaced to the agent (INIT-006). noteFromError only pattern-matches
+        // rate-limit shapes, so it sees the redacted text unchanged.
+        const err = e;
+        err.message = redactSecrets(err.message);
+        auditRecord({ ...base, status: 'failed', error: err.message });
+        noteFromError(platform, err);
+        throw err;
     }
 }

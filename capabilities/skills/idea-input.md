@@ -33,6 +33,12 @@ inherit it. Declining is fine; sensible defaults apply.
 straight to a single draft. A two-line offer ("want me to walk you through a short
 brief, or do you have it?") costs nothing and produces a sharper post.
 
+**Lead with the workflow library:** call `{{tool:workflow_list}}` and offer its
+entries as the pick-list ("this looks like a *weekly-insight* / *product-update* /
+*engagement-spark* run — pick one, or free-form?"). A picked entry pre-answers
+goal/platforms/format, so guided intake shrinks to the entry's required inputs
+(each delegable with "you pick"). Set `workflow` on the brief; "none" = free-form.
+
 When the user takes it — or says "guided" — don't ask for everything at once. Call
 `brief_schema` for the field list, then collect **one field at a time**, in order,
 **skipping any the brand kit already pre-fills** (confirm those rather than re-asking).

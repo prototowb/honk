@@ -1,3 +1,4 @@
+import { fetchWithTimeout as fetch } from '../lib/http.js';
 import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
 import { basename, extname } from 'path';

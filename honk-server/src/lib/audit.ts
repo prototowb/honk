@@ -1,4 +1,5 @@
 import { appendFileSync, readFileSync, existsSync } from 'fs';
+import { redactSecrets } from './http.js';
 import { dataFile } from './paths.js';
 import type { AuditEntry, AuditStatus, AuditSource } from './types.js';
 
@@ -11,7 +12,9 @@ function file(): string {
 }
 
 export function record(entry: Omit<AuditEntry, 'ts'>): void {
-  const line = JSON.stringify({ ts: new Date().toISOString(), ...entry });
+  // Redact at the persistence boundary: platform error bodies / URLs can echo
+  // credentials, and the audit log is durable (INIT-006).
+  const line = redactSecrets(JSON.stringify({ ts: new Date().toISOString(), ...entry }));
   try {
     appendFileSync(file(), line + '\n');
   } catch {

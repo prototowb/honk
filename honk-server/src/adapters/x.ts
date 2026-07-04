@@ -1,3 +1,4 @@
+import { fetchWithTimeout as fetch } from '../lib/http.js';
 import { randomBytes, createHmac } from 'crypto';
 import { env } from '../lib/env.js';
 

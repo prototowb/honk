@@ -88,8 +88,12 @@ starters.
   platform/format recommendations to surface, and which skills are activated
 - Not a prompt — a *parameterized spec*. The agent loads it and drives the session from it.
 
-**Where it lives:** `capabilities/workflows/<name>.md` — parallel to `capabilities/skills/`.
-Build is deferred; the concept governs design decisions now.
+**Where it lives (v1 shipped, INIT-008):** the machine spec lives in
+`honk-server/src/lib/workflows.ts` (single origin, like `specs.ts`/`brief.ts`) and surfaces
+through the `workflow_list` tool — an amendment to the original `capabilities/workflows/*.md`
+location, made for schema symmetry (required inputs ARE brief-field keys, testable) and
+because npm surfaces ship `lib/`, not `capabilities/`. Per-entry long-form prose can join
+`capabilities/` later without moving the spec.
 
 **Conceptual entry shape:**
 ```
@@ -128,11 +132,11 @@ prompt and the eventual UI control.**
 | Audience segment   | `brief.audience`                         | shipped | Segment selector         |
 | Draft approval     | `policy.auto_publish` gate (not a field) | shipped | Preview + approve screen |
 | Format selection   | `brief.format`                           | planned | Format card picker       |
-| Workflow starter   | `brief.workflow`                         | planned | Workflow gallery         |
+| Workflow starter   | `brief.workflow` + `workflow_list`       | shipped | Workflow gallery         |
 
-> **Status** = whether the schema field exists today. `brief.format` and `brief.workflow` are
-> **planned, not yet built** (the latter gated on the §3 workflow library) — flagged so guided
-> flows don't reference them as if shipped.
+> **Status** = whether the schema field exists today. `brief.workflow` shipped with the
+> workflow library v1 (INIT-008). `brief.format` remains **planned, not yet built** — flagged
+> so guided flows don't reference it as if shipped.
 
 **Corollary:** Don't design guided flows that skip this mapping. A guided decision that's hard
 to map to a schema field signals either a missing field or an underspecified decision.

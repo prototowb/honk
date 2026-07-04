@@ -21,6 +21,7 @@ import * as brand from './lib/brand.js';
 import { tagUrl } from './lib/links.js';
 import { bestTimes, formatBestTimes } from './lib/besttime.js';
 import { briefSchema, formatBriefSchema } from './lib/brief.js';
+import { listWorkflows, getWorkflow, formatWorkflow, formatWorkflows } from './lib/workflows.js';
 import { brandSchema, formatBrandSchema } from './lib/brand-schema.js';
 import { TOOLS } from './lib/tools.js';
 import { readFileSync } from 'node:fs';
@@ -312,6 +313,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             case 'best_time': {
                 const result = bestTimes({ platform: String(a.platform), count: a.count, account: String(a.account ?? '') });
                 return ok(formatBestTimes(result));
+            }
+            case 'workflow_list': {
+                if (a.name != null) {
+                    const w = getWorkflow(String(a.name));
+                    if (!w)
+                        return ok(`No workflow named '${String(a.name)}'. Available: ${listWorkflows().map(x => x.name).join(', ')}.`);
+                    return ok(formatWorkflow(w));
+                }
+                return ok(formatWorkflows(listWorkflows()));
             }
             case 'brief_schema': {
                 const profile = brand.get(String(a.account ?? ''));

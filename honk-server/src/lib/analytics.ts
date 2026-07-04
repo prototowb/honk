@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readVersioned, writeVersionedAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
 import type { AnalyticsSnapshot } from './types.js';
 
@@ -47,13 +47,12 @@ function file(): string {
 }
 
 function load(): AnalyticsSnapshot[] {
-  if (!existsSync(file())) return [];
-  try { return JSON.parse(readFileSync(file(), 'utf8')) as AnalyticsSnapshot[]; }
-  catch { return []; }
+  // Versioned store with legacy bare-shape fallback (INIT-008).
+  return readVersioned<AnalyticsSnapshot[]>(file(), []);
 }
 
 function save(items: AnalyticsSnapshot[]): void {
-  try { writeFileSync(file(), JSON.stringify(items, null, 2)); }
+  try { writeVersionedAtomic(file(), items); }
   catch { /* tracking write must not throw into a tool call */ }
 }
 

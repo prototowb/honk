@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readVersioned, writeVersionedAtomic } from '../lib/jsonstore.js';
 import { dataFile } from '../lib/paths.js';
 import type { QueueItem } from '../lib/types.js';
 
@@ -8,14 +8,14 @@ import type { QueueItem } from '../lib/types.js';
 function file(): string { return dataFile('queue.json'); }
 
 function load(): QueueItem[] {
-  const f = file();
-  if (!existsSync(f)) return [];
-  try { return JSON.parse(readFileSync(f, 'utf8')) as QueueItem[]; }
-  catch { return []; }
+  // Corrupt files are backed up beside the store before falling back (INIT-006);
+  // the store is { schema_version, items } with legacy bare arrays read
+  // transparently and upgraded on next save (INIT-008).
+  return readVersioned<QueueItem[]>(file(), []);
 }
 
 function save(items: QueueItem[]): void {
-  writeFileSync(file(), JSON.stringify(items, null, 2));
+  writeVersionedAtomic(file(), items);
 }
 
 function uid(): string {
