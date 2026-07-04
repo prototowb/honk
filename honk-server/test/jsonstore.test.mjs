@@ -35,3 +35,37 @@ test('readJsonOr parses a healthy file normally (no backup created)', () => {
   assert.deepEqual(readJsonOr(p, []), [1, 2, 3]);
   assert.ok(!existsSync(`${p}.corrupt`), 'no backup for a healthy file');
 });
+
+// ── INIT-008: versioned stores ────────────────────────────────────────────────
+
+const { readVersioned, writeVersionedAtomic, STORE_SCHEMA_VERSION } = await import('../lib/jsonstore.js');
+
+test('writeVersionedAtomic wraps items with schema_version; readVersioned unwraps', () => {
+  const p = join(dir, 'versioned.json');
+  writeVersionedAtomic(p, [{ id: 'q_1' }]);
+  const onDisk = JSON.parse(readFileSync(p, 'utf8'));
+  assert.equal(onDisk.schema_version, STORE_SCHEMA_VERSION);
+  assert.deepEqual(readVersioned(p, []), [{ id: 'q_1' }]);
+});
+
+test('readVersioned reads a LEGACY bare array transparently (pre-versioning file)', () => {
+  const p = join(dir, 'legacy.json');
+  writeFileSync(p, JSON.stringify([{ id: 'q_old' }]));
+  assert.deepEqual(readVersioned(p, []), [{ id: 'q_old' }], 'legacy shape must keep working');
+});
+
+test('readVersioned reads a legacy bare object map transparently', () => {
+  const p = join(dir, 'legacy-map.json');
+  writeFileSync(p, JSON.stringify({ x: { count: 2 } }));
+  assert.deepEqual(readVersioned(p, {}), { x: { count: 2 } });
+});
+
+test('readVersioned tolerates a NEWER schema_version best-effort (no data loss)', () => {
+  const p = join(dir, 'future.json');
+  writeFileSync(p, JSON.stringify({ schema_version: STORE_SCHEMA_VERSION + 1, items: [1] }));
+  assert.deepEqual(readVersioned(p, []), [1]);
+});
+
+test('readVersioned returns the fallback for a missing file', () => {
+  assert.deepEqual(readVersioned(join(dir, 'nope.json'), ['fb']), ['fb']);
+});

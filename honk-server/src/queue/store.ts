@@ -1,4 +1,4 @@
-import { readJsonOr, writeJsonAtomic } from '../lib/jsonstore.js';
+import { readVersioned, writeVersionedAtomic } from '../lib/jsonstore.js';
 import { dataFile } from '../lib/paths.js';
 import type { QueueItem } from '../lib/types.js';
 
@@ -8,14 +8,14 @@ import type { QueueItem } from '../lib/types.js';
 function file(): string { return dataFile('queue.json'); }
 
 function load(): QueueItem[] {
-  // readJsonOr backs a corrupt file up beside the store before falling back —
-  // the queue holds user drafts, and a silent empty-on-corrupt would let the
-  // next save() wipe them (INIT-006).
-  return readJsonOr<QueueItem[]>(file(), []);
+  // Corrupt files are backed up beside the store before falling back (INIT-006);
+  // the store is { schema_version, items } with legacy bare arrays read
+  // transparently and upgraded on next save (INIT-008).
+  return readVersioned<QueueItem[]>(file(), []);
 }
 
 function save(items: QueueItem[]): void {
-  writeJsonAtomic(file(), items);
+  writeVersionedAtomic(file(), items);
 }
 
 function uid(): string {

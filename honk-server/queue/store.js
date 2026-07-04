@@ -1,17 +1,17 @@
-import { readJsonOr, writeJsonAtomic } from '../lib/jsonstore.js';
+import { readVersioned, writeVersionedAtomic } from '../lib/jsonstore.js';
 import { dataFile } from '../lib/paths.js';
 // Runtime state — lives in ~/.honk (via dataFile), consistent with the brand kit,
 // analytics, followups, and audit log. Never inside the repo/install dir. Resolved
 // lazily each call so tests can point HONK_DATA_DIR at a temp dir.
 function file() { return dataFile('queue.json'); }
 function load() {
-    // readJsonOr backs a corrupt file up beside the store before falling back —
-    // the queue holds user drafts, and a silent empty-on-corrupt would let the
-    // next save() wipe them (INIT-006).
-    return readJsonOr(file(), []);
+    // Corrupt files are backed up beside the store before falling back (INIT-006);
+    // the store is { schema_version, items } with legacy bare arrays read
+    // transparently and upgraded on next save (INIT-008).
+    return readVersioned(file(), []);
 }
 function save(items) {
-    writeJsonAtomic(file(), items);
+    writeVersionedAtomic(file(), items);
 }
 function uid() {
     return `q_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;

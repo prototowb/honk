@@ -1,5 +1,4 @@
-import { readFileSync, existsSync } from 'fs';
-import { writeJsonAtomic } from './jsonstore.js';
+import { readVersioned, writeVersionedAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
 import { SUPPORTED_PLATFORMS, extractPostId, fetchMetrics } from './analytics.js';
 import type { FollowupJob } from './types.js';
@@ -26,13 +25,12 @@ function delayMs(): number {
 function file(): string { return dataFile('followups.json'); }
 
 function load(): FollowupJob[] {
-  if (!existsSync(file())) return [];
-  try { return JSON.parse(readFileSync(file(), 'utf8')) as FollowupJob[]; }
-  catch { return []; }
+  // Versioned store with legacy bare-shape fallback (INIT-008).
+  return readVersioned<FollowupJob[]>(file(), []);
 }
 
 function save(items: FollowupJob[]): void {
-  try { writeJsonAtomic(file(), items); }
+  try { writeVersionedAtomic(file(), items); }
   catch { /* never break a publish over a tracking write */ }
 }
 

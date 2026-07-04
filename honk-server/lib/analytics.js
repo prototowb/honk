@@ -1,5 +1,4 @@
-import { readFileSync, existsSync } from 'fs';
-import { writeJsonAtomic } from './jsonstore.js';
+import { readVersioned, writeVersionedAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
 import * as instagram from '../adapters/instagram.js';
 import * as facebook from '../adapters/facebook.js';
@@ -41,18 +40,12 @@ function file() {
     return dataFile('analytics.json');
 }
 function load() {
-    if (!existsSync(file()))
-        return [];
-    try {
-        return JSON.parse(readFileSync(file(), 'utf8'));
-    }
-    catch {
-        return [];
-    }
+    // Versioned store with legacy bare-shape fallback (INIT-008).
+    return readVersioned(file(), []);
 }
 function save(items) {
     try {
-        writeJsonAtomic(file(), items);
+        writeVersionedAtomic(file(), items);
     }
     catch { /* tracking write must not throw into a tool call */ }
 }

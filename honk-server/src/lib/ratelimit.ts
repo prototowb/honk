@@ -1,5 +1,4 @@
-import { readFileSync, existsSync } from 'fs';
-import { writeJsonAtomic } from './jsonstore.js';
+import { readVersioned, writeVersionedAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
 import type { RateLimitEntry } from './types.js';
 
@@ -14,13 +13,12 @@ function file(): string {
 }
 
 function load(): Record<string, RateLimitEntry> {
-  if (!existsSync(file())) return {};
-  try { return JSON.parse(readFileSync(file(), 'utf8')) as Record<string, RateLimitEntry>; }
-  catch { return {}; }
+  // Versioned store with legacy bare-shape fallback (INIT-008).
+  return readVersioned<Record<string, RateLimitEntry>>(file(), {});
 }
 
 function save(data: Record<string, RateLimitEntry>): void {
-  try { writeJsonAtomic(file(), data); }
+  try { writeVersionedAtomic(file(), data); }
   catch { /* never break a publish over a tracking write */ }
 }
 
