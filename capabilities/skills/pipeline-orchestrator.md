@@ -48,7 +48,10 @@ accessible sourcing) **plus** its own channel craft and limits — follow both, 
 hardcode numbers here.
 
 - For one idea across many platforms, start with `content_adapt(text, platforms)` for length-fitted drafts, then rewrite each in the platform's voice (adapt does length only, not tone).
-- Validate every variant with `content_validate(platform, content)` before it leaves this phase.
+- Validate every variant with `content_validate(platform, content)` while iterating;
+  run `content_check(platform, content, account)` as the final gate before anything
+  is queued — it folds in the duplicate guard and schedule sanity and renders the
+  non-skippable agent checklist in one report.
 
 ## Phase 4 — Visuals
 

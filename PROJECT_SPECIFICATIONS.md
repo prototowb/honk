@@ -144,8 +144,8 @@ ALPHA-017/018 · INBOX-001 · publish story.
 registry (H1) · store versioning (H0) · SQLite-via-node:sqlite decision (H1) · asset
 registry / DAM seed (H2) · blog + newsletter channels (H2) · campaigns (H2) · content
 recycling (H2) · remote MCP hosting (H2) · brand-portal export (H3) · approval workflows +
-vault + teams (H3) · A/B variants (H3) · guardian review posture (doctrine now, see
-PROJECT_ARCHITECTURE security model).
+vault + teams (H3) · A/B variants (H3) · guardian review posture — doctrine in
+PROJECT_ARCHITECTURE security model; its `content_check` report surface **shipped (INIT-009)**.
 
 ## Agent Integration Contract
 

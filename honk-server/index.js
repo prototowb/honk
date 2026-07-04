@@ -22,6 +22,7 @@ import { tagUrl } from './lib/links.js';
 import { bestTimes, formatBestTimes } from './lib/besttime.js';
 import { briefSchema, formatBriefSchema } from './lib/brief.js';
 import { listWorkflows, getWorkflow, formatWorkflow, formatWorkflows } from './lib/workflows.js';
+import { contentCheck, formatContentCheck } from './lib/report.js';
 import { brandSchema, formatBrandSchema } from './lib/brand-schema.js';
 import { TOOLS } from './lib/tools.js';
 import { readFileSync } from 'node:fs';
@@ -197,6 +198,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             // ── Content intelligence ──────────────────────────────────────────────
             case 'content_validate':
                 return ok(formatValidation(validateWithPolicy(String(a.platform), a.content, String(a.account ?? ''), { sponsored: Boolean(a.sponsored) })));
+            case 'content_check': {
+                const r = contentCheck(String(a.platform), a.content, String(a.account ?? ''), {
+                    sponsored: Boolean(a.sponsored),
+                    scheduled_at: a.scheduled_at != null ? String(a.scheduled_at) : null,
+                    duplicateWindowHours: a.within_hours ?? 168,
+                });
+                return ok(formatContentCheck(r));
+            }
             case 'content_adapt':
                 return ok(formatAdaptation(adapt(String(a.text), a.platforms)));
             case 'config_doctor':

@@ -27,6 +27,11 @@ in `honk-server/package.json` and flows into every generated artifact via
   content in both places now.
 
 ### Added
+- **`content_check` — one-call pre-publish report** (INIT-009). Runs every
+  deterministic gate at once (platform rules, brand policy/disclosures, duplicate
+  guard, schedule sanity) and returns a single pass/warn/block verdict plus the
+  agent-judged checklist the server cannot verify. The final review step before
+  queueing or publishing; the dispatch gate still enforces blocks independently.
 - **Workflow library v1** (INIT-008) — named, reusable workflow starters
   (`weekly-insight`, `product-update`, `engagement-spark`) via the new
   `workflow_list` tool; each declares required inputs (brief-schema field keys),
