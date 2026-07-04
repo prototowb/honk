@@ -219,6 +219,16 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('best_time rejects an unknown platform', bad.isError && /unknown platform/i.test(text(bad)));
 }
 
+// content_check — the aggregated pre-publish report (INIT-009), no credentials.
+{
+  const r = await client.callTool({ name: 'content_check', arguments: { platform: 'bluesky', content: { text: 'smoke check' } } });
+  check('content_check passes clean content with the agent checklist', !r.isError && /PASS/.test(text(r)) && /Agent-judged gates/.test(text(r)));
+}
+{
+  const r = await client.callTool({ name: 'content_check', arguments: { platform: 'bluesky', content: { text: 'x'.repeat(400) } } });
+  check('content_check blocks an over-limit payload', !r.isError && /BLOCK/.test(text(r)));
+}
+
 // workflow_list — the workflow library (INIT-008), no credentials.
 {
   const r = await client.callTool({ name: 'workflow_list', arguments: {} });

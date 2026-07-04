@@ -149,6 +149,22 @@ export const TOOLS = [
         },
     },
     {
+        name: 'content_check',
+        description: 'One-call pre-publish report — runs every deterministic gate at once (platform rules + brand policy/disclosures, duplicate guard vs recent publishes, schedule sanity if scheduled_at is given) and returns a single pass/warn/block verdict, followed by the agent-judged checklist (structure, followable sourcing, right account, brand fit, user confirmation) the server cannot verify. Use it as the final review before queue_add or publishing instead of calling content_validate + duplicate_check + schedule_check separately. A block here WILL be enforced by the dispatch gate; warnings are yours to resolve or accept deliberately.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                platform: { type: 'string', description: 'Target platform', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] },
+                content: { type: 'object', description: 'Platform-specific content fields (same shape as the posting tools)' },
+                account: { type: 'string', description: "Named account whose brand-kit policy to check against. Omit to fall back to the ACTIVE brand account (policy only — publishing stays explicit)." },
+                sponsored: SPONSORED_PROP,
+                scheduled_at: { type: 'string', description: 'Optional intended publish time (ISO 8601) — adds timezone/past-time sanity warnings.' },
+                within_hours: { type: 'number', description: 'Duplicate-guard window in hours (default 168 = 7 days).' },
+            },
+            required: ['platform', 'content'],
+        },
+    },
+    {
         name: 'content_adapt',
         description: 'Fit one source text to multiple platforms\' hard limits: auto-splits a long post into an X thread, grapheme-truncates for Bluesky, etc. Returns ready-to-post content per platform plus warnings. This handles the deterministic length-fitting only — rewrite tone/hashtags yourself before posting.',
         inputSchema: {
