@@ -27,6 +27,16 @@ in `honk-server/package.json` and flows into every generated artifact via
   content in both places now.
 
 ### Added
+- **Workflow library v1** (INIT-008) — named, reusable workflow starters
+  (`weekly-insight`, `product-update`, `engagement-spark`) via the new
+  `workflow_list` tool; each declares required inputs (brief-schema field keys),
+  un-guided defaults, format suggestions, and activated capabilities. The brief
+  gains a `workflow` field; guided mode leads with the pick-list. Replaces
+  hand-written per-session prompts.
+- **Store schema versioning** (INIT-008) — tracking stores (queue, followups,
+  analytics, rate-limits) persist as `{schema_version, items}`; legacy files are
+  read transparently and upgraded on next save; files from a newer version are
+  read best-effort and never destroyed.
 - **Outbound HTTP timeouts** (INIT-006) — every platform/API call goes through
   `fetchWithTimeout` (default 30s, `HONK_HTTP_TIMEOUT_MS` override), so a hung
   Graph call can no longer hang an MCP tool response or a scheduler tick.
