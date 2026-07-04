@@ -219,6 +219,16 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('best_time rejects an unknown platform', bad.isError && /unknown platform/i.test(text(bad)));
 }
 
+// workflow_list — the workflow library (INIT-008), no credentials.
+{
+  const r = await client.callTool({ name: 'workflow_list', arguments: {} });
+  check('workflow_list lists the seed entries', !r.isError && /weekly-insight/.test(text(r)) && /product-update/.test(text(r)) && /engagement-spark/.test(text(r)));
+}
+{
+  const r = await client.callTool({ name: 'workflow_list', arguments: { name: 'weekly-insight' } });
+  check('workflow_list name: shows one entry with required inputs', !r.isError && /required inputs/.test(text(r)) && /`angle`/.test(text(r)));
+}
+
 // brief_schema — the guided-mode / web-UI field spec, no credentials.
 {
   const r = await client.callTool({ name: 'brief_schema', arguments: {} });

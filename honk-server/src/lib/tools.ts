@@ -248,6 +248,16 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'workflow_list',
+    description: 'List the workflow library — named, reusable workflow starters (weekly-insight, product-update, engagement-spark) that replace hand-written per-session prompts. Each entry declares its required inputs (brief_schema field keys the user supplies in guided mode, each delegable with "you pick"), the defaults it assumes when un-guided, per-platform format suggestions, and which skills/tools it activates. Pass name to see one entry in full. Use it to offer the user a pick-list at session start (guided mode) or to select an entry yourself from context (un-guided) — say which entry and which defaults you chose. Supervised vs autonomous comes from the brand policy auto_publish at call time, never from the entry.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Show a single workflow entry in full (e.g. "weekly-insight"). Omit to list all.' },
+      },
+    },
+  },
+  {
     name: 'brand_schema',
     description: 'Return the brand-kit field schema with the current values for an account — the single source for guided brand setup (the brand-setup skill) and the future web-UI settings form. Lists the persistent fields a brand kit holds (voice tone/audience, visual identity: accent/bg/surface/heading/body colors + logo/icon/handle/default-template, hashtags, CTAs, notes) grouped, with type/options/help, which are recommended, and what is already set. Call it to drive guided setup (collect the empty recommended fields one at a time) or to show a brand-settings overview. Writes go through brand_voice(action:"set"). The companion to brief_schema (per-run) — this is the persistent layer.',
     inputSchema: {

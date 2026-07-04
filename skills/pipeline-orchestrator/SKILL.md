@@ -21,6 +21,10 @@ proceed (decline is fine; sensible defaults apply).
 
 ## Phase 1 — Concept (Creative Generator)
 
+If the brief names a `workflow` entry, load it first (`workflow_list`
+with that name) and honor its defaults and suggested formats unless the brief
+explicitly overrides them — the entry is the run's contract, not a hint.
+
 From the brief (angle, goal, audience), generate **3 distinct concepts**. Each:
 title, angle, key message, hook, best-fit platforms. Explore genuinely different
 perspectives; keep them on-brand and audience-relevant. Present all 3.
