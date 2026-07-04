@@ -80,7 +80,22 @@ stores deliberately stay flat per the INDIV-006 portability contract); (2) `lib/
 idea-input leads guided mode with the workflow pick-list, orchestrator honors the entry as the
 run's contract; PRINCIPLES §3/§4 amended (machine spec in code; §4 workflow row → shipped).
 
-**State:** **31 tools** · 15 skills · 5 templates · 2 runtime deps · **154 unit + 45-check
+**INIT-009 `content_check` (branch `feature/INIT-009-content-check`)** — aggregated
+pre-publish report ("CI for content", ROADMAP_NOTES R2): every deterministic gate in one call
+(validate+policy w/ active fallback, duplicate guard, schedule sanity) → pass/warn/block +
+the agent-judged ☐ checklist (explicitly not auto-passed). `lib/report.ts`; **tools 31→32**;
+orchestrator/content-intelligence adopt it as the final pre-queue gate.
+
+**Session infrastructure note:** the desktop mount intermittently corrupts `.git/index` and
+`ORIG_HEAD` under the sandbox. Mitigations in force: git runs with
+`GIT_INDEX_FILE=/sessions/<sandbox>/honk.index` (off-mount index) and the INIT-006/007/008
+merge into `development` was created via plumbing (`commit-tree` + `update-ref`) because
+ORIG_HEAD is un-writable. **On your machine this does not apply** — but if git ever reports
+"index file corrupt" locally: `rm .git/index && git reset --mixed HEAD` (working tree is
+never touched by that). All commit trees this session were verified complete (`ls-tree -r`
+counts) and `git fsck` is clean.
+
+**State:** **32 tools** · 15 skills · 5 templates · 2 runtime deps · **160 unit + 47-check
 smoke + build:check + pack:smoke** all green at every commit.
 
 ⚠️ Session notes:
