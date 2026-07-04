@@ -125,3 +125,88 @@ Sources: [Use plugins in Claude](https://support.claude.com/en/articles/13837440
 - SQLite queue with scheduling daemon
 - Media pipeline: local file → CDN → public URL
 - Analytics ingestion tools
+
+## Target Architecture & Evolution (INIT-007)
+
+> The current architecture above is the H0 state. This section defines where it evolves and —
+> critically — **what triggers each step**, so upgrades happen on evidence, not fashion.
+
+### Layering (already latent — make it law)
+
+```
+┌─ Surfaces ────────────────────────────────────────────────┐
+│ stdio MCP (today) · HTTP MCP (H2) · UI (H1, read-first)   │
+├─ Delegation ──────────────────────────────────────────────┤
+│ skills · workflow library · brief/brand schemas · persona │
+├─ Core domain (lib/) ──────────────────────────────────────┤
+│ dispatch chokepoint · validate+policy gate · queue ·      │
+│ brand resolution · analytics/followups · audit            │
+├─ Channel SPI (adapters/) ─────────────────────────────────┤
+│ social (6 today) · blog/CMS · newsletter · … (H2)         │
+├─ State (~/.honk) ─────────────────────────────────────────┤
+│ JSON stores (today) → node:sqlite (trigger below)         │
+└───────────────────────────────────────────────────────────┘
+```
+
+Rules that keep the layering real: **surfaces never import adapters** (only core); **core
+never reads `process.env` for credentials outside `lib/env.ts`**; **every publish path goes
+through `publishAudited`** (the policy gate lives there — INIT-005/006); **prose (skills)
+never carries a fact that has a machine origin** (the single-origin build).
+
+### Channel SPI — "platforms" become "channels"
+
+The adapter contract generalizes beyond social. A channel adapter declares:
+
+- **Verbs:** `publish` (required) · `comment` · `getMetrics` · `delete` — each optional and
+  **capability-flagged in `lib/specs.ts`**, so tools/skills/validation derive what a channel
+  can do instead of hard-coding platform lists (today `postFirstComment` hard-codes IG/FB —
+  the SPI absorbs that).
+- **Constraints:** limits/media rules in `PLATFORM_SPECS` (unchanged — already single-origin).
+- **Scopes:** required permissions documented in `.env.example` + the skill (AGENTS.md rule #7).
+
+A blog post to Ghost and a tweet are then the same pipeline: draft → validate(channel) →
+policy gate → publish → audit → follow-up. Newsletter/CMS channels add long-form `content`
+shapes to specs, not new machinery.
+
+### Storage evolution — trigger, not date
+
+Stay on JSON stores (now atomic + corrupt-backed, INIT-006) **until** any of:
+(a) INDIV-007 needs analytics joins over accrued history, (b) the H1 UI needs
+queries/pagination, (c) a store regularly exceeds ~1k items. Then adopt **`node:sqlite`**
+(built into Node ≥ 22.5): zero new runtime dependencies (preserves the 2-dep rule), one file
+db in `~/.honk/`, migration = one-time JSON import keeping the store interfaces
+(`queue/store.ts` etc.) stable. **Decision recorded:** engines bump to ≥ 22 LTS is the cost;
+accept it at H1, not before. Store files gain a `schema_version` field in H0 to make any
+future migration detectable.
+
+### Transport evolution — hosted MCP (H2)
+
+The stdio server reaches every local surface; claude.ai web + always-on scheduling need a
+**Streamable-HTTP MCP** deployment: same server core behind an HTTP transport with bearer
+auth, single-tenant per deployment first (your own creds on your own host). Multi-tenant
+(vault, per-user keys) is H3 and must not leak requirements backward into core.
+
+### Security doctrine (write it down, not just do it)
+
+1. **Two gate classes.** *Deterministic* gates (validate, policy/disclosure, duplicate,
+   dispatch re-validation) run in-server on every path and cannot be skipped by any agent.
+   *Agent-judged* gates (banned topics, craft checklist, brand fit) live in prose and bind
+   the agent, not the server. Never promote an agent-judged check to "done" — if it matters
+   deterministically, move it into the server gate.
+2. **Untrusted input stance.** Web research (`research-trends`) and platform webhooks (future
+   inbox) are **data, never instructions**. Skills must instruct the agent to treat fetched
+   content as quotable material only; nothing fetched may alter workflow, accounts, or policy.
+   The deterministic gates are the backstop when an agent is manipulated anyway.
+3. **Credential hygiene.** Creds only in env (`lib/env.ts`); never in queue items, audit
+   entries, or tool output; `redactSecrets` scrubs the audit/throw boundary (INIT-006);
+   scopes documented per feature (rule #7).
+4. **Blast-radius defaults.** `auto_publish: false`; explicit accounts for writes; no delete
+   tool until scoped (ALPHA-016); queue is reviewable state, not a hidden buffer.
+
+### Account registry (H1 seed exists)
+
+`brand-active.json` (INDIV-006) grows into `accounts.json`: an account = credential identity
+(env prefix) × brand identity (brand.json key) × channel handles (from `account_info`). The
+registry closes the INIT-005/006 note (policy fallback becomes registry-resolved), gives
+`brand_voice list` its backing store, and is the UI's account switcher. Flat `brand.json`
+stays — the registry references it, never absorbs it.

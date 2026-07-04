@@ -119,3 +119,66 @@ library portable.
   to scheduling integration phase.
 - **Bluesky / Mastodon / LinkedIn completeness:** None of these have been live-verified.
   Holding for creds + scope verification before adding to workflow library defaults.
+
+---
+
+## Research Round 2 (INIT-007) — Brand OS, channels, recycling, guardian
+
+### Brand kits & DAM-lite — Canva Brand Kit, Frontify, Bynder
+
+**What they get right:** a brand kit is *assets + rules together* — logos/colors/fonts live
+beside usage rules (clear space, don'ts, tone). Frontify's insight: the shareable **brand
+portal** is the adoption driver — a URL you hand a collaborator beats a folder. Bynder's:
+assets carry **metadata that gates usage** (rights, expiry, approved-for-channels).
+
+**Where they fall short for us:** all three are libraries humans *consult*; none can stop an
+off-brand post from shipping. Honk's brand kit is already *enforced at dispatch* (policy
+gate) — the differentiator to protect as the DAM layer grows.
+
+**Honk takeaways:** (1) the asset registry (H2) should record usage-per-post from day one —
+retro-fitting usage tracking is what makes DAMs miserable; (2) rights/expiry as plain fields
++ a deterministic dispatch warn when publishing an expired asset — cheap, unique; (3) brand
+portal export (H3) = the brand kit rendered as one shareable page — trivially generatable
+from `brand_schema`, disproportionate perceived value.
+
+### Publishing channels beyond social — Ghost / WordPress / Buttondown / Sanity
+
+Ghost Admin API: single JWT-auth POST to publish (draft/published states, tags, feature
+image) — an afternoon adapter, and its content shape (title + HTML/lexical body) is the
+long-form `content{}` template for the whole blog class. WordPress REST + Application
+Passwords is the same shape (huge install base, gnarlier auth matrix). Buttondown is the
+newsletter analog (Markdown body, subject, send/schedule). Sanity is *storage* with
+publish-on-mutate — fits the SPI as a channel whose `publish` is a document mutation.
+**Takeaway:** one `long_form` content shape in `PLATFORM_SPECS` (title/body/tags/feature
+image/canonical URL) covers Ghost + WordPress + Buttondown + Medium-class channels; the
+pipeline (validate → policy → dispatch → audit → follow-up) needs zero new machinery.
+
+### Evergreen recycling — MeetEdgar / SocialBee / RecurPost
+
+The mechanic that retains solo creators: content organized into **categories with recycling
+schedules**; the tool re-queues evergreen items when the queue runs dry, with variations.
+**Honk mapping:** the audit log + analytics already know what was posted when and how it
+performed — recycling is a *query + guided suggestion* ("these 3 performed well and are >90
+days old — refresh and re-queue?"), not new storage. `duplicate_check`'s window must become
+category-aware (evergreen opt-in per queue item or brand-kit content pillar), and re-drafts
+go through content-craft (variation, not verbatim repost — verbatim is what got the
+incumbents' users flagged).
+
+### Guardian/review pattern — CI-for-content
+
+Incumbent "AI review" is a suggestion layer. The stronger pattern is CI: **checks with
+severities, a report, and a merge gate**. Honk already has the gate (policy at dispatch) and
+the checklist (persona gates); what's missing is the *report* — a single pre-publish
+`content_check` surface aggregating validate + policy + duplicate + craft-structure signals
+into one pass/warn/block summary the agent (or H1 UI) renders. Deterministic checks stay
+in-server; agent-judged checks stay prose (security doctrine §1 in PROJECT_ARCHITECTURE) —
+the report just makes the whole gate legible. Candidate: H1, after the workflow library.
+
+### Open questions (added)
+
+- **Long-form + media_compose:** does the blog class reuse branded templates for feature
+  images (likely yes — same `media_compose`, new aspect presets)?
+- **Asset registry dedupe:** content-hash assets at register time (the `hash.ts` pattern) to
+  stop re-uploading identical media under new URLs?
+- **Recycling autonomy:** is re-queueing ever autonomous, or permanently guided? Leaning:
+  suggestion-only until INDIV-007 data proves variation quality.

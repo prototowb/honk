@@ -51,6 +51,27 @@ streamline." Focus confirmed: hardening over new features; UI phase (BETA-011) s
    recorded in the Completed table; metrics refreshed.
 5. **CHANGELOG** — Unreleased section updated with all of the above (in the final docs commit).
 
+**INIT-007 Steering-layer hardening (same branch, after INIT-006)** — user directive: also
+harden concept/vision/architecture/approach for existing, planned and unplanned features.
+- `PROJECT_SPECIFICATIONS.md` restructured: north star (publishing automation + assets &
+  digital brand management platform), 4 pillars (Publish · Brand OS · Intelligence & Engage ·
+  Delegation), non-goals, an explicit **1.0 definition**, and a **horizon roadmap H0–H3 with
+  entry criteria** placing every existing/planned/proposed feature (workflow library v1,
+  account registry, store `schema_version`, asset registry/DAM seed, blog + newsletter
+  channels, campaigns, evergreen recycling, hosted HTTP MCP, brand-portal export,
+  `content_check` report). Stale MVP tables removed (cross-link, don't duplicate);
+  Individualization record + agent contract preserved.
+- `PROJECT_ARCHITECTURE.md` + **Target Architecture & Evolution**: layering law, channel SPI
+  (platforms→channels with capability flags — absorbs the hard-coded IG/FB first-comment
+  list), storage trigger JSON→`node:sqlite` (engines≥22 cost recorded, adopt at H1),
+  transport milestone (hosted Streamable-HTTP MCP at H2), **security doctrine** (deterministic
+  vs agent-judged gates; fetched web content is data, never instructions), account registry.
+- `ROADMAP_NOTES.md` + Research Round 2: DAM patterns (Frontify portal, Bynder rights/expiry),
+  Ghost/WordPress/Buttondown/Sanity → one `long_form` content shape, MeetEdgar-class
+  recycling as query+suggestion, guardian = CI-for-content.
+- ⚠️ Root `ARCHITECTURE.md` is an unfilled proto-gear template ({{FRAMEWORK}} placeholders) —
+  doc rot; either fill via `pg` or point it at PROJECT_ARCHITECTURE.md next `pg` session.
+
 **State:** 30 tools · 15 skills · 5 templates · 2 runtime deps · **143 unit (+15) + 43-check
 smoke + build:check + pack:smoke** all green at every commit.
 

@@ -1,176 +1,151 @@
-# Honk
+# Honk — Product Specification
 
-> AI-native social publishing infrastructure. Built as a plugin system first, designed from the ground up for agent-driven workflows. No UI required to ship value.
+> **North star:** an AI-agent-powered **publishing automation and digital brand management
+> platform**. The agent is the interface; every capability ships agent-first as MCP tools +
+> skills, and the UI (when it arrives) renders what the agent already knows. Social publishing
+> is the beachhead — the platform generalizes to every channel a brand publishes through, and
+> to the assets and identity the brand publishes *with*.
+
+> **Doc boundaries:** this file carries vision, pillars, roadmap, and feature inventory.
+> Current + target architecture: [`PROJECT_ARCHITECTURE.md`](PROJECT_ARCHITECTURE.md).
+> Delegation/steering model: [`PROJECT_PRINCIPLES.md`](PROJECT_PRINCIPLES.md).
+> Mechanism research: [`ROADMAP_NOTES.md`](ROADMAP_NOTES.md). Cross-link, don't duplicate.
 
 ---
 
 ## Vision
 
-Competitors like Blotato bolt AI onto a traditional scheduling dashboard. Honk inverts that: the agent _is_ the interface. Publishing flows through Claude, Hermes, and any MCP-compatible agent. A UI gets added on top of a working system, not before it.
+Incumbents (Buffer, Hootsuite, Blotato, Taplio) bolt AI onto a dashboard-first product; brand
+tools (Canva, Frontify) bolt publishing onto a design-first product. Honk inverts both: **the
+agent initiates, drafts, brand-checks, schedules, publishes, measures, and learns** — through
+one MCP spine any agent can drive. A UI is a rendering layer over agent state, added after the
+system works, never required for value.
 
-Late-stage target: a multi-tenant SaaS that leaves Blotato, Buffer-AI, and Taplio behind by being the only tool that natively lives inside the agent's context rather than requiring the agent to call out to a separate product.
+The end state is a platform where a solo creator or a small team delegates their entire
+publishing operation: *"here's my brand, here's my cadence, here are my channels — run it,
+check with me where my policy says so."*
 
----
+**Why we win:** (1) MCP-native — lives inside Claude/Cursor/any agent rather than asking the
+agent to drive a foreign dashboard; (2) the brand kit is *enforced at dispatch*, not a style
+page humans forget; (3) one workflow spec runs supervised or autonomous, live or scheduled —
+delegation is the product, not a feature.
 
-## Guiding Principles
+## Product Pillars
 
-1. **Agent-first, UI-optional** — Every feature ships as an MCP tool or skill first. UI is a rendering layer added later.
-2. **One server, any agent** — The MCP server is the single source of truth. Claude Code, Claude Desktop, Cursor, Hermes, and any future agent all speak the same protocol.
-3. **Platform adapters are plug-and-play** — Adding a new social platform means adding one adapter file and one skill file. Nothing else needs to change.
-4. **Credentials never travel** — All secrets live in env vars. The server reads them; no agent ever touches a raw token.
-5. **State is explicit** — Every post, queue item, and job has a persisted record. No fire-and-forget.
+1. **Publish** — channel adapters (today: X, Instagram, TikTok, Facebook, Threads, Bluesky),
+   queue + scheduler, validation/adaptation to channel constraints, dispatch chokepoint with
+   audit + policy gate, alt-text/first-comment/UTM mechanics.
+2. **Brand OS** *(the assets & digital-brand-management identity of the platform)* — brand
+   kits (voice, audiences, per-channel deltas, policy/guardrails, visual identity), branded
+   media composition + templates, **asset registry (planned — the DAM seed)**, multi-brand
+   management with an account registry, portable user-owned brand data.
+3. **Intelligence & Engage** — analytics ingestion + auto-follow-up, best-time (baseline →
+   observed), learned voice (few-shots from real results), duplicate/repost guard, rate-limit
+   observation; inbox/comment automation (INBOX-001) and listening later.
+4. **Delegation** — the two-axis mode model (guided/un-guided × supervised/autonomous),
+   workflow library, schema symmetry (guided prompts = future UI forms = API params),
+   non-skippable pre-publish gates. Defined in `PROJECT_PRINCIPLES.md`; this pillar is why
+   the other three compose into automation rather than a toolbox.
 
----
+## Non-Goals
 
-## Roadmap
+- **Not a generic automation platform.** Zapier composes arbitrary apps; Honk is opinionated
+  end-to-end publishing. A workflow entry is a publishing workflow, not a general DAG.
+- **Not a CMS.** Honk publishes *to* CMSes/blogs (channel adapters); it does not host content.
+- **Not an ad manager.** Organic publishing + brand management; paid campaign tooling is out.
+- **Not UI-first, ever.** Any feature that only works through the UI is a design defect
+  (schema-symmetry violation).
+- **No unreviewed autonomy by default.** `auto_publish: false` is the eternal default; the
+  deterministic policy gate runs on every dispatch path regardless of agent quality.
 
-### Phase 0 — MVP (current focus)
-**Goal:** Working plugin for Claude Code + Claude Desktop App + Hermes. No UI.
+## What 1.0 Means (production-release definition)
 
-- [ ] Consolidated MCP server (`honk-server`) with all current platforms: X, Instagram, TikTok, Facebook, Threads, Bluesky
-- [ ] Content queue: MCP tools to add, list, update, and clear queued posts
-- [ ] Scheduling: queue items with `scheduled_at` timestamps; a poll-or-push dispatch mechanism
-- [ ] Claude Code skills for each platform (ported from `_bkp`)
-- [ ] Claude Desktop App `claude_desktop_config.json` entry
-- [ ] AGENTS.md — canonical agent onboarding doc that any agent reads on first contact
-- [ ] `.env.example` with all required vars documented
-- [ ] Smoke test: publish one post to each platform end-to-end
+`v1.0.0` ships when ALL of:
 
-**Deliverable:** Any agent that reads AGENTS.md can publish to all 6 platforms, queue content, and schedule posts — without any UI.
+1. **Live-verified or honestly flagged** — every advertised channel capability either verified
+   against the real API or marked experimental in the tool description itself (today: FB
+   alt-text, Threads, Bluesky creds, TikTok unverified).
+2. **Published + installable** — npm package public (name secured), plugin listed, README
+   quickstart ≤ 10 minutes cold.
+3. **Safety floor** (INIT-006 ✅) — outbound timeouts, secret redaction at the audit boundary,
+   atomic stores + corrupt-file backup, dispatch-time policy gate with active-account fallback.
+4. **Data compatibility promise** — `~/.honk/` store formats versioned; migrations (or
+   documented non-breakage) between releases; semver discipline (breaking = major) +
+   deprecation policy in RELEASING.md.
+5. **Gates green in CI** on every commit (already enforced) + `npm audit` clean at release cut.
 
----
+Everything else (UI, more channels, DAM depth, hosting) is post-1.0 growth, not 1.0 gate.
 
-### Phase 1 — Alpha (private, us + Hermes)
-**Goal:** Content intelligence layer. Start extracting signal from what we publish.
+## Horizon Roadmap
 
-- [x] Multi-account support (multiple X accounts, multiple IG pages, etc.)
-- [~] Post analytics ingestion: fetch engagement metrics, store locally — `analytics_fetch`/`analytics_report` + IG/FB/Threads adapter `getMetrics`. **Scaffold built; unverified against live APIs pending credential testing.**
-- [x] AI content adaptation: `content_adapt` fits a source to each platform's hard limits (auto X thread-split, grapheme-aware truncation). The deterministic length-fitting is done in-server; per-channel tone/hashtag rewrite is left to the calling agent (agent-first by design).
-- [x] Media pipeline: local image → Cloudinary/CDN → public URL
-- [x] Hermes-specific skill pack: persona-aware publishing instructions for the Hermes agent
-- [x] Scheduling correctness: `scheduled_at` is normalized to absolute UTC (`schedule_check` + `queue_add`). A timezone-less timestamp is accepted as **server-local** (correct on a local single-user server) but **flagged with a warning**, since it becomes ambiguous under hosted/multi-user deployment. Natural-language parsing is intentionally left to the agent, which already knows the current date/time.
+> Supersedes the old Phase 0–3 list (record preserved in `PROJECT_HISTORY.md` via the ticket
+> tables). Horizons have **entry criteria** — a horizon opens when its criteria are met, not
+> on a date. Tickets stay the unit of work; `PROJECT_STATUS.md` tracks them.
 
----
+### H0 — Production floor (current)
+**Goal: cut `v1.0.0` per the definition above.**
+- INIT-006 hardening ✅ · merge + publish story (`honk` name check → RELEASING.md flow)
+- Live verification pass: FB re-verify, Bluesky/Threads/TikTok creds, X 402 (BETA-013)
+- Store format versioning (`schema_version` field in each `~/.honk/` store) — cheap now,
+  a compatibility promise later
+- Live-prove content-craft (INIT-003 follow-through: one real post, materially better)
 
-### Phase 2 — Beta (closed, us + invited users)
-**Goal:** Multi-user, hardened, instrumented.
+### H1 — Delegation + first UI (entry: 1.0 cut)
+**Goal: initiation stops being hand-written prompts; reading state stops requiring an agent.**
+- **Workflow library v1** — `capabilities/workflows/<name>.md` + `workflow_list` tool +
+  3 seed entries (`weekly-insight`, `product-update`, `engagement-spark`); guided mode picks
+  from it (PRINCIPLES §3 — the concept is ready, build is small)
+- **Account registry** — grow `brand-active.json` into `accounts.json` (credential identity ×
+  brand identity × channel handles); closes the INIT-005 fallback note properly
+- **BETA-011 UI (read-only first):** analytics dashboard + content calendar + queue view,
+  rendering the same schemas guided mode uses (schema symmetry is the wireframe)
+- INDIV-007 learned/adaptive — once analytics history accrues (data-gated)
+- Storage: **SQLite via `node:sqlite`** when the UI/analytics joins need queries
+  (zero new runtime deps; requires engines ≥ 22 — decision recorded in PROJECT_ARCHITECTURE)
 
-- [ ] Auth layer: API key per user, scoped to their credential set _(deferred — pairs with multi-tenant/hosted, past the local-stdio stop line)_
-- [ ] Per-user credential vault (encrypted at rest) _(deferred — same)_
-- [ ] Analytics dashboard (first UI surface — read-only) **← UI stop line; planning not started**
-- [ ] Content calendar view **← UI**
-- [ ] Webhook ingest: receive platform webhooks (DMs, mentions) and surface them as MCP notifications _(deferred — needs a hosted listener)_
-- [~] Rate-limit tracking across all platforms with automatic backoff queue — `rate_limits` tool tallies observed 429s today. **Observational only; automatic backoff queue not yet built.**
-- [x] Audit log: every publish action recorded with timestamp, source, payload hash (`lib/audit.js` + `audit_log` tool)
+### H2 — Channel expansion + reach (entry: workflow library shipped; creds available)
+**Goal: "social publishing tool" → "publishes everywhere the brand publishes."**
+- Channel SPI generalization (adapters declare capabilities; see PROJECT_ARCHITECTURE) —
+  then: **Mastodon** (ALPHA-017), **LinkedIn** (ALPHA-018), **blog/CMS channels** (Ghost,
+  WordPress, headless e.g. Sanity), **newsletter** (Buttondown/Mailchimp-class)
+- **Asset registry v1** (DAM seed): every `media_upload`/`media_compose` output recorded
+  (id, provider URL, hash, dimensions, usage per post, rights/expiry note); `asset_list` /
+  reuse-in-drafts; the brand kit's logo/icon become registered assets
+- **Campaigns:** brief → cross-channel bundle (`campaign_id` on queue items, grouped
+  dispatch/reporting)
+- **Content recycling:** evergreen re-queue suggestions from the audit log + analytics
+  (duplicate_check-aware, opt-in)
+- **Remote MCP milestone:** hosted Streamable-HTTP MCP + bearer auth — unlocks claude.ai
+  web + always-on scheduling (transport change, same codebase)
+- INBOX-001 Phase 0 (public comment replies; DM phase gated on Meta App Review)
 
-> **Capability/UI boundary:** everything above the dashboard line is agent-first
-> infrastructure and is largely in place. The dashboard, calendar, and the
-> multi-tenant auth/vault/webhook items are the UI/hosted phase — intentionally
-> not started.
+### H3 — Platform (entry: remote MCP live + paying-user intent validated)
+**Goal: multi-tenant product, not a power tool.**
+- Team workspaces, roles, per-user credential vault (encrypted at rest), approval workflows
+- Subscription tiers; public API; brand-portal export (shareable brand one-pager — the
+  Frontify-lite move); template/workflow marketplace
+- A/B caption variants with analytics join; listening/alerts
 
----
+## Feature Inventory (by pillar)
 
-### Phase 3 — SaaS (public)
-**Goal:** Self-serve, monetized, competitive moat.
+**Existing (30 tools · 15 skills · 5 templates)** — Publish: 7 publish + tiktok-status, 5
+queue (drafts, sponsored persistence), scheduler + dispatch chokepoint (audit, policy gate,
+follow-up scheduling), content_validate/adapt, schedule_check, best_time, duplicate_check,
+link_tag, alt-text + first-comment, dry_run everywhere. Brand OS: brand_voice
+(get/set/list/use/clone + platform/audience resolution), brand_schema + guided brand-setup,
+policy block, visual kit + media_compose/media_upload, account_info (seed_brand_kit).
+Intelligence: analytics_fetch/report + auto-follow-ups, rate_limits, audit_log, config_doctor.
+Delegation: 15 skills incl. content-craft, pipeline-orchestrator, guided mode + brief_schema.
 
-- [ ] Web app: full publishing UI (Next.js, shadcn/ui)
-- [ ] Team workspaces: shared accounts, role-based access
-- [ ] Subscription tiers (free: 1 user / 2 platforms; pro: unlimited; agency: multi-brand)
-- [ ] Public API for third-party agent integrations
-- [ ] AI content brief → full cross-platform campaign, one command
-- [ ] Native integrations: Notion, Linear, Ghost, YouTube
+**Planned (ticketed):** INDIV-007 · BETA-011 · BETA-013 · ALPHA-016 delete (scope-gated) ·
+ALPHA-017/018 · INBOX-001 · publish story.
 
----
-
-## Architecture (MVP)
-
-```
-G:\Projects\_Plugins\
-├── honk-server/              ← MCP server (Node.js ESM)
-│   ├── index.js              ← server entrypoint + tool dispatcher
-│   ├── adapters/             ← one file per platform
-│   │   ├── x.js
-│   │   ├── instagram.js
-│   │   ├── tiktok.js
-│   │   ├── facebook.js
-│   │   ├── threads.js
-│   │   └── bluesky.js
-│   ├── queue/
-│   │   └── store.js          ← file-backed queue (JSON, upgrades to SQLite in Phase 1)
-│   ├── scheduler/
-│   │   └── index.js          ← polls queue, dispatches due posts
-│   └── package.json
-│
-├── skills/                   ← Claude Code skill files (SKILL.md per platform)
-│   ├── post-to-x/SKILL.md
-│   ├── post-to-instagram/SKILL.md
-│   ├── post-to-tiktok/SKILL.md
-│   ├── post-to-facebook/SKILL.md
-│   ├── post-to-threads/SKILL.md
-│   ├── post-to-bluesky/SKILL.md
-│   └── manage-queue/SKILL.md
-│
-├── AGENTS.md                 ← Single doc any agent reads to get fully operational
-├── PROJECT_SPECIFICATIONS.md ← This file
-├── .env.example              ← All required environment variables documented
-└── claude_desktop_config.json ← Drop-in Claude Desktop App MCP config
-```
-
----
-
-## MCP Tools (MVP surface)
-
-### Publishing tools (existing, ported)
-| Tool | Platform | Input |
-|------|----------|-------|
-| `x_post_tweet` | X | `text` |
-| `x_post_thread` | X | `tweets[]` |
-| `instagram_post` | Instagram | `image_url`, `caption` |
-| `tiktok_post_video` | TikTok | `video_url`, `caption`, `privacy_level?` |
-| `tiktok_check_publish_status` | TikTok | `publish_id` |
-| `facebook_post` | Facebook | `message`, `image_url?` |
-| `threads_post` | Threads | `text`, `image_url?` |
-| `bluesky_post` | Bluesky | `text` |
-
-### Queue tools (new in MVP)
-| Tool | Description | Input |
-|------|-------------|-------|
-| `queue_add` | Add a post to the content queue | `platform`, `content{}`, `scheduled_at?` |
-| `queue_list` | List queued posts, optionally filtered | `status?`, `platform?` |
-| `queue_update` | Update queue item status or content | `id`, `updates{}` |
-| `queue_remove` | Remove an item from the queue | `id` |
-| `queue_dispatch` | Immediately publish a queued item | `id` |
-
----
-
-## Environment Variables
-
-```
-# X (Twitter) — OAuth 1.0a
-X_API_KEY=
-X_API_SECRET=
-X_ACCESS_TOKEN=
-X_ACCESS_TOKEN_SECRET=
-
-# Instagram / Facebook — Meta Graph API (shared EAA token)
-INSTAGRAM_USER_ID=
-INSTAGRAM_ACCESS_TOKEN=
-FACEBOOK_PAGE_ID=
-FACEBOOK_ACCESS_TOKEN=
-
-# TikTok — Content Posting API
-TIKTOK_ACCESS_TOKEN=
-
-# Threads — Threads API
-THREADS_USER_ID=
-THREADS_ACCESS_TOKEN=
-
-# Bluesky — AT Protocol app password (not account password)
-BLUESKY_IDENTIFIER=
-BLUESKY_APP_PASSWORD=
-```
-
----
+**Proposed (this revision — newly placed above):** workflow library v1 (H1) · account
+registry (H1) · store versioning (H0) · SQLite-via-node:sqlite decision (H1) · asset
+registry / DAM seed (H2) · blog + newsletter channels (H2) · campaigns (H2) · content
+recycling (H2) · remote MCP hosting (H2) · brand-portal export (H3) · approval workflows +
+vault + teams (H3) · A/B variants (H3) · guardian review posture (doctrine now, see
+PROJECT_ARCHITECTURE security model).
 
 ## Agent Integration Contract
 
@@ -185,18 +160,22 @@ Any agent (Claude, Hermes, future) MUST:
 
 ## Competitive Positioning
 
-| Feature | SPMC | Blotato | Buffer AI | Taplio |
-|---------|------|---------|-----------|--------|
-| MCP-native | ✅ | ❌ | ❌ | ❌ |
-| Agent-first (no UI required) | ✅ | ❌ | ❌ | ❌ |
-| Works inside Claude/Cursor | ✅ | ❌ | ❌ | ❌ |
-| Open plugin architecture | ✅ | ❌ | ❌ | ❌ |
-| Self-hosted option | ✅ | ❌ | ❌ | ❌ |
-| AI content adaptation | Phase 1 | ✅ | Partial | ✅ |
-| Analytics | Phase 2 | ✅ | ✅ | ✅ |
-| Team workspaces | Phase 3 | ✅ | ✅ | Partial |
+| Capability | Honk | Blotato | Buffer AI | Taplio | Canva/Frontify |
+|---|---|---|---|---|---|
+| MCP-native / agent-first | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Works inside Claude/Cursor | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Brand kit **enforced at dispatch** | ✅ | ❌ | ❌ | ❌ | ❌ (style guide only) |
+| Workflow spec runs supervised OR autonomous | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Open plugin architecture / self-hosted | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Asset/brand management | H2–H3 | ❌ | ❌ | ❌ | ✅ |
+| Analytics | scaffold (live-verify pending) | ✅ | ✅ | ✅ | ❌ |
+| Team workspaces | H3 | ✅ | ✅ | Partial | ✅ |
 
-The moat is the MCP layer + agent-native workflow. Blotato can add AI to a dashboard; they cannot become an agent plugin without a rewrite.
+The moat is the MCP layer + delegation model: a dashboard company can add AI, but becoming an
+agent plugin — with brand policy enforced deterministically on every dispatch path — is a
+rewrite. The Brand-OS pillar attacks the design-tool flank the social tools ignore.
+
+---
 
 ## Individualization (Phases 1 & 2 shipped — backlog remains)
 
