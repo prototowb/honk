@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readJsonOr, writeJsonAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
 // Brand voice profile (ALPHA-009): a persistent brand kit that the content
 // skills read so every draft matches the user's voice without re-specifying it
@@ -148,19 +148,14 @@ export function resolveVoice(profile, opts = {}) {
     return { platform, audience, effective, overridden, sources, unknownAudience };
 }
 function load() {
-    if (!existsSync(file()))
-        return {};
-    try {
-        return JSON.parse(readFileSync(file(), 'utf8'));
-    }
-    catch {
-        return {};
-    }
+    // Corrupt-file backup via readJsonOr: the brand kit is user-authored data —
+    // never silently treat a torn file as empty (INIT-006).
+    return readJsonOr(file(), {});
 }
 // A `set`/`clear` is a deliberate user action — let write errors surface rather
 // than silently dropping the change (unlike the background tracking stores).
 function save(data) {
-    writeFileSync(file(), JSON.stringify(data, null, 2));
+    writeJsonAtomic(file(), data);
 }
 function key(account) { return account || '_default'; }
 // The stored profile for an account, or null if none is set.
@@ -201,17 +196,10 @@ export function list() {
 // read; it deliberately does NOT become a silent default for publishing/compose.
 function activeFile() { return dataFile('brand-active.json'); }
 export function getActive() {
-    if (!existsSync(activeFile()))
-        return '';
-    try {
-        return JSON.parse(readFileSync(activeFile(), 'utf8')).active || '';
-    }
-    catch {
-        return '';
-    }
+    return readJsonOr(activeFile(), {}).active || '';
 }
 export function setActive(account = '') {
-    writeFileSync(activeFile(), JSON.stringify({ active: account || '' }, null, 2));
+    writeJsonAtomic(activeFile(), { active: account || '' });
     return account || '';
 }
 // Copy an account's whole profile to a new account key as a starting point

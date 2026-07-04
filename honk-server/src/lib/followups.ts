@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
+import { writeJsonAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
 import { SUPPORTED_PLATFORMS, extractPostId, fetchMetrics } from './analytics.js';
 import type { FollowupJob } from './types.js';
@@ -31,7 +32,7 @@ function load(): FollowupJob[] {
 }
 
 function save(items: FollowupJob[]): void {
-  try { writeFileSync(file(), JSON.stringify(items, null, 2)); }
+  try { writeJsonAtomic(file(), items); }
   catch { /* never break a publish over a tracking write */ }
 }
 

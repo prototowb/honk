@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readJsonOr, writeJsonAtomic } from '../lib/jsonstore.js';
 import { dataFile } from '../lib/paths.js';
 import type { QueueItem } from '../lib/types.js';
 
@@ -8,14 +8,14 @@ import type { QueueItem } from '../lib/types.js';
 function file(): string { return dataFile('queue.json'); }
 
 function load(): QueueItem[] {
-  const f = file();
-  if (!existsSync(f)) return [];
-  try { return JSON.parse(readFileSync(f, 'utf8')) as QueueItem[]; }
-  catch { return []; }
+  // readJsonOr backs a corrupt file up beside the store before falling back —
+  // the queue holds user drafts, and a silent empty-on-corrupt would let the
+  // next save() wipe them (INIT-006).
+  return readJsonOr<QueueItem[]>(file(), []);
 }
 
 function save(items: QueueItem[]): void {
-  writeFileSync(file(), JSON.stringify(items, null, 2));
+  writeJsonAtomic(file(), items);
 }
 
 function uid(): string {

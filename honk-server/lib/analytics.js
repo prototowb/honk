@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
+import { writeJsonAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
 import * as instagram from '../adapters/instagram.js';
 import * as facebook from '../adapters/facebook.js';
@@ -51,7 +52,7 @@ function load() {
 }
 function save(items) {
     try {
-        writeFileSync(file(), JSON.stringify(items, null, 2));
+        writeJsonAtomic(file(), items);
     }
     catch { /* tracking write must not throw into a tool call */ }
 }

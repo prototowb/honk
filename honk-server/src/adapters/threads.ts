@@ -1,3 +1,4 @@
+import { fetchWithTimeout as fetch } from '../lib/http.js';
 import { env } from '../lib/env.js';
 
 const BASE = 'https://graph.threads.net/v1.0';

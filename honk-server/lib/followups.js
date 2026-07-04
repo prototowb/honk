@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
+import { writeJsonAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
 import { SUPPORTED_PLATFORMS, extractPostId, fetchMetrics } from './analytics.js';
 // Deferred analytics follow-ups (ALPHA-008). After a real publish to an
@@ -29,7 +30,7 @@ function load() {
 }
 function save(items) {
     try {
-        writeFileSync(file(), JSON.stringify(items, null, 2));
+        writeJsonAtomic(file(), items);
     }
     catch { /* never break a publish over a tracking write */ }
 }

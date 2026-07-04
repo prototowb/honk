@@ -1,3 +1,4 @@
+import { fetchWithTimeout as fetch } from '../lib/http.js';
 import { env } from '../lib/env.js';
 const BASE = 'https://open.tiktokapis.com/v2';
 export async function postVideo(videoUrl, caption, privacyLevel = 'SELF_ONLY', account = '') {

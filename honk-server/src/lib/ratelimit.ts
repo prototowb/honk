@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
+import { writeJsonAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
 import type { RateLimitEntry } from './types.js';
 
@@ -19,7 +20,7 @@ function load(): Record<string, RateLimitEntry> {
 }
 
 function save(data: Record<string, RateLimitEntry>): void {
-  try { writeFileSync(file(), JSON.stringify(data, null, 2)); }
+  try { writeJsonAtomic(file(), data); }
   catch { /* never break a publish over a tracking write */ }
 }
 

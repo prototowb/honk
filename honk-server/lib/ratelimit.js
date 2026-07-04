@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
+import { writeJsonAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
 // Lightweight rate-limit tracker. Adapters throw errors shaped like
 // "X API 429: ...", so we detect rate-limit responses from the error message
@@ -20,7 +21,7 @@ function load() {
 }
 function save(data) {
     try {
-        writeFileSync(file(), JSON.stringify(data, null, 2));
+        writeJsonAtomic(file(), data);
     }
     catch { /* never break a publish over a tracking write */ }
 }
