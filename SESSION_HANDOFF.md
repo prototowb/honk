@@ -95,6 +95,15 @@ ORIG_HEAD is un-writable. **On your machine this does not apply** — but if git
 never touched by that). All commit trees this session were verified complete (`ls-tree -r`
 counts) and `git fsck` is clean.
 
+**INIT-010 Live read-scope verification (branch `feature/INIT-010-live-verification`)** —
+ANALYTICS_VERIFICATION.md Part A executed for real (2026-07-05): IG profile+insights ✅,
+FB profile ✅, FB insights ✅ (empty-object zero-omission case, names current). Threads/
+TikTok/Bluesky tokens still empty. **Part B (follow-up loop) + FB first-comment/alt-text
+re-verify still need a user-confirmed live publish.** Mechanics note: sandbox egress can't
+reach Graph, so the script ran on the host via the File Explorer address bar
+(`cmd /c node …`), results read back through the mount; creds were temporarily at
+`honk-server/.env` (gitignored) and deleted after the run.
+
 **State:** **32 tools** · 15 skills · 5 templates · 2 runtime deps · **160 unit + 47-check
 smoke + build:check + pack:smoke** all green at every commit.
 
