@@ -13,14 +13,19 @@
    deferred metrics fetch (~24h) that the **scheduler** drains. This runbook
    collapses the 24h to seconds with `SPMC_ANALYTICS_DELAY_MS=0`.
 
-## Status (2026-06-25)
+## Status (2026-07-05 — Part A re-verified live, INIT-010)
 
 | Platform | Metric set (`adapters/*.js`) | Metric names | Live fetch |
 |----------|------------------------------|--------------|------------|
-| Instagram | `reach,likes,comments,saved,shares` | ✅ current | ✅ verified 2026-06-17 (BETA-010) |
-| Facebook  | `post_engagements,post_clicks,post_reactions_like_total,post_reactions_by_type_total` | ✅ current — June-2026 cull is reach/impression-only; these are unaffected | ◻ names validated; full fetch re-confirm pending |
-| Threads   | `views,likes,replies,reposts,quotes` | ✅ current | ◻ no creds yet |
-| X · TikTok · Bluesky | — | no `getMetrics` (tier/exposure) | n/a |
+| Instagram | `reach,likes,comments,saved,shares` | ✅ current | ✅ re-verified 2026-07-05 (profile + insights on media `17874248277652862`; default AND `protocode` account creds both resolve) |
+| Facebook  | `post_engagements,post_clicks,post_reactions_like_total,post_reactions_by_type_total` | ✅ current — no invalid-metric error live 2026-07-05 | ✅ verified 2026-07-05 on `105275157663337_1411992160954659` — call succeeds; **empty object** (Graph omits zero-value engagement metrics on a low-engagement post; the documented empty/partial case, not drift) |
+| Threads   | `views,likes,replies,reposts,quotes` | ✅ current | ◻ no creds yet (`THREADS_*` empty in honk.env) |
+| X · TikTok · Bluesky | — | no `getMetrics` (tier/exposure) | n/a (TikTok/Bluesky tokens also empty; X keys set but publish-only, 402 status unknown) |
+
+Profile reads (`account_info` path) also verified live 2026-07-05: IG `@protocode_`
+(id `17841446925507898`) + FB page `protocode` (id `105275157663337`).
+**Part B (auto-follow-up loop) still not run end-to-end** — needs a real publish
+(user-confirmed) with `SPMC_ANALYTICS_DELAY_MS=0`; everything else de-risked.
 
 The **auto-follow-up loop has never run end-to-end live** — that's the main thing
 to confirm here. The scheduler (`scheduler/index.js`) loads its own creds, so it
