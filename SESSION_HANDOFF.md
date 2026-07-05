@@ -112,6 +112,16 @@ insights), written to all four Meta slots in `~/.claude/honk.env` (backup
 first-comment re-verify is unblocked. `data_access_expires` 2026-10-03 (90d user-data window;
 publishing unaffected). ⚠️ Restart Claude Desktop so the MCP server re-reads honk.env.
 
+**INIT-011 Live E2E proof (2026-07-05)** — the whole pipeline ran for real, user-approved:
+brand voice → workflow entry → content-craft copy → media_compose → content_check PASS →
+approval → publishAudited (delay=0) → followups.runDue 8/8 → analytics snapshots. Post:
+prompt-injection/OWASP-LLM01 (AI-security angle per user direction; source link verified
+live) → IG `18123902104674983` + FB `…_1420845453402663`, first comments on BOTH (FB scope
+finally proven). Closes ANALYTICS_VERIFICATION Part B, the FB first-comment re-verify, and
+INIT-003's live-prove. Also fixed: Claude Desktop config pointed at the pre-rename
+`_Plugins\honk-server\run.js` path — server reconnected after correction (backup kept).
+Remaining live gaps: FB alt-text read-back; Threads/TikTok/Bluesky tokens; X 402.
+
 **State:** **32 tools** · 15 skills · 5 templates · 2 runtime deps · **160 unit + 47-check
 smoke + build:check + pack:smoke** all green at every commit.
 

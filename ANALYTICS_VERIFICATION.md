@@ -33,8 +33,19 @@ missing), `instagram_manage_comments`, `read_insights`, `instagram_manage_insigh
 ⚠️ `data_access_expires` = 2026-10-03 (Meta's 90-day user-data window) — publishing
 is unaffected; if user-data *reads* ever 400 after that date, re-run the mint once.
 Backup of the previous env: `honk.env.bak-2026-07-05223322`.
-**Part B (auto-follow-up loop) still not run end-to-end** — needs a real publish
-(user-confirmed) with `SPMC_ANALYTICS_DELAY_MS=0`; everything else de-risked.
+**Part B — VERIFIED end-to-end 2026-07-05 (INIT-011).** A user-approved AI-security
+post (prompt injection / OWASP LLM01) published live to IG (`18123902104674983`) + FB
+(`105275157663337_1420845453402663`) through `publishAudited` with
+`SPMC_ANALYTICS_DELAY_MS=0`; `followups.runDue()` drained **8/8** jobs (the 2 new + 6
+backlogged) and snapshots landed in `analytics_report` — the IG one already counting
+its own first comment. Also verified live: **FB first_comment ✅** (the
+`pages_manage_engagement` scope on the new PAGE token — previously the blocker),
+**IG first_comment ✅** (re-confirmed), FB metrics now return keyed values
+(`post_clicks`, `post_reactions_*`), and both posts carried `alt_text` (FB read-back
+still unchecked — the API accepted it without error). The full agent flow held:
+brand voice → workflow entry (`weekly-insight`) → content-craft copy → `media_compose`
+(kit identity) → `content_check` PASS → explicit user approval → publish → audit →
+follow-up → snapshot.
 
 The **auto-follow-up loop has never run end-to-end live** — that's the main thing
 to confirm here. The scheduler (`scheduler/index.js`) loads its own creds, so it
