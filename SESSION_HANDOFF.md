@@ -104,6 +104,14 @@ reach Graph, so the script ran on the host via the File Explorer address bar
 (`cmd /c node …`), results read back through the mount; creds were temporarily at
 `honk-server/.env` (gitignored) and deleted after the run.
 
+**INIT-010b Non-expiring Meta token minted (2026-07-05)** — the user's fresh USER token
+(valid, full scopes, but expiring in ~22h) was exchanged via API (short→long-lived→
+`/me/accounts`) into a **PAGE token with `expires=NEVER`**, verified on IG+FB (profile +
+insights), written to all four Meta slots in `~/.claude/honk.env` (backup
+`honk.env.bak-2026-07-05223322`). Scopes now include **`pages_manage_engagement`** — the FB
+first-comment re-verify is unblocked. `data_access_expires` 2026-10-03 (90d user-data window;
+publishing unaffected). ⚠️ Restart Claude Desktop so the MCP server re-reads honk.env.
+
 **State:** **32 tools** · 15 skills · 5 templates · 2 runtime deps · **160 unit + 47-check
 smoke + build:check + pack:smoke** all green at every commit.
 
