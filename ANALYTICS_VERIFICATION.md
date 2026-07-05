@@ -24,6 +24,15 @@
 
 Profile reads (`account_info` path) also verified live 2026-07-05: IG `@protocode_`
 (id `17841446925507898`) + FB page `protocode` (id `105275157663337`).
+
+**Token (2026-07-05):** all four Meta slots in `~/.claude/honk.env` now hold a
+**non-expiring PAGE token** (minted via fb_exchange_token → `/me/accounts`;
+`debug_token`: `type=PAGE expires=NEVER`). Scopes include `pages_manage_posts`,
+`instagram_content_publish`, `pages_manage_engagement` (FB first-comment — previously
+missing), `instagram_manage_comments`, `read_insights`, `instagram_manage_insights`.
+⚠️ `data_access_expires` = 2026-10-03 (Meta's 90-day user-data window) — publishing
+is unaffected; if user-data *reads* ever 400 after that date, re-run the mint once.
+Backup of the previous env: `honk.env.bak-2026-07-05223322`.
 **Part B (auto-follow-up loop) still not run end-to-end** — needs a real publish
 (user-confirmed) with `SPMC_ANALYTICS_DELAY_MS=0`; everything else de-risked.
 
