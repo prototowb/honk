@@ -19,8 +19,8 @@
 |----------|------------------------------|--------------|------------|
 | Instagram | `reach,likes,comments,saved,shares` | ✅ current | ✅ re-verified 2026-07-05 (profile + insights on media `17874248277652862`; default AND `protocode` account creds both resolve) |
 | Facebook  | `post_engagements,post_clicks,post_reactions_like_total,post_reactions_by_type_total` | ✅ current — no invalid-metric error live 2026-07-05 | ✅ verified 2026-07-05 on `105275157663337_1411992160954659` — call succeeds; **empty object** (Graph omits zero-value engagement metrics on a low-engagement post; the documented empty/partial case, not drift) |
-| Threads   | `views,likes,replies,reposts,quotes` | ✅ current | ◻ no creds yet (`THREADS_*` empty in honk.env) |
-| X · TikTok · Bluesky | — | no `getMetrics` (tier/exposure) | n/a (TikTok/Bluesky tokens also empty; X keys set but publish-only, 402 status unknown) |
+| Threads   | `views,likes,replies,reposts,quotes` | ✅ current | ⛔ **descoped indefinitely** (2026-07-06, INIT-012) — creds never provided; revisit only on explicit user request |
+| X · TikTok · Bluesky | — | no `getMetrics` (tier/exposure) | ⛔ **descoped indefinitely** (2026-07-06, INIT-012) — TikTok/Bluesky tokens never provided; X 402 credit-blocked |
 
 Profile reads (`account_info` path) also verified live 2026-07-05: IG `@protocode_`
 (id `17841446925507898`) + FB page `protocode` (id `105275157663337`).

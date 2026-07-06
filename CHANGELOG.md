@@ -10,6 +10,20 @@ in `honk-server/package.json` and flows into every generated artifact via
 
 ## [Unreleased]
 
+### Changed
+- **Descoped indefinitely (INIT-012, user decision):** Threads / TikTok / Bluesky
+  live credentials and X publish verification (API tier 402). Adapters stay
+  shipped and tested; the affected publish tools now carry an explicit
+  **[Experimental: never verified against the live API]** flag in their
+  descriptions (the 1.0 definition's "honestly flagged" arm). The items moved
+  to a *Descoped* table in PROJECT_STATUS.md and no longer appear in handoffs.
+- **SDLC streamline (INIT-012):** AGENTS.md's unfilled proto-gear scaffolding
+  (fictional "4 Core + 2 Flex agents", placeholder git-flow/sprint blocks)
+  replaced with the real **Session Model** (one Lead AI per session, the
+  orient→contract→branch→build→gate→record→merge→hand-off loop, backlog-hygiene
+  rule); root ARCHITECTURE.md (never-filled template) reduced to a pointer at
+  PROJECT_ARCHITECTURE.md, the BUILD_CONCEPT.md convention.
+
 ### Fixed
 - **Queued posts without an explicit `account:` bypassed brand policy** (INIT-006,
   closing the boundary flagged in INIT-005). The dispatch policy gate now falls

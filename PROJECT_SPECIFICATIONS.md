@@ -63,8 +63,11 @@ delegation is the product, not a feature.
 `v1.0.0` ships when ALL of:
 
 1. **Live-verified or honestly flagged** — every advertised channel capability either verified
-   against the real API or marked experimental in the tool description itself (today: FB
-   alt-text, Threads, Bluesky creds, TikTok unverified).
+   against the real API or marked experimental in the tool description itself. Threads /
+   TikTok / Bluesky creds + X publish (402) are **descoped indefinitely** (2026-07-06,
+   INIT-012 — see PROJECT_STATUS *Descoped*): those channels take the "honestly flagged"
+   arm — live-unverified noted in the tool descriptions. Remaining verify item: FB
+   alt-text read-back (minor).
 2. **Published + installable** — npm package public (name secured), plugin listed, README
    quickstart ≤ 10 minutes cold.
 3. **Safety floor** (INIT-006 ✅) — outbound timeouts, secret redaction at the audit boundary,
@@ -85,7 +88,8 @@ Everything else (UI, more channels, DAM depth, hosting) is post-1.0 growth, not 
 ### H0 — Production floor (current)
 **Goal: cut `v1.0.0` per the definition above.**
 - INIT-006 hardening ✅ · merge + publish story (`honk` name check → RELEASING.md flow)
-- Live verification pass: FB re-verify, Bluesky/Threads/TikTok creds, X 402 (BETA-013)
+- Live verification pass ✅ (INIT-010/011: IG+FB read/write/first-comment/follow-up loop);
+  Bluesky/Threads/TikTok creds + X 402 **descoped** (INIT-012) → "honestly flagged" arm
 - Store format versioning (`schema_version` field in each `~/.honk/` store) — cheap now,
   a compatibility promise later
 - Live-prove content-craft (INIT-003 follow-through: one real post, materially better)
@@ -137,8 +141,9 @@ policy block, visual kit + media_compose/media_upload, account_info (seed_brand_
 Intelligence: analytics_fetch/report + auto-follow-ups, rate_limits, audit_log, config_doctor.
 Delegation: 15 skills incl. content-craft, pipeline-orchestrator, guided mode + brief_schema.
 
-**Planned (ticketed):** INDIV-007 · BETA-011 · BETA-013 · ALPHA-016 delete (scope-gated) ·
-ALPHA-017/018 · INBOX-001 · publish story.
+**Planned (ticketed):** INDIV-007 · BETA-011 · ALPHA-016 delete (scope-gated) ·
+ALPHA-017/018 · INBOX-001 · publish story. (BETA-013 **descoped** 2026-07-06 — see
+PROJECT_STATUS *Descoped*.)
 
 **Proposed (this revision — newly placed above):** workflow library v1 (H1) · account
 registry (H1) · store versioning (H0) · SQLite-via-node:sqlite decision (H1) · asset
