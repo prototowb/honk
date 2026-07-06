@@ -1,13 +1,17 @@
 import type { ToolDefinition } from './types.js';
 
 const DRY_RUN_PROP = { type: 'boolean', description: 'If true, validate and preview the post without publishing. Records a dry_run audit entry.' };
+// 1.0 definition §1 (PROJECT_SPECIFICATIONS): channels without live verification are honestly
+// flagged in the tool description itself. Threads/TikTok/Bluesky creds + X publish (402) are
+// descoped indefinitely (INIT-012) — flag stays until a real publish is verified.
+const LIVE_UNVERIFIED = ' [Experimental: never verified against the live API — no credentials available. Adapter is unit/smoke-tested only.]';
 const SPONSORED_PROP = { type: 'boolean', description: 'Mark this as a sponsored/paid post. Enforces the brand kit\'s required sponsored disclosures (policy.disclosures.sponsored) — a missing one blocks publishing.' };
 
 export const TOOLS: ToolDefinition[] = [
   // ── X (Twitter) ──────────────────────────────────────────────────────────
   {
     name: 'x_post_tweet',
-    description: 'Post a single tweet to X (Twitter). Max 280 characters.',
+    description: 'Post a single tweet to X (Twitter). Max 280 characters.' + LIVE_UNVERIFIED,
     inputSchema: {
       type: 'object',
       properties: {
@@ -21,7 +25,7 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'x_post_thread',
-    description: 'Post a thread of tweets to X. Each array item is one tweet, chained as replies.',
+    description: 'Post a thread of tweets to X. Each array item is one tweet, chained as replies.' + LIVE_UNVERIFIED,
     inputSchema: {
       type: 'object',
       properties: {
@@ -56,7 +60,7 @@ export const TOOLS: ToolDefinition[] = [
   // ── TikTok ────────────────────────────────────────────────────────────────
   {
     name: 'tiktok_post_video',
-    description: 'Post a video to TikTok (PULL_FROM_URL). Until your app passes audit, posts land as private/self-only regardless of privacy_level.',
+    description: 'Post a video to TikTok (PULL_FROM_URL). Until your app passes audit, posts land as private/self-only regardless of privacy_level.' + LIVE_UNVERIFIED,
     inputSchema: {
       type: 'object',
       properties: {
@@ -76,7 +80,7 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'tiktok_check_publish_status',
-    description: 'Check the async publish status of a TikTok video post.',
+    description: 'Check the async publish status of a TikTok video post.' + LIVE_UNVERIFIED,
     inputSchema: {
       type: 'object',
       properties: {
@@ -107,7 +111,7 @@ export const TOOLS: ToolDefinition[] = [
   // ── Threads ───────────────────────────────────────────────────────────────
   {
     name: 'threads_post',
-    description: 'Post text (optionally with an image) to Threads.',
+    description: 'Post text (optionally with an image) to Threads.' + LIVE_UNVERIFIED,
     inputSchema: {
       type: 'object',
       properties: {
@@ -124,7 +128,7 @@ export const TOOLS: ToolDefinition[] = [
   // ── Bluesky ───────────────────────────────────────────────────────────────
   {
     name: 'bluesky_post',
-    description: 'Post text to Bluesky via the AT Protocol. No OAuth — just an app password.',
+    description: 'Post text to Bluesky via the AT Protocol. No OAuth — just an app password.' + LIVE_UNVERIFIED,
     inputSchema: {
       type: 'object',
       properties: {

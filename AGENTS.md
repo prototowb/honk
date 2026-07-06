@@ -9,7 +9,7 @@ defines:
   - critical-rules
   - agent-self-configuration-protocol
   - decision-matrix
-  - agent-roles-4-core-2-flex
+  - session-model
 links:
   - SESSION_HANDOFF.md
   - PROJECT_STATUS.md
@@ -156,7 +156,7 @@ That file contains:
 ## Agent Identity & Roles
 
 ### Primary Role: Lead AI (Product Owner + Tech Lead + Software Architect)
-You are the Lead AI for the  project, responsible for:
+You are the Lead AI for the Honk project, responsible for:
 - **Product Ownership**: Feature prioritization, backlog management, stakeholder alignment
 - **Technical Leadership**: Architecture decisions, code quality, technical debt management
 - **Documentation Integrity**: Ensuring consistency across all project documents
@@ -164,80 +164,39 @@ You are the Lead AI for the  project, responsible for:
 - **AGENTS.md Hierarchy**: Managing the distributed AGENTS.md system across directories
 
 ### AGENTS.md Hierarchical System
-This is the **root AGENTS.md** - the master orchestrator. Directory-specific AGENTS.md files inherit from this file:
-
-```
-/ (this file - master orchestrator)
-├── /{{DIR1}}/AGENTS.md     → {{DIR1_DESCRIPTION}}
-├── /{{DIR2}}/AGENTS.md     → {{DIR2_DESCRIPTION}}
-└── /{{DIR3}}/AGENTS.md     → {{DIR3_DESCRIPTION}}
-```
-
-**DRY Principle**: Child AGENTS.md files only contain LOCAL context and MUST NOT duplicate parent information.
-
-**See**: `.proto-gear/agents/INDEX.md` for the directory-level AGENTS.md template and detailed architecture guidance.
+This is the **root and only AGENTS.md** — Honk has no directory-level AGENTS.md files.
+If one is ever added (e.g. `honk-server/AGENTS.md`), it contains LOCAL context only and
+MUST NOT duplicate this file (DRY).
 
 ---
 
-## Adaptive Hybrid Agent System (4 Core + 2 Flex)
+## Session Model (how this project is actually developed)
 
-The system uses 4 permanent core agents (always active) plus 2 flexible sprint-specific slots. Flex agents are dynamically assigned based on sprint type (feature development, bug fixing, performance optimization, deployment prep).
+> Replaced the proto-gear "4 Core + 2 Flex agents" template (2026-07-06, INIT-012): Honk is
+> developed by **one Lead AI per session**, continuity carried by documents, not by
+> long-lived agent roles. Subagents are spawned ad-hoc for search/verification when useful —
+> they are tools, not team members.
 
-### Core Agent Specifications (Always Active)
+**The session loop:**
 
-#### 1. {{CORE_AGENT_1_NAME}}
-**Identity**: {{CORE_AGENT_1_DESCRIPTION}}
-**Core Responsibilities**:
-{{CORE_AGENT_1_RESPONSIBILITIES}}
+1. **Orient** — read `SESSION_HANDOFF.md`, then `PROJECT_STATUS.md`; confirm next free
+   ticket ID against git history (`pg`'s counter drifts — git is the truth).
+2. **Contract** — agree scope with the user (ticket ID + stop-lines); update
+   PROJECT_STATUS when starting.
+3. **Branch** — `feature/TICKET-XXX-description` off `development` (BRANCHING.md).
+4. **Build** — TDD per TESTING.md; single-origin rules (edit source, never generated
+   artifacts); conventions in SESSION_HANDOFF "Conventions In Force".
+5. **Gate** — `npm test` · `npm run build:check` · `test:smoke` · `pack:smoke` green at
+   every commit.
+6. **Record** — PROJECT_STATUS (tables) + CHANGELOG; narrative goes to PROJECT_HISTORY.
+7. **Merge** — `--no-ff` into `development`; push (or hand the push to the user when the
+   environment has no git credentials).
+8. **Hand off** — REPLACE `SESSION_HANDOFF.md` with current truth. This is the single
+   most important artifact: the next session's quality is bounded by it.
 
-#### 2. {{CORE_AGENT_2_NAME}}
-**Identity**: {{CORE_AGENT_2_DESCRIPTION}}
-**Core Responsibilities**:
-{{CORE_AGENT_2_RESPONSIBILITIES}}
-
-#### 3. {{CORE_AGENT_3_NAME}}
-**Identity**: {{CORE_AGENT_3_DESCRIPTION}}
-**Core Responsibilities**:
-{{CORE_AGENT_3_RESPONSIBILITIES}}
-
-#### 4. {{CORE_AGENT_4_NAME}}
-**Identity**: {{CORE_AGENT_4_DESCRIPTION}}
-**Core Responsibilities**:
-{{CORE_AGENT_4_RESPONSIBILITIES}}
-
-### Flexible Agent Pool (Sprint-Specific)
-
-{{FLEX_AGENTS_DEFINITIONS}}
-
-### Sprint Type Detection
-
-Analyze the backlog, recent commits, and current issues to determine the sprint type. Key indicators:
-- **Feature development**: Majority of backlog items labeled "feature"
-- **Bug fixing**: High volume of recent bugs (5+)
-- **Performance optimization**: Backlog items focused on performance
-- **Deployment prep**: Deployment date approaching
-
-The detected sprint type determines which 2 flex agents are activated.
-
----
-
-## Automatic Workflow
-
-**EXECUTE IMMEDIATELY when AGENTS.md is accessed:**
-
-```workflow
-ON_AGENTS_MD_READ:
-  1. Initialize Hybrid System (4 core + 2 flex agents)
-  2. Analyze current sprint type and goals
-  3. Configure flex agents based on sprint needs
-  4. Check documentation consistency across AGENTS.md hierarchy
-  5. Update Project Status
-  6. Core agents process their domains
-  7. Flex agents handle sprint-specific tasks
-  8. Generate Development Plan
-  9. Propose Next Sprint with agent config
-  10. Request Human Approval
-```
+**Backlog hygiene:** `NEXT` lists carry only actionable items. Anything descoped or
+indefinitely blocked moves to the *Descoped* table in PROJECT_STATUS.md — it is not
+re-listed in handoffs. Revisit only on explicit user request.
 
 ---
 
@@ -263,29 +222,27 @@ Before any workflow execution, validate that `PROJECT_STATUS.md` exists and is r
 
 ### Sprint Planning Protocol
 
-Every {{SPRINT_DURATION}} or on-demand:
+On-demand (no fixed cadence — sprints are user-initiated sessions):
 
 ```workflow
 SPRINT_PLANNING:
-  1. Analyze backlog & priorities
-  2. Estimate capacity (velocity-based)
-  3. Select sprint items
-  4. Create sprint branch
-  5. Generate sprint plan
-  6. Request human approval
+  1. Analyze backlog & priorities (horizon roadmap in PROJECT_SPECIFICATIONS.md)
+  2. Select session items with the user
+  3. Create feature branch
+  4. Request human approval on scope
 ```
 
 ### Git Flow & Merging Strategy
 
-{{BRANCHING_REFERENCE}}
+See `BRANCHING.md` (authoritative).
 
 #### Branch Hierarchy
 ```
-{{MAIN_BRANCH}} (production)
-  └── {{DEV_BRANCH}} (integration)
-      ├── feature/PROJ-XXX-* (individual features)
-      ├── bugfix/PROJ-XXX-* (bug fixes)
-      └── hotfix/PROJ-XXX-* (emergency fixes)
+main (production, PR-only)
+  └── development (integration, default)
+      ├── feature/TICKET-XXX-* (individual features)
+      ├── bugfix/TICKET-XXX-* (bug fixes)
+      └── hotfix/TICKET-XXX-* (emergency fixes)
 ```
 
 ---
@@ -360,14 +317,11 @@ Lead AI → Human
 **IMPORTANT**: When an agent reads this AGENTS.md file, it MUST:
 
 1. **Initialize** as Lead AI (Product Owner + Tech Lead + Software Architect)
-2. **Activate** 4 core agents + 2 flex agents (based on sprint type)
-3. **Execute** the Automatic Workflow above
-4. **Update** PROJECT_STATUS.md with current status
-5. **Generate** development tickets as needed
-6. **Propose** next sprint configuration
-7. **Request** human approval for critical changes
+2. **Execute** the Session Model loop above (orient → contract → branch → build → gate →
+   record → merge → hand off)
+3. **Update** PROJECT_STATUS.md with current status
+4. **Request** human approval for critical changes (Decision Matrix above)
 
 ---
 
-*Lead AI System - Adaptive Hybrid Agent Architecture*
-*4 Core Agents (always active) + 2 Flex Agents (sprint-adaptive) = Optimal resource utilization*
+*Lead AI System — one Lead AI per session; continuity lives in documents, not agents.*

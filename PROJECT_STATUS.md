@@ -125,17 +125,28 @@ Full plans (shape · logic · surface · tests · open decisions) in
 |----|-------|------------------------|
 | ALPHA-016 | **Delete / unpublish** a published post | Destructive — confirm scope + which platforms |
 | INBOX-001 | **Comment-keyword → DM file/link** (ManyChat-style automation) | Plan drafted (`INBOX_FEATURE_PLAN.md`); gated on DM-API app-review + comment-ingestion decision |
-
-**ALPHA-014 alt-text + ALPHA-015 first-comment — fully live-verified.** IG alt-text + first-comment ✅; **FB first-comment ✅ (2026-07-05, INIT-011** — the non-expiring PAGE token carries `pages_manage_engagement`); FB alt-text accepted without error, read-back still unchecked. Scope: X/Bluesky alt-text deferred (text-only adapters). New convention: features document permission scopes (AGENTS.md rule #7 + `.env.example`).
 | ALPHA-017 | **Mastodon** adapter (new platform — easy AT-style API) | Needs your instance + app token |
 | ALPHA-018 | **LinkedIn** adapter (new platform — strategic, the Taplio space) | Needs creds + API access-tier decision |
 
-### Deferred stop-lines (unchanged)
+**ALPHA-014 alt-text + ALPHA-015 first-comment — fully live-verified.** IG alt-text + first-comment ✅; **FB first-comment ✅ (2026-07-05, INIT-011** — the non-expiring PAGE token carries `pages_manage_engagement`); FB alt-text accepted without error, read-back still unchecked. Scope: X/Bluesky alt-text deferred (text-only adapters). New convention: features document permission scopes (AGENTS.md rule #7 + `.env.example`).
+
+### Deferred stop-lines
 
 | ID | Title | Priority |
 |----|-------|----------|
 | BETA-011 | UI implementation **planning** — analytics dashboard + content calendar (Phase 2/3). NOT started | ⚪ Next phase (stop line) |
-| BETA-013 | Remaining live creds: Bluesky (`BLUESKY_APP_PASSWORD` empty), Threads (token empty — id set), TikTok (token empty); add X credits to unblock 402. **IG/FB read paths live-verified 2026-07-05 (INIT-010)** | Medium |
+
+### Descoped — indefinite (user decision 2026-07-06, INIT-012)
+
+> These items are **off the backlog**. They do NOT appear in handoff `NEXT` lists and are
+> not carried forward. Revisit only on explicit user request. Adapters/code stay shipped;
+> the affected tools are honestly flagged as live-unverified in their descriptions
+> (1.0 definition §1, PROJECT_SPECIFICATIONS.md).
+
+| ID | Item | State at descope |
+|----|------|------------------|
+| BETA-013 | Threads / TikTok / Bluesky live credentials | Tokens never provided; adapters + unit/smoke coverage shipped; Threads analytics metric names verified current against docs |
+| BETA-013 | X publish verification | Keys set; API tier credit-blocked (402) — no write possible without paid credits |
 
 ---
 
