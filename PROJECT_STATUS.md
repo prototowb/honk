@@ -38,14 +38,12 @@ Branch: `feature/ALPHA-009-content-foundations`.
 
 ## Active Tickets
 
-**None in progress.** The Sprint Alpha-2 build-now spine + all credential-free
-features shipped (ALPHA-008/009/010/011/012/013/020/021), and **ALPHA-019
-best-time-to-post** shipped this session (see *Completed*). Remaining work is the
-**needs-your-input** track (Mastodon/LinkedIn creds, alt-text/first-comment/delete
-scope) and the BETA-011 UI stop-line — see *Next Up*. Per the user's direction
-("everything but platform adapters"), the next non-adapter items (alt-text /
-first-comment / delete) touch live publish paths — delete is destructive — and
-stay gated on a scope confirmation before build.
+**None in progress.** Latest session (2026-07-06/07) shipped **INIT-012** (SDLC
+streamline: BETA-013 descoped to the *Descoped* table below, AGENTS.md session
+model, doc-rot heal) and **INIT-013** (asset registry v1 — the DAM seed; tools
+32→34) — see *Completed*. Open lanes: the publish story (npm name check →
+RELEASING.md), the **needs-your-input** track below, and the BETA-011 UI
+stop-line. See `SESSION_HANDOFF.md` → NEXT for the ordered list.
 
 ## Completed Tickets
 
