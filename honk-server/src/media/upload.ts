@@ -3,6 +3,7 @@ import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
 import { basename, extname } from 'path';
 import type { UploadResult } from '../lib/types.js';
+import * as assets from '../lib/assets.js';
 
 const VIDEO_EXTS = new Set(['.mp4', '.mov', '.webm', '.avi', '.mkv', '.m4v']);
 
@@ -119,9 +120,29 @@ export async function upload(filePathOrBuffer: string | Buffer | null, provider:
   let lastErr: unknown;
   for (const p of order) {
     try {
-      if (p === 'cloudinary') return await uploadCloudinary(input, account, fname);
-      if (p === 'imgbb')      return await uploadImgbb(input, account, fname);
-      throw new Error(`Unknown provider: ${p}. Supported: cloudinary, imgbb`);
+      let result: UploadResult;
+      if (p === 'cloudinary')  result = await uploadCloudinary(input, account, fname);
+      else if (p === 'imgbb')  result = await uploadImgbb(input, account, fname);
+      else throw new Error(`Unknown provider: ${p}. Supported: cloudinary, imgbb`);
+      // Asset registry (INIT-013): record the output — best-effort, a registry
+      // failure must never fail the upload. Compose-internal calls (buffer via
+      // _buf, filePathOrBuffer === null) are skipped: compose() registers its
+      // own output with template/dimension metadata (source: 'compose').
+      if (filePathOrBuffer !== null) {
+        try {
+          const { buf } = resolveInput(input, name);
+          assets.register({
+            url: result.url,
+            hash: assets.hashBuffer(buf),
+            provider: result.provider,
+            source: 'upload',
+            ...(typeof result.bytes === 'number' ? { bytes: result.bytes } : {}),
+            ...(typeof result.format === 'string' ? { format: result.format } : {}),
+            ...(account ? { account } : {}),
+          });
+        } catch { /* best-effort */ }
+      }
+      return result;
     } catch (e) {
       lastErr = e;
     }

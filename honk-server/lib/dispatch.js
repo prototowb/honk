@@ -11,6 +11,7 @@ import { schedule as scheduleFollowup } from './followups.js';
 import { extractPostId } from './analytics.js';
 import { validateWithPolicy } from './policy-gate.js';
 import { redactSecrets } from './http.js';
+import { extractMediaUrls, recordUsage, expiryWarnings } from './assets.js';
 // Routes to the right adapter and returns a structured result:
 //   { summary, raw }  — summary is the human-readable line shown to the agent.
 export async function publish(platform, content, account = '') {
@@ -117,6 +118,25 @@ export async function publishAudited(platform, content, account = '', meta = {})
             scheduleFollowup({ platform, raw: result.raw, account });
         }
         catch { /* analytics follow-up is best-effort */ }
+        // Asset registry (INIT-013): usage-per-post from day one — every registered
+        // asset this publish referenced gets a usage record; rights-expired assets
+        // surface a deterministic WARN on the summary (never a block). Best-effort:
+        // the registry must never fail a live post.
+        try {
+            const mediaUrls = extractMediaUrls(content);
+            if (mediaUrls.length) {
+                recordUsage(mediaUrls, {
+                    platform,
+                    ...(postId ? { post_id: postId } : {}),
+                    ...(account ? { account } : {}),
+                    at: new Date().toISOString(),
+                });
+                const expired = expiryWarnings(mediaUrls);
+                if (expired.length)
+                    result.summary += '\n' + expired.map(w => `⚠ ${w}`).join('\n');
+            }
+        }
+        catch { /* best-effort */ }
         return result;
     }
     catch (e) {

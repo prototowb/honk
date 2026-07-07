@@ -442,4 +442,37 @@ export const TOOLS: ToolDefinition[] = [
       required: ['file_path'],
     },
   },
+  // ── Asset registry (DAM seed, INIT-013) ───────────────────────────────────
+  {
+    name: 'asset_list',
+    description: 'List/inspect the asset registry — every media_compose / media_upload output is recorded automatically (URL, content hash, dimensions, rights/expiry, usage per post). Filter by source/tag/account/template/expired/used, or pass query (id, hash, or URL) for one asset\'s full record. Reuse a registered URL in drafts instead of re-uploading identical media.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query:    { type: 'string', description: 'Exact id (ast_…), content hash, or URL — returns the single matching asset.' },
+        source:   { type: 'string', description: 'Only assets from this origin', enum: ['upload', 'compose', 'brand-kit', 'manual'] },
+        tag:      { type: 'string', description: 'Only assets carrying this tag' },
+        account:  { type: 'string', description: 'Only assets registered under this brand account' },
+        template: { type: 'string', description: 'Only media_compose outputs of this template' },
+        expired:  { type: 'boolean', description: 'true → only assets past their rights expiry; false → only unexpired' },
+        used:     { type: 'boolean', description: 'true → only assets with recorded publishes; false → never-published' },
+        limit:    { type: 'number', description: 'Max entries returned (newest first). Default: all' },
+      },
+    },
+  },
+  {
+    name: 'asset_update',
+    description: 'Set rights/expiry and tags on a registered asset (addressed by id, hash, or URL). A past rights expiry produces a deterministic WARNING in content_check and on the dispatch summary — publishing is never blocked; the judgment stays with you.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id:                { type: 'string', description: 'Asset id (ast_…), content hash, or any of its URLs' },
+        rights_note:       { type: 'string', description: 'Human note on usage rights / license terms' },
+        rights_expires_at: { type: 'string', description: 'ISO date/timestamp after which publishing this asset warns' },
+        add_tags:          { type: 'array', items: { type: 'string' }, description: 'Tags to add' },
+        remove_tags:       { type: 'array', items: { type: 'string' }, description: 'Tags to remove' },
+      },
+      required: ['id'],
+    },
+  },
 ];

@@ -141,6 +141,15 @@ un-publish). Credentials are per account via `KEY__ACCOUNT` env vars (see
 `config_doctor`); `list` unions brand kits with credentialed accounts so you see
 the whole picture.
 
+### Asset registry (media reuse + rights)
+
+`asset_list` shows every recorded media output (compose/upload are registered
+automatically): URL, hash, dimensions, tags, rights/expiry, and usage per post.
+Reuse a registered URL instead of re-uploading identical media; filter
+`used:false` for never-published assets, `expired:true` to audit rights.
+`asset_update(id, rights_note, rights_expires_at, add_tags)` records license
+terms — an expired asset WARNS in `content_check`/dispatch but never blocks.
+
 ### Start a brief (optional guided intake)
 
 ```

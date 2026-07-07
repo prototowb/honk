@@ -15,6 +15,7 @@ import { validateWithPolicy } from './policy-gate.js';
 import { hashContent } from './hash.js';
 import { recentDuplicate } from './audit.js';
 import { normalizeScheduledAt, timezoneWarning, isPast } from './schedule.js';
+import { extractMediaUrls, expiryWarnings } from './assets.js';
 
 export type Verdict = 'pass' | 'warn' | 'block';
 
@@ -62,6 +63,9 @@ export function contentCheck(
     const norm = normalizeScheduledAt(scheduled_at);
     if (norm && isPast(norm)) warnings.push(`scheduled_at ${scheduled_at} is in the past — it would dispatch immediately on the next scheduler tick.`);
   }
+
+  // Asset rights/expiry (INIT-013) — deterministic warn, never a block.
+  warnings.push(...expiryWarnings(extractMediaUrls(content)));
 
   const verdict: Verdict = gate.errors.length ? 'block' : warnings.length ? 'warn' : 'pass';
   return { verdict, platform, errors: gate.errors, warnings, notes, duplicate, agentGates: AGENT_GATES };
