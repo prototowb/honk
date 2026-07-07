@@ -37,7 +37,7 @@ delegation is the product, not a feature.
    audit + policy gate, alt-text/first-comment/UTM mechanics.
 2. **Brand OS** *(the assets & digital-brand-management identity of the platform)* — brand
    kits (voice, audiences, per-channel deltas, policy/guardrails, visual identity), branded
-   media composition + templates, **asset registry (planned — the DAM seed)**, multi-brand
+   media composition + templates, **asset registry v1 (shipped INIT-013 — the DAM seed)**, multi-brand
    management with an account registry, portable user-owned brand data.
 3. **Intelligence & Engage** — analytics ingestion + auto-follow-up, best-time (baseline →
    observed), learned voice (few-shots from real results), duplicate/repost guard, rate-limit
@@ -112,9 +112,11 @@ Everything else (UI, more channels, DAM depth, hosting) is post-1.0 growth, not 
 - Channel SPI generalization (adapters declare capabilities; see PROJECT_ARCHITECTURE) —
   then: **Mastodon** (ALPHA-017), **LinkedIn** (ALPHA-018), **blog/CMS channels** (Ghost,
   WordPress, headless e.g. Sanity), **newsletter** (Buttondown/Mailchimp-class)
-- **Asset registry v1** (DAM seed): every `media_upload`/`media_compose` output recorded
-  (id, provider URL, hash, dimensions, usage per post, rights/expiry note); `asset_list` /
-  reuse-in-drafts; the brand kit's logo/icon become registered assets
+- **Asset registry v1** (DAM seed) — **✅ shipped early (INIT-013, 2026-07-06)**: every
+  `media_upload`/`media_compose` output recorded (id, provider URL(s), hash-deduped,
+  dimensions, usage per post, rights/expiry with deterministic dispatch warn);
+  `asset_list`/`asset_update`; kit logo/icon registered. Remaining H2 depth: bulk import,
+  provider-side deletion, approved-for-channel gating
 - **Campaigns:** brief → cross-channel bundle (`campaign_id` on queue items, grouped
   dispatch/reporting)
 - **Content recycling:** evergreen re-queue suggestions from the audit log + analytics
@@ -147,7 +149,7 @@ PROJECT_STATUS *Descoped*.)
 
 **Proposed (this revision — newly placed above):** workflow library v1 (H1) · account
 registry (H1) · store versioning (H0) · SQLite-via-node:sqlite decision (H1) · asset
-registry / DAM seed (H2) · blog + newsletter channels (H2) · campaigns (H2) · content
+registry / DAM seed (**shipped INIT-013**) · blog + newsletter channels (H2) · campaigns (H2) · content
 recycling (H2) · remote MCP hosting (H2) · brand-portal export (H3) · approval workflows +
 vault + teams (H3) · A/B variants (H3) · guardian review posture — doctrine in
 PROJECT_ARCHITECTURE security model; its `content_check` report surface **shipped (INIT-009)**.

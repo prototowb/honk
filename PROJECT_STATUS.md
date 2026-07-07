@@ -38,14 +38,12 @@ Branch: `feature/ALPHA-009-content-foundations`.
 
 ## Active Tickets
 
-**None in progress.** The Sprint Alpha-2 build-now spine + all credential-free
-features shipped (ALPHA-008/009/010/011/012/013/020/021), and **ALPHA-019
-best-time-to-post** shipped this session (see *Completed*). Remaining work is the
-**needs-your-input** track (Mastodon/LinkedIn creds, alt-text/first-comment/delete
-scope) and the BETA-011 UI stop-line — see *Next Up*. Per the user's direction
-("everything but platform adapters"), the next non-adapter items (alt-text /
-first-comment / delete) touch live publish paths — delete is destructive — and
-stay gated on a scope confirmation before build.
+**None in progress.** Latest session (2026-07-06/07) shipped **INIT-012** (SDLC
+streamline: BETA-013 descoped to the *Descoped* table below, AGENTS.md session
+model, doc-rot heal) and **INIT-013** (asset registry v1 — the DAM seed; tools
+32→34) — see *Completed*. Open lanes: the publish story (npm name check →
+RELEASING.md), the **needs-your-input** track below, and the BETA-011 UI
+stop-line. See `SESSION_HANDOFF.md` → NEXT for the ordered list.
 
 ## Completed Tickets
 
@@ -105,6 +103,8 @@ stay gated on a scope confirmation before build.
 | INIT-009 | **`content_check` aggregated pre-publish report** — the "CI for content" surface from the guardian research (ROADMAP_NOTES R2), pulled forward now the workflow library exists. One call runs every **deterministic** gate (platform rules + brand policy via the policy gate with the INIT-006 active-account fallback, duplicate guard vs recent publishes, schedule timezone/past sanity when `scheduled_at` given) → single **pass/warn/block** verdict, followed by the **agent-judged** checklist (structure, followable sourcing, right account, brand fit, confirmation) rendered as ☐ items the server explicitly does NOT auto-pass (security doctrine: deterministic vs agent-judged). `lib/report.ts` pure + formatter; **tools 31→32**; content-intelligence + pipeline-orchestrator adopt it as the final pre-queue gate; granular tools remain for drafting. A block here is the same block `publishAudited` enforces at dispatch — the report makes the gate legible, it does not replace it. 160 unit (+6) + 47-check smoke (+2) + build:check + pack:smoke green | ✅ Done |
 | INIT-010 | **Live read-scope verification (Part A)** — creds staged from `~/.claude/honk.env` via the desktop bridge (sandbox egress is allowlisted, so the runbook script ran ON the host through File Explorer, output read back through the mount). Verified live 2026-07-05: **IG profile + insights** ✅ (media `17874248277652862`, default + `PROTOCODE__` creds), **FB profile** ✅ (page `protocode`), **FB insights** ✅ (call succeeds on `…_1411992160954659`; empty object = the documented Graph zero-omission case, no invalid-metric error → names current, `read_insights` scoped). Threads/TikTok/Bluesky tokens **still empty** (BETA-013); X keys set, 402 status untestable without a write. **Part B (auto-follow-up loop) still needs a user-confirmed live publish.** Docs-only commit; creds copy removed after the run | ✅ Done |
 | INIT-011 | **Live E2E proof — the full pipeline, for real** — user-approved AI-security post (prompt injection / OWASP LLM01, source verified live) published to IG (`18123902104674983`) + FB (`105275157663337_1420845453402663`) through the complete agent flow: brand voice → `workflow_list` entry (weekly-insight, un-guided angle pick, supervised authority) → content-craft layered copy → `media_compose` (kit identity, square-tall) → **`content_check` PASS** (both) → explicit user approval → `publishAudited` (`SPMC_ANALYTICS_DELAY_MS=0`) → **`followups.runDue()` drained 8/8** → snapshots in `analytics_report`. **Closes:** ANALYTICS_VERIFICATION **Part B** ✅; **FB first-comment** ✅ live (`pages_manage_engagement` on the new non-expiring PAGE token); IG first-comment re-confirmed ✅; FB metrics fetch returns keyed values ✅; **INIT-003 live-prove** ✅ (hook→payoff structure + followable source, live). FB alt-text read-back remains unchecked (accepted without error). Also this arc: Desktop config fix (stale pre-rename server path) | ✅ Done |
+| INIT-012 | **SDLC streamline + descope** — (1) BETA-013 (Threads/TikTok/Bluesky creds, X 402) **descoped indefinitely** by user decision → new *Descoped* table (this file), pruned from specs/verification docs, dropped from handoff NEXT lists (backlog-hygiene rule in AGENTS.md); the six affected publish tools carry an explicit **live-unverified/experimental** note in their descriptions (the 1.0 definition's "honestly flagged" arm). (2) AGENTS.md template fiction (4+2 agent system, `{{placeholder}}` sprint/git-flow blocks) replaced with the real **Session Model** loop; root ARCHITECTURE.md (never-filled `pg` template) reduced to a pointer at PROJECT_ARCHITECTURE.md. Net −780 lines. Gates green | ✅ Done |
+| INIT-013 | **Asset registry v1 — the DAM seed** (H2 item pulled forward; first Brand OS platform brick). `lib/assets.ts` versioned store (`assets.json`, INIT-008 contract): id, content **hash** (dedupe at register — identical bytes under a new URL extend one asset), provider URL(s), dimensions, **rights/expiry**, tags, **usage per post from day one** (R2 takeaway). Auto-registration: `media_upload` (external calls) + `media_compose` (template+dims; kit logo/icon registered as `brand-kit` assets). `publishAudited` chokepoint records usage (post_id join) + appends a deterministic **expiry WARN** to the summary; `content_check` folds the same warn into the report (never a block — judgment stays with the user). Tools **32→34**: `asset_list` (filters: source/tag/account/template/expired/used; query by id/hash/URL), `asset_update` (rights_note, rights_expires_at, tags). All registry hooks best-effort — a registry failure can never fail an upload or a live post. 171 unit (+11) + 49-check smoke (+2) + build:check + pack:smoke green | ✅ Done |
 
 ## Next Up
 
@@ -163,9 +163,9 @@ Full phase tables in `PROJECT_HISTORY.md`.
 | Metric | Value |
 |--------|-------|
 | Platforms supported | 6 (X, Instagram, TikTok, Facebook, Threads, Bluesky) |
-| MCP tools | 32 (7 publishing + 1 tiktok-status + 9 content-intelligence + 1 workflow_list + 1 brand_voice + 1 brand_schema + 1 link_tag + 5 queue + 3 observability + 1 account_info + 2 media) |
+| MCP tools | 34 (7 publishing + 1 tiktok-status + 9 content-intelligence + 1 workflow_list + 1 brand_voice + 1 brand_schema + 1 link_tag + 5 queue + 3 observability + 1 account_info + 2 media + 2 assets) |
 | Claude Code skills | 15 (9 publishing: 6 platform + manage-queue + upload-media + content-intelligence · 5 pipeline: idea-input + research-trends + pipeline-orchestrator + output-manager + brand-setup · 1 craft: content-craft) |
-| Tests | 160 unit (`node:test`) + 47-check MCP smoke test |
+| Tests | 171 unit (`node:test`) + 49-check MCP smoke test |
 | npm package | `honk` v0.3.0-alpha (unpublished) |
 | Dependencies | 2 (`@modelcontextprotocol/sdk`, `sharp`) — unchanged |
 | Agent surfaces | 5 (Claude Code, Claude Desktop, Hermes, OpenClaw/generic, CLI/npm) |

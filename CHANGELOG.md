@@ -10,6 +10,19 @@ in `honk-server/package.json` and flows into every generated artifact via
 
 ## [Unreleased]
 
+### Added
+- **Asset registry v1 — the DAM seed** (INIT-013, tools 32→34). Every
+  `media_compose` / `media_upload` output is recorded automatically in a
+  versioned `assets.json` store: provider URL(s), content hash (identical bytes
+  re-uploaded under a new URL dedupe onto one asset), dimensions, tags,
+  rights/expiry note, and **usage per post** captured at the dispatch
+  chokepoint. New tools: `asset_list` (filter by source/tag/account/template/
+  expired/used, or query one asset by id/hash/URL) and `asset_update` (rights +
+  tags). A rights-expired asset produces a deterministic **warning** in
+  `content_check` and on the publish summary — never a block. The brand kit's
+  logo/icon are registered as `brand-kit` assets when composing. All hooks are
+  best-effort: the registry can never fail an upload or a live post.
+
 ### Changed
 - **Descoped indefinitely (INIT-012, user decision):** Threads / TikTok / Bluesky
   live credentials and X publish verification (API tier 402). Adapters stay

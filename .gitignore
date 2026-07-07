@@ -19,3 +19,6 @@ honk-server/**/*.js.map
 
 # npm pack output (pack:smoke leftover if cleanup is blocked)
 *.tgz
+
+# Cowork/Claude session artifacts
+.claude/

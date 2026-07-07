@@ -4,7 +4,7 @@
 
 # Honk Tool Reference
 
-**32 tools** · generated from `honk-server/lib/tools.js` + `lib/specs.js` · server v0.3.0-alpha
+**34 tools** · generated from `honk-server/lib/tools.js` + `lib/specs.js` · server v0.3.0-alpha
 
 ## Publishing & status
 
@@ -37,6 +37,8 @@
 | `brand_schema` | — | `account` (string) | — | Return the brand-kit field schema with the current values for an account — the single source for guided brand setup (the brand-setup skill) and the future web-UI settings form. Lists the persistent fields a brand kit holds (voice tone/audience, visual identity: accent/bg/surface/heading/body colors + logo/icon/handle/default-template, hashtags, CTAs, notes) grouped, with type/options/help, which are recommended, and what is already set. Call it to drive guided setup (collect the empty recommended fields one at a time) or to show a brand-settings overview. Writes go through brand_voice(action:"set"). The companion to brief_schema (per-run) — this is the persistent layer. |
 | `audit_log` | — | `platform` (string), `status` (string), `source` (string), `limit` (number) | — | Read the publish audit trail: every publish, failure, and dry-run with timestamp, platform, account, content hash, and result. Filter by platform/status/source. |
 | `schedule_check` | `scheduled_at` (string) | — | — | Validate and normalize a scheduled_at timestamp to canonical UTC ISO 8601. A timestamp without an explicit timezone is interpreted as the server's local time and flagged with a warning (it becomes ambiguous under hosted/multi-user deployment). Returns the normalized value and whether it is in the past. |
+| `asset_list` | — | `query` (string), `source` (string), `tag` (string), `account` (string), `template` (string), `expired` (boolean), `used` (boolean), `limit` (number) | — | List/inspect the asset registry — every media_compose / media_upload output is recorded automatically (URL, content hash, dimensions, rights/expiry, usage per post). Filter by source/tag/account/template/expired/used, or pass query (id, hash, or URL) for one asset's full record. Reuse a registered URL in drafts instead of re-uploading identical media. |
+| `asset_update` | `id` (string) | `rights_note` (string), `rights_expires_at` (string), `add_tags` (array), `remove_tags` (array) | — | Set rights/expiry and tags on a registered asset (addressed by id, hash, or URL). A past rights expiry produces a deterministic WARNING in content_check and on the dispatch summary — publishing is never blocked; the judgment stays with you. |
 
 ## Observability
 

@@ -24,6 +24,7 @@ import { briefSchema, formatBriefSchema } from './lib/brief.js';
 import { listWorkflows, getWorkflow, formatWorkflow, formatWorkflows } from './lib/workflows.js';
 import { contentCheck, formatContentCheck } from './lib/report.js';
 import { brandSchema, formatBrandSchema } from './lib/brand-schema.js';
+import * as assets from './lib/assets.js';
 import { TOOLS } from './lib/tools.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -428,6 +429,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     throw e;
                 }
             }
+            // ── Asset registry (DAM seed, INIT-013) ───────────────────────────────
+            case 'asset_list': {
+                if (a.query != null) {
+                    const found = assets.find(String(a.query));
+                    if (!found)
+                        return ok(`No asset matches '${String(a.query)}' (id, hash, or URL).`);
+                    return ok(assets.formatAsset(found));
+                }
+                const filter = {};
+                if (a.source != null)
+                    filter.source = String(a.source);
+                if (a.tag != null)
+                    filter.tag = String(a.tag);
+                if (a.account != null)
+                    filter.account = String(a.account);
+                if (a.template != null)
+                    filter.template = String(a.template);
+                if (typeof a.expired === 'boolean')
+                    filter.expired = a.expired;
+                if (typeof a.used === 'boolean')
+                    filter.used = a.used;
+                let items = assets.list(filter);
+                if (a.limit != null)
+                    items = items.slice(0, Number(a.limit));
+                return ok(assets.formatAssets(items));
+            }
+            case 'asset_update': {
+                const updated = assets.update(String(a.id), {
+                    ...(a.rights_note != null ? { rights_note: String(a.rights_note) } : {}),
+                    ...(a.rights_expires_at != null ? { rights_expires_at: String(a.rights_expires_at) } : {}),
+                    ...(Array.isArray(a.add_tags) ? { add_tags: a.add_tags } : {}),
+                    ...(Array.isArray(a.remove_tags) ? { remove_tags: a.remove_tags } : {}),
+                });
+                return ok(`Asset updated.\n${assets.formatAsset(updated)}`);
+            }
             // ── Media ──────────────────────────────────────────────────────────────
             case 'media_compose': {
                 const brandAccount = a.account ?? brand.getActive();
@@ -436,6 +472,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 if (!template)
                     throw new Error('media_compose needs a `template` (or set visual.default_template in the brand kit via brand_voice).');
                 const result = await compose.compose(template, variables, { provider: a.provider ?? undefined, account: String(a.account ?? '') });
+                // Asset registry (INIT-013): the brand kit's identity media are assets
+                // too — register the kit's logo/icon URLs (dedupe by URL) best-effort.
+                const v = visual;
+                for (const [kind, u] of [['logo', v.logo_url], ['icon', v.icon_url]]) {
+                    if (typeof u === 'string' && u) {
+                        try {
+                            assets.register({ url: u, source: 'brand-kit', tags: ['brand-kit', kind], ...(brandAccount ? { account: brandAccount } : {}) });
+                        }
+                        catch { /* best-effort */ }
+                    }
+                }
                 const activeNote = brandAccount && !a.account
                     ? `\n(brand kit from active account '${brandAccount}')` : '';
                 return ok(`Composed ${result.template} (${result.dimensions.width}×${result.dimensions.height})\n`

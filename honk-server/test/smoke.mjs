@@ -277,6 +277,14 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   if (id) await client.callTool({ name: 'queue_remove', arguments: { id } });
 }
 
+// asset registry — credential-free surface (INIT-013).
+{
+  const r = await client.callTool({ name: 'asset_list', arguments: {} });
+  check('asset_list reports an empty registry', !r.isError && /no assets registered/i.test(text(r)));
+  const u = await client.callTool({ name: 'asset_update', arguments: { id: 'ast_missing', rights_note: 'x' } });
+  check('asset_update errors on an unknown asset', /no asset matches/i.test(text(u)));
+}
+
 await client.close();
 console.log(`\n${failures === 0 ? 'SMOKE PASS' : `SMOKE FAIL (${failures})`}`);
 process.exit(failures === 0 ? 0 : 1);

@@ -79,6 +79,13 @@ backdrop photo behind the layers, and `logo_url` to stamp a logo bottom-right.
 For a local source image instead of a rendered template, use the `upload-media`
 skill. Then queue or publish via `manage-queue`.
 
+Every compose/upload output is auto-recorded in the **asset registry**
+(`asset_list`) with its URL, content hash, dimensions, and — once published —
+usage per post. Before rendering or uploading again, check `asset_list` for an
+existing asset you can reuse (same URL, no re-upload); identical bytes dedupe
+onto one asset automatically. Rights-noted assets past their expiry
+(`asset_update`) surface a warning in `content_check` and on dispatch.
+
 ### Design principles (platform graphic design)
 
 - **One focal point.** The headline is the hero; everything else supports it.
