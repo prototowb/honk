@@ -89,12 +89,17 @@ README), which matters independent of ever pushing to the registry.
   "complete," spot-check it — don't trust the claim.**
 - `PROJECT_SPECIFICATIONS.md`'s H0 goal list had two items sitting unchecked for weeks
   after they'd shipped: "Store format versioning" (done — INIT-008) and "Live-prove
-  content-craft" (done — INIT-011's AI-security post). Both now marked ✅. **With the
-  README fix and the redefined point 2, every H0 bullet is checked** except the `npm
-  audit` clause (point 5) — checked fresh this session: **5 vulnerabilities (1 high, 3
-  moderate, 1 low)** in transitive deps (`fast-uri`, `hono`, via
-  `@modelcontextprotocol/sdk`), fixable via `npm audit fix` but not yet attempted/tested.
-  Whether/when to cut `v1.0.0` given this is **the user's call, not something to auto-cut.**
+  content-craft" (done — INIT-011's AI-security post). Both now marked ✅.
+- **`npm audit` clause (point 5) — found AND fixed same session.** 5 vulnerabilities
+  (1 high, 3 moderate, 1 low) in transitive deps (`fast-uri` via `ajv`, `hono` via
+  `@modelcontextprotocol/sdk`); `npm audit fix` bumped the (root, npm-workspace-hoisted)
+  lockfile only — `@modelcontextprotocol/sdk` moved to 1.30.0, still inside its existing
+  `^1.12.0` range in `package.json`, which is untouched. `npm audit` now reports **0
+  vulnerabilities**; type-check + 180 unit + 49 smoke + build:check + pack:smoke all
+  reverified green after the bump.
+
+**Every H0 bullet and every "1.0 Means" criterion now checks out — nothing in the
+definition is blocking `v1.0.0` anymore. Whether/when to cut it is the user's call.**
 
 ## Session Infrastructure — sandbox-only, retired here but keep for reference
 
@@ -117,10 +122,10 @@ sandbox, not a live sandbox problem).
 
 ## NEXT
 
-1. **Decide on cutting `v1.0.0`.** Every H0 bullet + "1.0 Means" criterion is now checked
-   except `npm audit` (5 vulnerabilities in transitive deps — see above). Options: run
-   `npm audit fix` + re-test, then cut; cut anyway and track the audit separately; or hold.
-   This is the natural next decision, not a coding task — ask the user.
+1. **Decide on cutting `v1.0.0`.** Every H0 bullet + every "1.0 Means" criterion now
+   checks out (see above — the `npm audit` item is also resolved). This is a decision for
+   the user, not a coding task: if yes, follow `RELEASING.md`'s changelog-move +
+   version-bump flow, tag, PR `development` → `main`.
 2. **BETA-011 UI phase** (stop-line; entry after 1.0 cut per horizons) — read-only first:
    queue/calendar/analytics/assets views rendering the same schemas guided mode uses. The
    account registry's handle cache (INIT-014) is now there for the account switcher.
