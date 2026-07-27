@@ -1,7 +1,11 @@
-import test   from 'node:test';
+import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { report } from '../lib/config.js';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { report, accountsOverview, formatAccounts } from '../lib/config.js';
 import { env, hasAll, discoverAccounts } from '../lib/env.js';
+import * as accounts from '../lib/accounts.js';
 
 test('reports a configured platform and a missing one', () => {
   process.env.BLUESKY_IDENTIFIER   = 'me.bsky.social';
@@ -43,3 +47,51 @@ test('never includes credential values, only key names', () => {
   const serialized = JSON.stringify(report());
   assert.ok(!serialized.includes('super-secret-value'));
 });
+
+// Account registry handle enrichment (INIT-014) — accountsOverview() layers
+// accounts.ts's cache onto rows; formatAccounts() renders it.
+{
+  let dir;
+  before(() => { dir = mkdtempSync(join(tmpdir(), 'honk-config-')); process.env.HONK_DATA_DIR = dir; });
+  after(() => { try { rmSync(dir, { recursive: true, force: true }); } catch {} });
+
+  test('accountsOverview layers a cached handle onto the matching row', () => {
+    process.env.BRAND__X_API_KEY            = 'k';
+    process.env.BRAND__X_API_SECRET         = 's';
+    process.env.BRAND__X_ACCESS_TOKEN       = 't';
+    process.env.BRAND__X_ACCESS_TOKEN_SECRET = 'ts';
+    accounts.recordHandle('brand', 'instagram', { id: '1', handle: '@brand_ig', name: 'Brand' });
+
+    const row = accountsOverview().rows.find(r => r.account === 'brand');
+    assert.ok(row);
+    assert.equal(row.handles.instagram.handle, '@brand_ig');
+  });
+
+  test('formatAccounts does not double the @ prefix a handle already carries', () => {
+    // Regression: the adapters (instagram.ts/facebook.ts getProfile) already
+    // prefix '@' onto the handle before it reaches the registry — formatAccounts
+    // must render it verbatim, not prepend a second '@'.
+    const rendered = formatAccounts({
+      active: '',
+      rows: [{
+        name: 'brand', account: 'brand', isDefault: false, active: false,
+        brandProfile: false, platforms: [],
+        handles: { instagram: { handle: '@brand_ig', name: null } },
+      }],
+    });
+    assert.match(rendered, /instagram=@brand_ig\b/);
+    assert.doesNotMatch(rendered, /@@/);
+  });
+
+  test('formatAccounts falls back to the profile name when a platform has no handle', () => {
+    const rendered = formatAccounts({
+      active: '',
+      rows: [{
+        name: 'brand', account: 'brand', isDefault: false, active: false,
+        brandProfile: false, platforms: [],
+        handles: { facebook: { handle: null, name: 'Brand Page' } },
+      }],
+    });
+    assert.match(rendered, /facebook=Brand Page/);
+  });
+}
