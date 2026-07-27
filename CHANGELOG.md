@@ -11,6 +11,22 @@ in `honk-server/package.json` and flows into every generated artifact via
 ## [Unreleased]
 
 ### Added
+- **Account registry v1** (INIT-014) — `brand-active.json`'s active-account
+  pointer grows into a versioned `accounts.json` registry (own comment called
+  it "the seed of a future account registry"; this is that registry). Still
+  owns the active pointer (`brand.getActive`/`setActive` now delegate to it,
+  with an automatic read-only seed from the legacy `brand-active.json` file so
+  existing active selections carry over with no migration step), and now also
+  caches each account's channel handle (id/handle/name/icon_url) fetched via
+  `account_info`, so `brand_voice list` shows it without a live API round trip.
+  Scope stays exactly what H1 called for — credential identity (env) × brand
+  identity (`brand.json`) × channel handles — nothing else is duplicated into
+  the registry. Registry keys are lowercase-normalized (matches the existing
+  `accountsOverview()` join) while the active pointer preserves the exact case
+  the user set, since `brand.json` and `env()` key off raw case. Tools stay 34
+  (no new tool surface — `brand_voice list` and `account_info` are unchanged
+  call shapes, richer output). 8 unit tests.
+
 - **Asset registry v1 — the DAM seed** (INIT-013, tools 32→34). Every
   `media_compose` / `media_upload` output is recorded automatically in a
   versioned `assets.json` store: provider URL(s), content hash (identical bytes

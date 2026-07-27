@@ -303,6 +303,7 @@ export interface AccountRow {
   active: boolean;
   brandProfile: boolean;
   platforms: string[];
+  handles?: Record<string, { handle?: string | null; name?: string | null }>;
 }
 
 export interface AccountsOverview {

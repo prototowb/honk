@@ -99,8 +99,9 @@ Everything else (UI, more channels, DAM depth, hosting) is post-1.0 growth, not 
 - **Workflow library v1** — `capabilities/workflows/<name>.md` + `workflow_list` tool +
   3 seed entries (`weekly-insight`, `product-update`, `engagement-spark`); guided mode picks
   from it (PRINCIPLES §3 — the concept is ready, build is small)
-- **Account registry** — grow `brand-active.json` into `accounts.json` (credential identity ×
-  brand identity × channel handles); closes the INIT-005 fallback note properly
+- **Account registry — shipped INIT-014.** `brand-active.json` grew into `accounts.json`
+  (credential identity × brand identity × channel handles); active pointer + channel-handle
+  cache from `account_info`; closes the INIT-005 fallback note (registry-resolved)
 - **BETA-011 UI (read-only first):** analytics dashboard + content calendar + queue view,
   rendering the same schemas guided mode uses (schema symmetry is the wireframe)
 - INDIV-007 learned/adaptive — once analytics history accrues (data-gated)

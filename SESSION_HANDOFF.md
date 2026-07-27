@@ -4,83 +4,89 @@
 
 ## Where We Are
 
-**`v0.3.0-alpha`** · `development` is default/integration (green). **`development` is
-~28 commits ahead of `origin/development` and UNPUSHED** — the sandbox has no GitHub
-credentials. **First action: push** (`git -C G:\Projects\_Plugins\honk push origin development`
-on the host). `main` still at v0.3.0-alpha via PR only.
+**`v0.3.0-alpha`** · `development` is default/integration (green) and **pushed —
+`origin/development` is caught up** (was ~28 commits behind at session start; see
+below). `main` still at v0.3.0-alpha via PR only.
 
-**State:** **34 tools** · 15 skills · 5 templates · 2 runtime deps · **171 unit +
+**State:** **34 tools** · 15 skills · 5 templates · 2 runtime deps · **179 unit +
 49-check smoke + build:check + pack:smoke** green at every commit.
 
-## This Session (2026-07-06/07) — INIT-012 + INIT-013
+## This Session (2026-07-27) — repo repair + push + INIT-014
 
-**INIT-012 SDLC streamline + descope** (`feature/INIT-012-sdlc-streamline`, merged):
-- **Descoped indefinitely (user decision):** Threads/TikTok/Bluesky live creds + X publish
-  (402). New *Descoped* table in PROJECT_STATUS is their only home — they are NOT re-listed
-  in handoffs (backlog-hygiene rule now in AGENTS.md → Session Model). Adapters stay
-  shipped/tested; the six affected publish tools carry an explicit **[Experimental: never
-  verified against the live API]** description flag — the 1.0 definition's "honestly
-  flagged" arm (PROJECT_SPECIFICATIONS §1 updated; remaining verify item: FB alt-text
-  read-back, minor).
-- **AGENTS.md**: proto-gear template fiction (4 Core + 2 Flex agents, {{placeholder}}
-  sprint/git-flow blocks) replaced with the real **Session Model** (one Lead AI per session;
-  orient→contract→branch→build→gate→record→merge→hand off). Root **ARCHITECTURE.md**
-  (never-filled pg template) reduced to a pointer at PROJECT_ARCHITECTURE.md
-  (BUILD_CONCEPT.md convention). Net −780 lines. `agent/mcp-config.json` healed to the
-  post-rename path. `.gitignore`: `*.tgz`, `.claude/`.
+**Repo repair (first thing, before any other work):** this was the first session on the
+real host since the prior sandboxed session (2026-07-06/07). `.git/index` was **entirely
+missing** — the sandbox's off-mount-index workaround (see the retired Session
+Infrastructure section below) never got written back — so `git status` showed all 250
+tracked files as deleted, though the working tree content was intact. Fixed with `git
+read-tree HEAD` (rebuilds the index from a commit; touches no files) after confirming via
+`git write-tree` / tree-hash comparison that the working tree was byte-identical to
+`development`'s tip. A stale 3-week-old `.git/HEAD.lock` (from the same sandbox session
+half-failing a git operation — see old point 2 below) also had to be removed before `git
+symbolic-ref HEAD refs/heads/development` would take. **If `git status` ever again shows
+mass deletions with content still present on disk, suspect a missing/stale index before
+anything else** — do NOT `git add -A`/commit over it without first diffing working-tree
+content against the branch tip it should match.
 
-**INIT-013 Asset registry v1 — the DAM seed** (`feature/INIT-013-asset-registry`, merged;
-H2 item pulled forward as the first Brand OS platform brick, user's pick):
-- `src/lib/assets.ts` — versioned tracking store `~/.honk/assets.json` ({schema_version,
-  items}, INIT-008 contract). Asset: id (`ast_<hash16>`), content hash, provider URL(s),
-  dims/bytes/format, source (upload|compose|brand-kit|manual), template, tags,
-  **rights{note,expires_at}**, **usage[] per post**.
-- **Dedupe at register** by content hash (URL fallback when hash-less): identical bytes
-  re-uploaded under a new URL extend ONE asset's url list (latest wins as primary).
-- **Auto-registration:** `media/upload.ts` registers external uploads (compose-internal
-  buffer calls skipped — compose registers richer); `media/compose.ts` registers with
-  template+dims; `index.ts media_compose` registers the kit's logo/icon as `brand-kit`
-  assets (URL-dedupe). ALL hooks best-effort: registry failure can never fail an upload
-  or a live post.
-- **Usage-per-post from day one** (the R2 anti-retrofit takeaway): `publishAudited`
-  chokepoint records {platform, post_id, account, at} onto every registered asset the
-  publish referenced (matches ANY known URL of a deduped asset).
-- **Rights/expiry = deterministic WARN, never block:** in `content_check` (report.ts) and
-  appended to the dispatch summary. Judgment stays with the user (security doctrine:
-  deterministic vs agent-judged).
-- **Tools 32→34:** `asset_list` (filters source/tag/account/template/expired/used; `query`
-  by id/hash/URL for one record) + `asset_update` (rights_note, rights_expires_at,
-  add/remove_tags). Skills prose: output-manager (reuse-before-re-render),
-  content-intelligence (registry section). 171 unit (+11) + 49 smoke (+2).
+**Pushed `development` → `origin/development`** (27 commits, including the INIT-012 +
+INIT-013 work from the prior session that never left the sandbox).
 
-## ⚠ Session Infrastructure (READ before touching files/git in a sandboxed session)
+**INIT-014 Account registry v1** (`feature/INIT-014-account-registry`, merged) — the H1
+item ("grow `brand-active.json` into `accounts.json`"):
+- `src/lib/accounts.ts` — new versioned store (`accounts.json`, INIT-008 contract: this
+  file is machine-written-only, unlike the deliberately-flat `brand.json`/
+  `brand-active.json`, so format drift should be detectable). Still owns the **active
+  account pointer** — `brand.getActive`/`setActive` now delegate to it, with `getActive()`
+  read-only-seeding from the legacy `brand-active.json` on first read (no explicit
+  migration step; the first `setActive()` call creates `accounts.json` going forward).
+  Now also **caches each account's channel handle** (id/handle/name/icon_url) fetched via
+  `account_info`, recorded best-effort so a registry hiccup can never fail the profile
+  read. `config.ts`'s `accountsOverview()` layers the cache onto `brand_voice list` output
+  — no live API round trip needed to see it.
+- **Scope held to exactly the H1 line** — credential identity (env) × brand identity
+  (`brand.json`) × channel handles, nothing more. Credential presence and brand-profile
+  existence stay live-computed (unchanged) in `config.ts`; the registry only owns what
+  neither of those already own. No `display_name`/`notes`/new tool — those would be
+  designing for the not-yet-started BETA-011 UI, not what H1 asked for.
+- **Case handling (the part worth re-reading if you touch this later):** registry keys are
+  lowercase-normalized (matches `accountsOverview()`'s existing join, which already
+  lowercases both credential and brand-profile account names). The **active pointer stays
+  raw-case** — `brand.get()`/`env(key, account)` key off the exact case the user set, so
+  lowercasing `getActive()`'s return would desync the pointer from the accounts it
+  resolves against (a live policy-fallback regression). Covered by a dedicated test.
+- Tools stay **34** — no new tool; `brand_voice list` and `account_info` are unchanged
+  call shapes with richer output. 179 unit (+8) + 49 smoke (unchanged — the handle-cache
+  path needs live `account_info` creds smoke can't exercise; covered by the 8 unit tests
+  instead, plus the full unchanged 49-check smoke suite passing as a regression check on
+  the `brand.ts`/`config.ts` refactor).
 
-The desktop mount misbehaves under the sandbox — all mitigations verified this session:
-1. **Desktop file tools (Write/Edit) TRUNCATE/NULL-PAD files to their previous byte length
-   on this mount.** Corrupted 6 files this session (caught by tsc + byte-size diff vs git).
-   **Write files ONLY via bash** (python/heredoc through the Linux mount path). Verify with
-   `wc -c` vs `git show HEAD:<file> | wc -c` after any suspicious write.
-2. `.git/HEAD` and `ORIG_HEAD` are intermittently **un-writable** → `git switch`/`merge`
-   can fail or half-fail. Use **plumbing**: `git write-tree` → `git commit-tree` →
-   `git update-ref refs/heads/<branch>`. Merges: `commit-tree TREE -p dev -p feature`.
-3. Off-mount index in force: `export GIT_INDEX_FILE=/sessions/<sandbox>/honk.index`
-   (rebuild with `git read-tree HEAD` if stale). `unable to unlink tmp_obj_*` warnings are
-   cosmetic. **None of this applies on the user's machine.**
-4. No GitHub creds in the sandbox → the USER pushes.
-5. `pack:smoke` PASSES but its tgz cleanup hits EPERM on the mount — tarball is gitignored.
-6. HEAD may still point at a stale feature branch after a failed switch — branch refs are
-   correct; trust `git log <branch>` over `git branch --show-current`.
+## Session Infrastructure — sandbox-only, retired here but keep for reference
+
+The prior session ran in a sandbox with a mounted drive that misbehaved; **none of this
+applies on the user's own machine** (confirmed again this session — real host, no mount
+issues beyond the one-time missing-index repair above, which was a leftover *from* the
+sandbox, not a live sandbox problem).
+1. Desktop file tools (Write/Edit) could truncate/null-pad files on the mount — write via
+   bash instead, verify with `wc -c` vs `git show HEAD:<file> | wc -c`.
+2. `.git/HEAD`/`ORIG_HEAD` were intermittently un-writable → `git switch`/`merge` could
+   fail or half-fail; use plumbing (`git write-tree` → `git commit-tree` → `git update-ref`).
+3. Off-mount index (`GIT_INDEX_FILE=/sessions/<sandbox>/honk.index`) was in force; this
+   session's repair (above) was the cleanup this note anticipated.
+4. No GitHub creds in the sandbox → the user pushed. Not needed here — this session pushed
+   directly.
+5. `pack:smoke`'s tgz cleanup hit EPERM on the mount (tarball is gitignored regardless).
+6. HEAD could point at a stale feature branch after a failed switch — trust `git log
+   <branch>` over `git branch --show-current`. (This is in fact what happened — see repair
+   note above.)
 
 ## NEXT
 
-0. **Push `development`** (user, on host). Then npm **publish story**: check `honk` name
-   availability on the registry → RELEASING.md flow (LICENSE/metadata done since INIT-006).
-1. **Content quality — live-prove INIT-003** (H0): one real fact-bearing post through
+1. **npm publish story** — check `honk` name availability on the registry → RELEASING.md
+   flow (LICENSE/metadata done since INIT-006).
+2. **Content quality — live-prove INIT-003** (H0): one real fact-bearing post through
    content-craft + persona gates, confirm hook→payoff→CTA + followable source lands better.
-2. **Account registry (H1)** — grow `brand-active.json` into `accounts.json` (credential ×
-   brand × handles); asset registry + policy fallback both want it.
 3. **BETA-011 UI phase** (stop-line; entry after 1.0 cut per horizons) — read-only first:
-   queue/calendar/analytics/**assets** views rendering the same schemas guided mode uses.
+   queue/calendar/analytics/assets views rendering the same schemas guided mode uses. The
+   account registry's handle cache (INIT-014) is now there for the account switcher.
 4. **INBOX-001** Phase 0 vs 1 decision (plan in INBOX_FEATURE_PLAN.md).
 5. **INDIV-007 learned/adaptive** — data-gated on accrued analytics.
 6. Deferred: ALPHA-016 delete (destructive, scope-paused) · ALPHA-017 Mastodon /
@@ -93,14 +99,15 @@ The desktop mount misbehaves under the sandbox — all mitigations verified this
 - **Outbound HTTP** — `import { fetchWithTimeout as fetch } from '../lib/http.js'` in
   adapters/media. Secrets scrubbed at the audit boundary.
 - **JSON state** — `lib/jsonstore.ts` (`writeVersionedAtomic`/`readVersioned` for tracking
-  stores; brand stores stay flat per INDIV-006). Asset store follows the versioned contract.
-- **Registry hooks are best-effort** — never let assets.ts throw into an upload/publish path.
+  stores; brand stores stay flat per INDIV-006). Asset store and account registry both
+  follow the versioned contract.
+- **Registry hooks are best-effort** — never let assets.ts/accounts.ts throw into an
+  upload/publish/read path.
 - **Build origin:** tool → `src/lib/tools.ts` · limit → `src/lib/specs.ts` · cred/media key →
   `src/lib/config.ts` (+ both env.examples in sync) · skill prose → `capabilities/` ·
   template → `media/templates/<id>/` · version → `honk-server/package.json`. Then
-  `npm run build:ts && npm run build`. ⚠ `npm run build` rewrites `agent/mcp-config.json`
-  with the LOCAL absolute path — in a sandbox session, restore the user's Windows path
-  (`G:\Projects\_Plugins\honk\honk-server\run.js`) before committing.
+  `npm run build:ts && npm run build`. `npm run build` rewrites `agent/mcp-config.json`
+  with the local absolute path — check `git diff agent/mcp-config.json` after, don't assume.
 - **Gates green at every commit:** `npm test` · `npm run build:check` · `test:smoke` ·
   `pack:smoke`. CI gates `main`/`development`/`feature/**` + PRs.
 - **Narrative history → PROJECT_HISTORY.md** (newest first); PROJECT_STATUS stays a lean
@@ -111,5 +118,5 @@ The desktop mount misbehaves under the sandbox — all mitigations verified this
   **Always confirm post content with the user before publishing.**
 - **Git flow:** branch off `development`, merge `--no-ff`, push; `main` via PR only. Commit
   via `git commit -F <msgfile>`. Ticket IDs: confirm next free INIT-xxx against git history
-  (INIT-013 was this session's last; `pg`'s counter drifts).
+  (INIT-014 was this session's last; `pg`'s counter drifts).
 - **Document permission scopes** for platform-touching features (`.env.example` + skill).
