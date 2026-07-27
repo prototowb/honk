@@ -55,7 +55,9 @@ test('recordHandle for a second platform merges into the same account row', () =
   accounts.recordHandle('multi', 'facebook', { id: '2', handle: 'multi_fb' });
   const rec = accounts.get('multi');
   assert.deepEqual(Object.keys(rec.handles).sort(), ['facebook', 'instagram']);
-  assert.equal(accounts.list().filter(r => r.account === 'multi').length, 1);
+  const created = rec.created_at;
+  accounts.recordHandle('multi', 'facebook', { id: '2', handle: 'multi_fb_renamed' });
+  assert.equal(accounts.get('multi').created_at, created); // same row, not re-minted
 });
 
 test('get() returns null for an account that was never recorded', () => {
@@ -64,7 +66,26 @@ test('get() returns null for an account that was never recorded', () => {
 
 test('the default account (empty string) stores under its own row, separate from named accounts', () => {
   accounts.recordHandle('', 'instagram', { id: '789', handle: 'default_ig' });
-  const rec = accounts.get('');
-  assert.equal(rec.handles.instagram.handle, 'default_ig');
-  assert.ok(accounts.list().some(r => r.account === ''));
+  accounts.recordHandle('brand', 'instagram', { id: '999', handle: 'brand_ig' });
+  assert.equal(accounts.get('').handles.instagram.handle, 'default_ig');
+  assert.equal(accounts.get('brand').handles.instagram.handle, 'brand_ig');
+});
+
+test('accounts.json coexisting with a stale populated brand-active.json: setActive migrates forward and stops reading the legacy file', async () => {
+  const upgradeDir = mkdtempSync(join(tmpdir(), 'honk-accounts-upgrade-'));
+  const prevDir = process.env.HONK_DATA_DIR;
+  process.env.HONK_DATA_DIR = upgradeDir;
+  writeFileSync(join(upgradeDir, 'brand-active.json'), JSON.stringify({ active: 'old-active' }));
+  try {
+    assert.equal(accounts.getActive(), 'old-active'); // pre-upgrade: reads the legacy file
+    accounts.setActive('new-active'); // first write creates accounts.json
+    assert.equal(accounts.getActive(), 'new-active');
+    // Legacy file is now stale but untouched — accounts.json is authoritative going forward,
+    // even if brand-active.json still exists on disk with the old value.
+    writeFileSync(join(upgradeDir, 'brand-active.json'), JSON.stringify({ active: 'stale-value' }));
+    assert.equal(accounts.getActive(), 'new-active');
+  } finally {
+    process.env.HONK_DATA_DIR = prevDir;
+    rmSync(upgradeDir, { recursive: true, force: true });
+  }
 });

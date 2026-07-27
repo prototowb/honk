@@ -8,7 +8,7 @@
 `origin/development` is caught up** (was ~28 commits behind at session start; see
 below). `main` still at v0.3.0-alpha via PR only.
 
-**State:** **34 tools** · 15 skills · 5 templates · 2 runtime deps · **179 unit +
+**State:** **34 tools** · 15 skills · 5 templates · 2 runtime deps · **180 unit +
 49-check smoke + build:check + pack:smoke** green at every commit.
 
 ## This Session (2026-07-27) — repo repair + push + INIT-014
@@ -54,10 +54,16 @@ item ("grow `brand-active.json` into `accounts.json`"):
   lowercasing `getActive()`'s return would desync the pointer from the accounts it
   resolves against (a live policy-fallback regression). Covered by a dedicated test.
 - Tools stay **34** — no new tool; `brand_voice list` and `account_info` are unchanged
-  call shapes with richer output. 179 unit (+8) + 49 smoke (unchanged — the handle-cache
-  path needs live `account_info` creds smoke can't exercise; covered by the 8 unit tests
+  call shapes with richer output. 180 unit (+9) + 49 smoke (unchanged — the handle-cache
+  path needs live `account_info` creds smoke can't exercise; covered by the 9 unit tests
   instead, plus the full unchanged 49-check smoke suite passing as a regression check on
   the `brand.ts`/`config.ts` refactor).
+- **Follow-up cleanup same session:** cut `accounts.ts`'s `list()` — exported but nothing
+  in `src/` called it (no `account_list` tool; same designing-for-hypotheticals rule that
+  kept `display_name`/`upsert` out). The two tests that used it were rewritten against
+  `get()`; a real-upgrade-path test was added (`accounts.json` created while a stale
+  populated `brand-active.json` still exists on disk — confirms the legacy file is only
+  read before `accounts.json` exists, never after).
 
 ## Session Infrastructure — sandbox-only, retired here but keep for reference
 
