@@ -39,11 +39,11 @@ Branch: `feature/ALPHA-009-content-foundations`.
 ## Active Tickets
 
 **None in progress.** Latest session (2026-07-27) pushed `development` (27
-commits, previously stranded in a creds-less sandbox) and shipped **INIT-014**
-(account registry v1 — `accounts.json`, H1) — see *Completed*. Open lanes: the
-publish story (npm name check → RELEASING.md), the **needs-your-input** track
-below, and the BETA-011 UI stop-line. See `SESSION_HANDOFF.md` → NEXT for the
-ordered list.
+commits, previously stranded in a creds-less sandbox), shipped **INIT-014**
+(account registry v1 — `accounts.json`, H1) — see *Completed* — and descoped
+the npm publish plan indefinitely (see *Descoped*). Open lanes: live-proving
+INIT-003 content quality, the **needs-your-input** track below, and the
+BETA-011 UI stop-line. See `SESSION_HANDOFF.md` → NEXT for the ordered list.
 
 ## Completed Tickets
 
@@ -137,7 +137,7 @@ Full plans (shape · logic · surface · tests · open decisions) in
 |----|-------|----------|
 | BETA-011 | UI implementation **planning** — analytics dashboard + content calendar (Phase 2/3). NOT started | ⚪ Next phase (stop line) |
 
-### Descoped — indefinite (user decision 2026-07-06, INIT-012)
+### Descoped — indefinite (user decisions; see per-row date)
 
 > These items are **off the backlog**. They do NOT appear in handoff `NEXT` lists and are
 > not carried forward. Revisit only on explicit user request. Adapters/code stay shipped;
@@ -146,8 +146,9 @@ Full plans (shape · logic · surface · tests · open decisions) in
 
 | ID | Item | State at descope |
 |----|------|------------------|
-| BETA-013 | Threads / TikTok / Bluesky live credentials | Tokens never provided; adapters + unit/smoke coverage shipped; Threads analytics metric names verified current against docs |
-| BETA-013 | X publish verification | Keys set; API tier credit-blocked (402) — no write possible without paid credits |
+| BETA-013 | Threads / TikTok / Bluesky live credentials | Tokens never provided; adapters + unit/smoke coverage shipped; Threads analytics metric names verified current against docs (2026-07-06, INIT-012) |
+| BETA-013 | X publish verification | Keys set; API tier credit-blocked (402) — no write possible without paid credits (2026-07-06, INIT-012) |
+| — | **npm publish** (the `honk` name-check → RELEASING.md flow) | No plan to distribute via the npm registry. `package.json` metadata (LICENSE, repository, bugs, homepage) and `RELEASING.md` stay as-is — harmless, not actively maintained toward a publish. `prepublishOnly`/`pack:smoke` keep running since they validate the tarball is installable, independent of whether it's ever pushed to the registry (2026-07-27) |
 
 ---
 

@@ -87,7 +87,9 @@ Everything else (UI, more channels, DAM depth, hosting) is post-1.0 growth, not 
 
 ### H0 — Production floor (current)
 **Goal: cut `v1.0.0` per the definition above.**
-- INIT-006 hardening ✅ · merge + publish story (`honk` name check → RELEASING.md flow)
+- INIT-006 hardening ✅ · merged to `development`. npm publish is **descoped indefinitely**
+  (user decision, 2026-07-27) — no plan to distribute via the npm registry; RELEASING.md
+  stays as reference but is not an active NEXT item. See PROJECT_STATUS *Descoped*.
 - Live verification pass ✅ (INIT-010/011: IG+FB read/write/first-comment/follow-up loop);
   Bluesky/Threads/TikTok creds + X 402 **descoped** (INIT-012) → "honestly flagged" arm
 - Store format versioning (`schema_version` field in each `~/.honk/` store) — cheap now,
@@ -145,8 +147,8 @@ Intelligence: analytics_fetch/report + auto-follow-ups, rate_limits, audit_log, 
 Delegation: 15 skills incl. content-craft, pipeline-orchestrator, guided mode + brief_schema.
 
 **Planned (ticketed):** INDIV-007 · BETA-011 · ALPHA-016 delete (scope-gated) ·
-ALPHA-017/018 · INBOX-001 · publish story. (BETA-013 **descoped** 2026-07-06 — see
-PROJECT_STATUS *Descoped*.)
+ALPHA-017/018 · INBOX-001. (BETA-013 **descoped** 2026-07-06; npm publish **descoped**
+2026-07-27 — see PROJECT_STATUS *Descoped*.)
 
 **Proposed (this revision — newly placed above):** workflow library v1 (H1) · account
 registry (H1) · store versioning (H0) · SQLite-via-node:sqlite decision (H1) · asset

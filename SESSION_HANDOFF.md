@@ -65,6 +65,14 @@ item ("grow `brand-active.json` into `accounts.json`"):
   populated `brand-active.json` still exists on disk — confirms the legacy file is only
   read before `accounts.json` exists, never after).
 
+**npm publish descoped indefinitely (user decision):** there is no plan to distribute
+`honk` via the npm registry. Moved to PROJECT_STATUS *Descoped* (backlog-hygiene rule —
+AGENTS.md) and dropped from the H0 goal list in PROJECT_SPECIFICATIONS.md. `RELEASING.md`
+and the `package.json` publish metadata (LICENSE, repository/bugs/homepage) stay as
+harmless reference, not an active target. `prepublishOnly`/`pack:smoke` keep running —
+they validate the tarball installs cleanly (`npm install -g .` from a local clone, per
+README), which matters independent of ever pushing to the registry.
+
 ## Session Infrastructure — sandbox-only, retired here but keep for reference
 
 The prior session ran in a sandbox with a mounted drive that misbehaved; **none of this
@@ -86,16 +94,14 @@ sandbox, not a live sandbox problem).
 
 ## NEXT
 
-1. **npm publish story** — check `honk` name availability on the registry → RELEASING.md
-   flow (LICENSE/metadata done since INIT-006).
-2. **Content quality — live-prove INIT-003** (H0): one real fact-bearing post through
+1. **Content quality — live-prove INIT-003** (H0): one real fact-bearing post through
    content-craft + persona gates, confirm hook→payoff→CTA + followable source lands better.
-3. **BETA-011 UI phase** (stop-line; entry after 1.0 cut per horizons) — read-only first:
+2. **BETA-011 UI phase** (stop-line; entry after 1.0 cut per horizons) — read-only first:
    queue/calendar/analytics/assets views rendering the same schemas guided mode uses. The
    account registry's handle cache (INIT-014) is now there for the account switcher.
-4. **INBOX-001** Phase 0 vs 1 decision (plan in INBOX_FEATURE_PLAN.md).
-5. **INDIV-007 learned/adaptive** — data-gated on accrued analytics.
-6. Deferred: ALPHA-016 delete (destructive, scope-paused) · ALPHA-017 Mastodon /
+3. **INBOX-001** Phase 0 vs 1 decision (plan in INBOX_FEATURE_PLAN.md).
+4. **INDIV-007 learned/adaptive** — data-gated on accrued analytics.
+5. Deferred: ALPHA-016 delete (destructive, scope-paused) · ALPHA-017 Mastodon /
    ALPHA-018 LinkedIn (need creds/decisions). Descoped items live ONLY in PROJECT_STATUS.
 
 ## Conventions In Force

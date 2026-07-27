@@ -1,5 +1,10 @@
 # Releasing Honk
 
+> **Note (2026-07-27):** npm registry publish is descoped indefinitely — no plan to
+> distribute `honk` via `npm publish` (see PROJECT_STATUS.md *Descoped*). The
+> version-bump / changelog mechanics below still apply to any release cut (tags,
+> `main` merges); skip step 4 (`npm publish`) unless that decision changes.
+
 The version lives once in `honk-server/package.json` and flows into every
 generated artifact (`TOOLS.md`, `.claude-plugin/plugin.json`,
 `claude_desktop_config.json`) through `npm run build`. **Never hand-edit the
