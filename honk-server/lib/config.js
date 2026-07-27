@@ -100,7 +100,9 @@ export function formatAccounts(o) {
     const lines = [`Accounts (active: ${o.active || 'default'}):`, ''];
     for (const r of o.rows) {
         const handleBits = r.handles
-            ? Object.entries(r.handles).map(([platform, h]) => `${platform}=${h.handle ? `@${h.handle}` : (h.name || '?')}`).join(', ')
+            // h.handle already carries its own '@' prefix when present (adapters format it
+            // that way — see instagram.ts/facebook.ts getProfile) — do not double it.
+            ? Object.entries(r.handles).map(([platform, h]) => `${platform}=${h.handle || h.name || '?'}`).join(', ')
             : '';
         lines.push(`${r.active ? '▸' : ' '} ${r.name} — brand kit: ${r.brandProfile ? 'set' : '—'}`
             + ` · creds: ${r.platforms.length ? r.platforms.join(', ') : '—'}`
