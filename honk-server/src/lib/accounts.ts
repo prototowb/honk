@@ -94,11 +94,6 @@ export function get(account = ''): AccountRecord | null {
   return load().accounts[key(account)] || null;
 }
 
-export function list(): (AccountRecord & { account: string })[] {
-  const { accounts } = load();
-  return Object.entries(accounts).map(([k, r]) => ({ account: k === '_default' ? '' : k, ...r }));
-}
-
 // Cache a platform's fetched profile (id/handle/name/icon_url) for an
 // account, creating the registry row on first use. Called from the
 // account_info tool — best-effort at the call site (a registry hiccup must
