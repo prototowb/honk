@@ -1,6 +1,7 @@
 import { PLATFORM_SPECS } from './specs.js';
 import { env, hasAll, discoverAccounts } from './env.js';
 import * as brand from './brand.js';
+import * as accounts from './accounts.js';
 export const MEDIA_PROVIDERS = {
     cloudinary: ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'],
     imgbb: ['IMGBB_API_KEY'],
@@ -85,13 +86,25 @@ export function accountsOverview() {
             platforms: [...(credPlatforms[name] || [])].sort(),
         });
     }
+    // Layer in cached channel handles (INIT-014 account registry) — a row only
+    // gains `handles` when account_info has actually been called for it.
+    for (const row of rows) {
+        const rec = accounts.get(row.account);
+        if (!rec || !Object.keys(rec.handles).length)
+            continue;
+        row.handles = Object.fromEntries(Object.entries(rec.handles).map(([platform, h]) => [platform, { handle: h.handle ?? null, name: h.name ?? null }]));
+    }
     return { active, rows };
 }
 export function formatAccounts(o) {
     const lines = [`Accounts (active: ${o.active || 'default'}):`, ''];
     for (const r of o.rows) {
+        const handleBits = r.handles
+            ? Object.entries(r.handles).map(([platform, h]) => `${platform}=${h.handle ? `@${h.handle}` : (h.name || '?')}`).join(', ')
+            : '';
         lines.push(`${r.active ? '▸' : ' '} ${r.name} — brand kit: ${r.brandProfile ? 'set' : '—'}`
-            + ` · creds: ${r.platforms.length ? r.platforms.join(', ') : '—'}${r.active ? '  (active)' : ''}`);
+            + ` · creds: ${r.platforms.length ? r.platforms.join(', ') : '—'}`
+            + `${handleBits ? ` · handles: ${handleBits}` : ''}${r.active ? '  (active)' : ''}`);
     }
     lines.push('', 'Switch with brand_voice(action:"use", account:"<name>"); copy a profile with action:"clone".');
     return lines.join('\n');

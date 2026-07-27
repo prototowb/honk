@@ -203,10 +203,16 @@ auth, single-tenant per deployment first (your own creds on your own host). Mult
 4. **Blast-radius defaults.** `auto_publish: false`; explicit accounts for writes; no delete
    tool until scoped (ALPHA-016); queue is reviewable state, not a hidden buffer.
 
-### Account registry (H1 seed exists)
+### Account registry — shipped (INIT-014)
 
-`brand-active.json` (INDIV-006) grows into `accounts.json`: an account = credential identity
-(env prefix) × brand identity (brand.json key) × channel handles (from `account_info`). The
-registry closes the INIT-005/006 note (policy fallback becomes registry-resolved), gives
-`brand_voice list` its backing store, and is the UI's account switcher. Flat `brand.json`
-stays — the registry references it, never absorbs it.
+`lib/accounts.ts` (`accounts.json`, versioned store): an account = credential identity (env
+prefix) × brand identity (`brand.json` key) × channel handles (from `account_info`). Still
+owns the active pointer (`brand-active.json`'s INDIV-006 role — `brand.getActive`/`setActive`
+delegate to it, legacy file read-only-seeded on first read) and now caches each account's
+fetched handle (id/handle/name/icon_url), which `config.ts`'s `accountsOverview()` layers
+onto `brand_voice list` output. Credential presence and brand-profile existence stay
+live-computed (env / `brand.json`) — the registry only owns what neither of those already
+own. Registry keys lowercase-normalized (matches the existing `accountsOverview()` join);
+the active pointer itself stays raw-case, since `brand.get()`/`env()` key off it. Flat
+`brand.json` stays — the registry references it, never absorbs it. Next: a UI account
+switcher (BETA-011) is the first real consumer of the handle cache.

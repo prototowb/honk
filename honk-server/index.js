@@ -18,6 +18,7 @@ import { hashContent } from './lib/hash.js';
 import { status as rateLimitStatus } from './lib/ratelimit.js';
 import { fetchMetrics, report as analyticsReport, SUPPORTED_PLATFORMS } from './lib/analytics.js';
 import * as brand from './lib/brand.js';
+import * as accounts from './lib/accounts.js';
 import { tagUrl } from './lib/links.js';
 import { bestTimes, formatBestTimes } from './lib/besttime.js';
 import { briefSchema, formatBriefSchema } from './lib/brief.js';
@@ -217,12 +218,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     throw new Error(`account_info not available for "${a.platform}". Supported: instagram, facebook.`);
                 const p = await mod.getProfile(String(a.account ?? ''));
                 let seedNote = '';
+                let permanentIconUrl = p.icon_url ?? null;
                 if (a.seed_brand_kit && (p.handle || p.icon_url)) {
                     const brandAccount = a.account ?? brand.getActive();
                     const patch = { visual: {} };
                     if (p.handle)
                         patch.visual.handle = p.handle;
-                    let permanentIconUrl = p.icon_url ?? null;
                     if (p.icon_url) {
                         try {
                             const imgRes = await fetch(p.icon_url);
@@ -243,6 +244,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     ].filter(Boolean);
                     seedNote = `\n\nBrand kit updated (account '${label}'): ${updated.join(', ')}.`;
                 }
+                // Account registry (INIT-014): cache the fetched identity so a UI
+                // account switcher / brand_voice list don't need a live API round
+                // trip. Best-effort — a registry hiccup must never fail this read.
+                try {
+                    accounts.recordHandle(String(a.account ?? ''), p.platform, {
+                        id: p.id, handle: p.handle, name: p.name, icon_url: permanentIconUrl,
+                    });
+                }
+                catch { /* cache is best-effort */ }
                 return ok(`${p.platform}${a.account ? `/${a.account}` : ''} profile:\n`
                     + `  name:   ${p.name ?? '(none)'}\n`
                     + `  handle: ${p.handle ?? '(none set)'}\n`
