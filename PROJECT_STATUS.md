@@ -47,9 +47,10 @@ rename (title/paths/bins/credential-file/skill-count/test-count all stale)
 despite this file claiming that rename complete; two H0 goals in
 PROJECT_SPECIFICATIONS.md had shipped (INIT-008, INIT-011) but sat unchecked;
 the 1.0 definition's "npm package public" clause was rewritten to drop the
-public-registry requirement (user decision) now that every other H0/1.0
-criterion checks out except `npm audit` (5 vulnerabilities found, unfixed —
-see SESSION_HANDOFF). **Deciding whether/when to cut `v1.0.0` is now the live
+public-registry requirement (user decision); the last open item, `npm audit`
+(5 vulnerabilities found), was resolved same-day via `npm audit fix`
+(lockfile-only bump, gates reverified green — see SESSION_HANDOFF). **Every
+H0/1.0 criterion now checks out. Deciding whether/when to cut `v1.0.0` is the live
 open question** — see `SESSION_HANDOFF.md` → NEXT.
 
 ## Completed Tickets

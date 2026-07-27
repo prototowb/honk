@@ -105,12 +105,14 @@ Everything else (UI, more channels, DAM depth, hosting) is post-1.0 growth, not 
   file, skill list/count, test counts all pre-rename; point 2 of the 1.0 definition above
   also redefined to drop the public-registry requirement)
 
-**With the above, every H0 bullet is now checked** except point 5's `npm audit` clause:
-checked 2026-07-27, `honk-server` currently has **5 vulnerabilities (1 high, 3 moderate,
-1 low)** in transitive deps (`fast-uri`, `hono` — pulled in via
-`@modelcontextprotocol/sdk`), fixable via `npm audit fix` but unverified against the test
-suite yet. Whether/when to cut `v1.0.0` is a decision for the user to make explicitly, not
-something to auto-cut.
+**Every H0 bullet and every "1.0 Means" criterion now checks out**, including point 5's
+`npm audit` clause: the 5 vulnerabilities found 2026-07-27 (1 high, 3 moderate, 1 low, in
+transitive deps `fast-uri`/`hono` via `@modelcontextprotocol/sdk`) were resolved same-day
+via `npm audit fix` (lockfile-only bump, `@modelcontextprotocol/sdk` stays within its
+existing `^1.12.0` range) — `npm audit` now reports **0 vulnerabilities**, verified against
+the full gate suite (type-check, 180 unit, 49-check smoke, build:check, pack:smoke, all
+green). **Whether/when to cut `v1.0.0` is a decision for the user to make explicitly** —
+nothing in this definition is blocking it anymore.
 
 ### H1 — Delegation + first UI (entry: 1.0 cut)
 **Goal: initiation stops being hand-written prompts; reading state stops requiring an agent.**
