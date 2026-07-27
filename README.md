@@ -1,9 +1,9 @@
-# SPMC — Social Publishing Mission Control
+# Honk
 
 AI-native MCP server for publishing to X, Instagram, TikTok, Facebook, Threads, and Bluesky.  
 The agent is the interface — no UI required.
 
-**MCP tools:** direct posting · content validation & cross-platform adaptation · dry-run previews · audit log · content queue · scheduler · media pipeline (compose + CDN upload) · config + rate-limit + analytics introspection
+**MCP tools:** direct posting · content validation & cross-platform adaptation · dry-run previews · audit log · content queue · scheduler · media pipeline (compose + CDN upload) · brand voice/visual kit + multi-brand + account registry · asset registry (DAM) · workflow library · best-time-to-post · one-call pre-publish report · config + rate-limit + analytics introspection
 
 ---
 
@@ -12,11 +12,11 @@ The agent is the interface — no UI required.
 All agent surfaces load credentials from the same file. Set it up once and every integration works:
 
 ```
-Windows:     %USERPROFILE%\.claude\spmc.env
-macOS/Linux: ~/.claude/spmc.env
+Windows:     %USERPROFILE%\.claude\honk.env
+macOS/Linux: ~/.claude/honk.env
 ```
 
-Copy `.env.example` to that path and fill in your keys. This file survives reinstalls and is the primary location for all surfaces. A `spmc-server/.env` fallback is also supported for local dev.
+Copy `.env.example` to that path and fill in your keys. This file survives reinstalls and is the primary location for all surfaces. (`~/.claude/spmc.env` — the pre-rename name — is still read as a transition fallback; a `honk-server/.env` fallback is also supported for local dev.)
 
 ---
 
@@ -24,21 +24,21 @@ Copy `.env.example` to that path and fill in your keys. This file survives reins
 
 The project ships as a Claude Code plugin. When active, Claude Code:
 - Loads the MCP server automatically via `.mcp.json`
-- Discovers and activates the 13 skills in `skills/`
+- Discovers and activates the 15 skills in `skills/`
 
 **Setup:**
 
-1. Run `npm install` inside `spmc-server/`
-2. Add credentials to `~/.claude/spmc.env`
+1. Run `npm install` inside `honk-server/`
+2. Add credentials to `~/.claude/honk.env`
 3. Load the plugin in Claude Code (the `.claude-plugin/plugin.json` and `.mcp.json` are auto-read from the project root)
 
 **How it works:**
 
 `.mcp.json` declares the server connection using `${CLAUDE_PLUGIN_ROOT}` — Claude Code resolves this to wherever the plugin lives, so no path hardcoding is needed. Credentials flow in as `${VAR}` placeholders resolved from the running environment.
 
-**Skills (`skills/`)** — two layers of one plugin:
+**Skills (`skills/`)** — three layers of one plugin:
 
-*Publishing engine — route to tools on the `spmc` MCP server:*
+*Publishing engine — route to tools on the `honk` MCP server:*
 
 | Skill | Trigger examples |
 |-------|-----------------|
@@ -60,30 +60,37 @@ The project ships as a Claude Code plugin. When active, Claude Code:
 | `research-trends` | "what's trending", "research topics for content" |
 | `pipeline-orchestrator` | "run the content pipeline", "generate concepts from this brief" |
 | `output-manager` | "make the visuals for this post", "add the logo overlay" |
+| `brand-setup` | "set up my brand kit", "configure my voice/visual identity" |
 
-The pipeline produces platform-native content and hands it to the SPMC queue; the publishing-engine skills then schedule and publish it. See **Content Pipeline** below for the end-to-end workflow.
+*Craft — a cross-cutting skill consulted by the platform + pipeline skills, not a pipeline stage of its own:*
+
+| Skill | Purpose |
+|-------|---------|
+| `content-craft` | Platform-native engagement structure (hook → context → payoff → CTA), accessible source attribution, hashtag intent, carousel arc |
+
+The pipeline produces platform-native content and hands it to the Honk queue; the publishing-engine skills then schedule and publish it. See **Content Pipeline** below for the end-to-end workflow.
 
 ---
 
 ## Content Pipeline (creative layer)
 
-SPMC is two layers of one plugin: the **publishing engine** (the `spmc` MCP tools + their skills) and the **content pipeline** — an agent-side creative workflow that turns an idea or a trend into platform-native content, then hands it to the queue. The pipeline does creative work, not schema-driven work, so it lives entirely in skills (no server tools of its own).
+Honk is three layers of one plugin: the **publishing engine** (the `honk` MCP tools + their skills), the **content pipeline** — an agent-side creative workflow that turns an idea or a trend into platform-native content, then hands it to the queue — and the **brand kit** (`brand_voice`/`brand_schema`/`brand-setup`), a persistent profile the pipeline and platform skills read so drafts already match your voice, visual identity, and guardrails. The pipeline does creative work, not schema-driven work, so it lives entirely in skills (no server tools of its own, aside from `workflow_list` offering named starters).
 
 **Path A — manual idea:**
 
 ```
-/idea-input            describe the idea (topic, audience, tone, references)
+/idea-input            describe the idea (topic, audience, tone, references) — or pick a workflow_list entry
   ↓
-/pipeline-orchestrator concepts → editorial review → platform-native content
+/pipeline-orchestrator concepts → editorial review (content-craft) → platform-native content
   ↓
-/output-manager        generate platform visuals (+ logo overlay)
+/output-manager        generate platform visuals (+ logo overlay, brand-kit identity)
   ↓
-/manage-queue          review, schedule, dispatch  →  publishing engine
+/manage-queue           content_check → review, schedule, dispatch  →  publishing engine
 ```
 
 **Path B — trend research (automated):** swap the first step for `/research-trends`, which surveys Google Trends, Reddit, news, and social hashtags, selects a promising angle, and emits a pipeline-ready brief — then continues through the same orchestrator → visuals → queue path.
 
-**Scheduling:** both paths are schedulable (e.g. via Cowork's scheduler) — run trend research daily for a timely queue, mix in manual ideas for specific angles, and let the SPMC scheduler auto-dispatch queued items when their `scheduled_at` arrives. All paths feed the same queue.
+**Scheduling:** both paths are schedulable — run trend research daily for a timely queue, mix in manual ideas for specific angles, and let the Honk scheduler auto-dispatch queued items when their `scheduled_at` arrives. All paths feed the same queue.
 
 ---
 
@@ -96,38 +103,23 @@ Merge the `mcpServers` block into your Claude Desktop config file:
 | Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
 | macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
 
-**Option A — npm (after `npm install -g spmc` or once published):**
-
 ```json
 {
   "mcpServers": {
-    "spmc": {
-      "command": "npx",
-      "args": ["-y", "spmc"]
-    }
-  }
-}
-```
-
-**Option B — local clone:**
-
-```json
-{
-  "mcpServers": {
-    "spmc": {
+    "honk": {
       "command": "node",
-      "args": ["C:\\path\\to\\spmc-server\\run.js"]
+      "args": ["C:\\path\\to\\honk-server\\run.js"]
     }
   }
 }
 ```
 
-**With scheduler** (auto-dispatches scheduled queue items every 60s):  
-Replace `run.js` with `start.js`. The scheduler runs as a background child process and logs to `~/.claude/spmc-scheduler.log`.
+**With scheduler** (auto-dispatches scheduled queue items every 60s, plus the ~24h auto-analytics follow-up):  
+Replace `run.js` with `start.js`. The scheduler runs as a background child process and logs to `~/.claude/honk-scheduler.log`.
 
-Credentials load automatically from `~/.claude/spmc.env` at startup — do not put raw secrets in the Desktop config.
+Credentials load automatically from `~/.claude/honk.env` at startup — do not put raw secrets in the Desktop config.
 
-Restart Claude Desktop after editing the config. The `spmc` server appears in the MCP connections panel and all SPMC tools are immediately available.
+Restart Claude Desktop after editing the config. The `honk` server appears in the MCP connections panel and all Honk tools are immediately available.
 
 ---
 
@@ -141,8 +133,8 @@ any BYO agent (point your own at these files).
 | File | Purpose |
 |------|---------|
 | `agent/mcp-config.json` | Drop-in MCP server connection block |
-| `agent/CONTEXT.md` | Full operational briefing: the full tool catalog (publishing, content-intelligence, queue, observability, media — generator-injected), return values, platform gotchas, credential loading |
-| `agent/SKILLS.md` | Trigger → tool reference for every platform + queue management + multi-platform campaigns |
+| `agent/CONTEXT.md` | Full operational briefing: the full tool catalog (publishing, content-intelligence, brand kit, assets, queue, observability, media — generator-injected), return values, platform gotchas, credential loading |
+| `agent/SKILLS.md` | Trigger → tool reference for every platform + brand/asset management + queue management + multi-platform campaigns |
 | `agent/persona.md` | Pre-publish checklist, voice/tone defaults, confirmation vs. autonomous behavior rules (the default persona; override per agent) |
 
 **Connect:**
@@ -152,9 +144,9 @@ Drop this into your agent's MCP config (update the path to match your clone):
 ```json
 {
   "mcpServers": {
-    "spmc": {
+    "honk": {
       "command": "node",
-      "args": ["C:\\path\\to\\spmc-server\\run.js"]
+      "args": ["C:\\path\\to\\honk-server\\run.js"]
     }
   }
 }
@@ -166,7 +158,7 @@ Or reference `agent/mcp-config.json` directly if your agent supports file-based 
 On first contact, point the agent at `agent/CONTEXT.md`. It's written to be read once and then operated from — no external files required during a session. `agent/SKILLS.md` gives the agent its trigger mappings; `agent/persona.md` defines the publishing persona and what requires user confirmation.
 
 **What the agent operates autonomously (no confirmation needed):**
-- Reading the queue (`queue_list`)
+- Reading the queue (`queue_list`), audit log, brand kit, and asset registry
 - Checking TikTok publish status
 - Adding to queue without dispatching
 
@@ -184,70 +176,63 @@ Any MCP client supporting stdio transport connects with a standard config block:
 ```json
 {
   "mcpServers": {
-    "spmc": {
+    "honk": {
       "command": "node",
-      "args": ["/absolute/path/to/spmc-server/run.js"]
+      "args": ["/absolute/path/to/honk-server/run.js"]
     }
   }
 }
 ```
 
-Server name: `spmc`. All SPMC tools are listed on `tools/list` with full JSON Schema definitions.
+Server name: `honk`. All Honk tools are listed on `tools/list` with full JSON Schema definitions.
 
 If your client is itself an **agent** (not just a raw tool caller), give it the same briefing as any BYO agent — `agent/CONTEXT.md` + `agent/SKILLS.md` — so it knows the platform gotchas, return shapes, and trigger phrases, not just the raw tool list.
 
 **Credentials:** three options in priority order:
-1. `~/.claude/spmc.env` — file-based, auto-loaded on startup
-2. `spmc-server/.env` — local dev fallback
-3. Inherited from environment — if neither file exists, the server uses `process.env` directly
+1. `~/.claude/honk.env` — file-based, auto-loaded on startup (`~/.claude/spmc.env` read as a legacy-name fallback)
+2. `honk-server/.env` — local dev fallback
+3. Inherited from environment — if none of the above exist, the server uses `process.env` directly
 
 **With scheduler:**  
-Use `start.js` instead of `run.js`. The scheduler spawns as a background process and logs to `~/.claude/spmc-scheduler.log` — this directory must exist. If running outside a Claude environment, change the log path in `spmc-server/start.js` or run the scheduler separately:
+Use `start.js` instead of `run.js`. The scheduler spawns as a background process and logs to `~/.claude/honk-scheduler.log` — this directory must exist. If running outside a Claude environment, change the log path in `honk-server/start.js` or run the scheduler separately:
 
 ```bash
-node spmc-server/scheduler/index.js
+node honk-server/scheduler/index.js
 ```
 
 ---
 
-## Global / CLI Agents (npm)
+## Global / CLI install (from a local clone)
 
-The `spmc-server` package is structured for npm distribution. Install once and any config can reference it without a local clone.
+There's no plan to publish `honk` to the public npm registry (see `PROJECT_STATUS.md` → *Descoped*). The package is still fully npm-structured — install it globally from your own clone and any config can reference it without a repo path.
 
 **Install globally:**
 ```bash
-cd spmc-server
-npm install -g .           # install from local clone
-
-# or after npm publish:
-npm install -g spmc
+git clone https://github.com/prototowb/honk.git
+cd honk/honk-server
+npm install
+npm install -g .
 ```
 
 **Run** (two bins):
 ```bash
-spmc                       # MCP server only (stdio)
-spmc-start                 # MCP server + scheduler daemon (auto-dispatch + auto-analytics)
-npx -y spmc                # MCP server, without a global install
+honk                       # MCP server only (stdio)
+honk-start                 # MCP server + scheduler daemon (auto-dispatch + auto-analytics)
 ```
 
-**Config block (any client):**
+**Config block (any client), after a global install:**
 ```json
 {
-  "command": "npx",
-  "args": ["-y", "spmc"]
+  "command": "honk-start"
 }
 ```
 
-Credentials load from `~/.claude/spmc.env` automatically. No path hardcoding needed.
+Credentials load from `~/.claude/honk.env` automatically. No path hardcoding needed once installed globally.
 
-**Scheduler:** the `spmc` bin runs the MCP server only. For auto-dispatch of
+**Scheduler:** the `honk` bin runs the MCP server only. For auto-dispatch of
 scheduled posts **and** the ~24h auto-analytics follow-up to fire, use the
-**`spmc-start`** bin (MCP server + scheduler daemon) as the entry point instead:
-```json
-{ "command": "spmc-start" }
-```
-Without a global install: `{ "command": "npx", "args": ["-y", "-p", "spmc", "spmc-start"] }`.
-The scheduler logs to `~/.claude/spmc-scheduler.log` (that directory must exist).
+**`honk-start`** bin (MCP server + scheduler daemon) as the entry point instead.
+The scheduler logs to `~/.claude/honk-scheduler.log` (that directory must exist).
 
 ---
 
@@ -256,13 +241,13 @@ The scheduler logs to `~/.claude/spmc-scheduler.log` (that directory must exist)
 | Surface | Entry point | Skills | Credentials |
 |---------|------------|--------|-------------|
 | Claude Code plugin | `.mcp.json` → `run.js` | `skills/` (auto-loaded) | `.mcp.json` `${VAR}` → env |
-| Claude Desktop | `claude_desktop_config.json` | — | `~/.claude/spmc.env` |
-| BYO agent (Hermes, etc.) | `agent/mcp-config.json` | `agent/SKILLS.md` | `~/.claude/spmc.env` or env |
-| OpenClaw / other | stdio `node run.js` | `agent/SKILLS.md` (if agent) | `~/.claude/spmc.env` or env |
-| CLI / npm | `npx spmc` | — | `~/.claude/spmc.env` or env |
+| Claude Desktop | `claude_desktop_config.json` | — | `~/.claude/honk.env` |
+| BYO agent (Hermes, etc.) | `agent/mcp-config.json` | `agent/SKILLS.md` | `~/.claude/honk.env` or env |
+| OpenClaw / other | stdio `node run.js` | `agent/SKILLS.md` (if agent) | `~/.claude/honk.env` or env |
+| CLI / global install | `honk` / `honk-start` | — | `~/.claude/honk.env` or env |
 
-**`run.js`** (bin: `spmc`) — MCP server only  
-**`start.js`** (bin: `spmc-start`) — MCP server + scheduler daemon (use this for always-on surfaces like Claude Desktop)
+**`run.js`** (bin: `honk`) — MCP server only  
+**`start.js`** (bin: `honk-start`) — MCP server + scheduler daemon (use this for always-on surfaces like Claude Desktop)
 
 ---
 
@@ -335,9 +320,9 @@ _34 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 **Notes:**
 
 - Every publishing tool (and `queue_dispatch`) accepts **`dry_run: true`** — it validates the payload and previews routing without sending, and records a `dry_run` audit entry. Use it to rehearse a post before going live.
-- Queue status lifecycle: `pending` → `dispatched` → `published` | `failed`.
-- Media templates: `square-dark` (1080×1080) · `story-dark` (1080×1920) · `banner-wide` (1200×628). CDN: Cloudinary (images + video) auto-selected; imgbb fallback (images only).
-- **Unverified:** `analytics_*` and `rate_limits` depend on live API behavior not yet exercised against real credentials. The store, routing, and tools are real; live confirmation is pending credential testing.
+- Queue status lifecycle: `draft` → `pending` → `dispatched` → `published` | `failed`.
+- Media templates: `square-dark` (1080×1080) · `square-tall` (1080×1350) · `story-dark` (1080×1920) · `banner-wide` (1200×628) · `square-news` (1080×1080, carousel slide). CDN: Cloudinary (images + video) auto-selected; imgbb fallback (images only).
+- **Unverified:** `analytics_*` and `rate_limits` depend on live API behavior; IG/FB are live-verified (INIT-010/011), Threads/TikTok/Bluesky are descoped indefinitely (no credentials — see `PROJECT_STATUS.md` *Descoped*) and their publish tools carry an explicit experimental flag in their descriptions.
 
 ---
 
@@ -345,12 +330,12 @@ _34 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 
 | Platform | Required vars | Notes |
 |----------|--------------|-------|
-| X | `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET` | OAuth 1.0a. Regenerate tokens after changing app permissions. |
-| Instagram | `INSTAGRAM_USER_ID`, `INSTAGRAM_ACCESS_TOKEN` | `EAA…` token (Facebook Login for Business), not `IGAA…`. Requires linked FB Page. |
-| Facebook | `FACEBOOK_PAGE_ID`, `FACEBOOK_ACCESS_TOKEN` | Same `EAA…` token as Instagram with `pages_manage_posts` scope. |
-| TikTok | `TIKTOK_ACCESS_TOKEN` | `video.publish` scope. Posts are `SELF_ONLY` until app passes TikTok audit. |
-| Threads | `THREADS_USER_ID`, `THREADS_ACCESS_TOKEN` | Separate app from Instagram — own token via `graph.threads.net`. |
-| Bluesky | `BLUESKY_IDENTIFIER`, `BLUESKY_APP_PASSWORD` | No OAuth. Generate at bsky.app/settings/app-passwords. |
+| X | `X_API_KEY`, `X_API_SECRET`, `X_ACCESS_TOKEN`, `X_ACCESS_TOKEN_SECRET` | OAuth 1.0a. Regenerate tokens after changing app permissions. Publish path is descoped (API tier credit-blocked, 402) — adapter is unit/smoke-tested only. |
+| Instagram | `INSTAGRAM_USER_ID`, `INSTAGRAM_ACCESS_TOKEN` | `EAA…` token (Facebook Login for Business), not `IGAA…`. Requires linked FB Page. Live-verified. |
+| Facebook | `FACEBOOK_PAGE_ID`, `FACEBOOK_ACCESS_TOKEN` | Same `EAA…` token as Instagram with `pages_manage_posts` scope. Live-verified. |
+| TikTok | `TIKTOK_ACCESS_TOKEN` | `video.publish` scope. Posts are `SELF_ONLY` until app passes TikTok audit. Descoped — no credentials. |
+| Threads | `THREADS_USER_ID`, `THREADS_ACCESS_TOKEN` | Separate app from Instagram — own token via `graph.threads.net`. Descoped — no credentials. |
+| Bluesky | `BLUESKY_IDENTIFIER`, `BLUESKY_APP_PASSWORD` | No OAuth. Generate at bsky.app/settings/app-passwords. Descoped — no credentials. |
 | Cloudinary | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Used by `media_compose` and `media_upload`. |
 | imgbb | `IMGBB_API_KEY` | Fallback CDN for images only. |
 
@@ -360,7 +345,7 @@ _34 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 
 ## Platform Gotchas
 
-**X** — Tokens need Read+Write permissions set in the developer portal. Regenerate after changing permission level; the existing token won't gain the new scope. Counting: URLs always count as 23 characters regardless of length, and emoji above U+FFFF count as 2.
+**X** — Tokens need Read+Write permissions set in the developer portal. Regenerate after changing permission level; the existing token won't gain the new scope. Counting: URLs always count as 23 characters regardless of length, and emoji above U+FFFF count as 2. Publish path is currently descoped (see above).
 
 **Instagram** — Use the classic Graph API path (`graph.facebook.com`, `EAA…` token). The newer Instagram Business Login issues `IGAA…` tokens that don't work for this API. Link the IG Business Account to a Facebook Page before generating credentials. System User tokens are more stable than personal-login tokens.
 
@@ -381,27 +366,29 @@ _34 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 claude_desktop_config.json  Drop-in Claude Desktop config
 .env.example              All credential keys + multi-account examples
 
-skills/                   Claude Code SKILL.md files (13 total: 9 publishing + 4 pipeline)
+skills/                   Claude Code SKILL.md files (15 total: 9 publishing + 5 pipeline + 1 craft)
 agent/                    Bring-your-own-agent integration pack (Hermes, OpenClaw, …)
   mcp-config.json
   CONTEXT.md
   SKILLS.md
   persona.md
 
-spmc-server/
+honk-server/
   run.js                  Entry point: load creds → start MCP server
   start.js                Entry point: spawn scheduler → start MCP server
   index.js                MCP server (all tool definitions)
+  src/                    TypeScript source (compiles to the paths below via `npm run build:ts`)
   adapters/               One file per platform (6 total) + getMetrics (IG/FB/Threads)
-  lib/                    Dispatcher, specs, validate, adapt, config, schedule, audit, analytics
+  lib/                    Dispatcher, specs, validate, adapt, config, schedule, audit, analytics,
+                          brand kit, account registry, asset registry, workflows, policy gate, …
   queue/store.js          File-backed JSON queue
   scheduler/              Scheduler daemon (polls every 60s)
   media/                  Compose + upload pipeline
-  data/                   Runtime state (audit log etc.) — gitignored
-  test/                   node:test unit suites + smoke.mjs
-  package.json            npm package (bin: spmc → run.js)
+  data/                   Runtime state (audit log, brand kit, registries, …) — gitignored
+  test/                   node:test unit suites + smoke.mjs + pack-smoke.mjs
+  package.json            npm package (bin: honk → run.js, honk-start → start.js)
 ```
 
-**Tests:** `cd spmc-server && npm test` (37 unit) · `npm run test:smoke` (drives the real server over MCP).
+**Tests:** `cd honk-server && npm test` (180 unit) · `npm run test:smoke` (49-check, drives the real server over MCP) · `npm run pack:smoke` (packs + installs + boots the tarball).
 
 Full specification: `PROJECT_SPECIFICATIONS.md`

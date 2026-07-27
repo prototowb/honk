@@ -68,8 +68,12 @@ delegation is the product, not a feature.
    INIT-012 — see PROJECT_STATUS *Descoped*): those channels take the "honestly flagged"
    arm — live-unverified noted in the tool descriptions. Remaining verify item: FB
    alt-text read-back (minor).
-2. **Published + installable** — npm package public (name secured), plugin listed, README
-   quickstart ≤ 10 minutes cold.
+2. **Installable, quickstart ≤ 10 minutes cold** — git clone → `npm install` →
+   `npm install -g .` (or wired directly into Claude Code/Desktop/a BYO agent) with a
+   correct, current README walking every surface. **Public npm registry publish is
+   descoped indefinitely** (user decision, 2026-07-27 — no distribution plan; see
+   PROJECT_STATUS *Descoped*) and is explicitly NOT a 1.0 gate. `RELEASING.md`'s
+   version-bump/changelog discipline still applies to tagged releases regardless.
 3. **Safety floor** (INIT-006 ✅) — outbound timeouts, secret redaction at the audit boundary,
    atomic stores + corrupt-file backup, dispatch-time policy gate with active-account fallback.
 4. **Data compatibility promise** — `~/.honk/` store formats versioned; migrations (or
@@ -92,9 +96,21 @@ Everything else (UI, more channels, DAM depth, hosting) is post-1.0 growth, not 
   stays as reference but is not an active NEXT item. See PROJECT_STATUS *Descoped*.
 - Live verification pass ✅ (INIT-010/011: IG+FB read/write/first-comment/follow-up loop);
   Bluesky/Threads/TikTok creds + X 402 **descoped** (INIT-012) → "honestly flagged" arm
-- Store format versioning (`schema_version` field in each `~/.honk/` store) — cheap now,
-  a compatibility promise later
-- Live-prove content-craft (INIT-003 follow-through: one real post, materially better)
+- Store format versioning ✅ (INIT-008 — `schema_version` field in each `~/.honk/` store;
+  the account registry (INIT-014) and asset registry (INIT-013) both follow the contract)
+- Live-prove content-craft ✅ (INIT-011 — the AI-security post: hook→payoff structure +
+  followable source, confirmed live on IG+FB)
+- README quickstart ✅ (this session — corrected throughout for the SPMC→Honk rename,
+  which had left the file almost entirely un-swept: title, paths, bin names, credential
+  file, skill list/count, test counts all pre-rename; point 2 of the 1.0 definition above
+  also redefined to drop the public-registry requirement)
+
+**With the above, every H0 bullet is now checked** except point 5's `npm audit` clause:
+checked 2026-07-27, `honk-server` currently has **5 vulnerabilities (1 high, 3 moderate,
+1 low)** in transitive deps (`fast-uri`, `hono` — pulled in via
+`@modelcontextprotocol/sdk`), fixable via `npm audit fix` but unverified against the test
+suite yet. Whether/when to cut `v1.0.0` is a decision for the user to make explicitly, not
+something to auto-cut.
 
 ### H1 — Delegation + first UI (entry: 1.0 cut)
 **Goal: initiation stops being hand-written prompts; reading state stops requiring an agent.**

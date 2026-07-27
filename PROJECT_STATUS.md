@@ -40,10 +40,17 @@ Branch: `feature/ALPHA-009-content-foundations`.
 
 **None in progress.** Latest session (2026-07-27) pushed `development` (27
 commits, previously stranded in a creds-less sandbox), shipped **INIT-014**
-(account registry v1 — `accounts.json`, H1) — see *Completed* — and descoped
-the npm publish plan indefinitely (see *Descoped*). Open lanes: live-proving
-INIT-003 content quality, the **needs-your-input** track below, and the
-BETA-011 UI stop-line. See `SESSION_HANDOFF.md` → NEXT for the ordered list.
+(account registry v1 — `accounts.json`, H1) — see *Completed* — descoped the
+npm publish plan indefinitely (see *Descoped*), and healed doc rot found in
+the process: `README.md` had never actually been swept for the SPMC→Honk
+rename (title/paths/bins/credential-file/skill-count/test-count all stale)
+despite this file claiming that rename complete; two H0 goals in
+PROJECT_SPECIFICATIONS.md had shipped (INIT-008, INIT-011) but sat unchecked;
+the 1.0 definition's "npm package public" clause was rewritten to drop the
+public-registry requirement (user decision) now that every other H0/1.0
+criterion checks out except `npm audit` (5 vulnerabilities found, unfixed —
+see SESSION_HANDOFF). **Deciding whether/when to cut `v1.0.0` is now the live
+open question** — see `SESSION_HANDOFF.md` → NEXT.
 
 ## Completed Tickets
 

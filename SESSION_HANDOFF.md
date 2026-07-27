@@ -73,6 +73,29 @@ harmless reference, not an active target. `prepublishOnly`/`pack:smoke` keep run
 they validate the tarball installs cleanly (`npm install -g .` from a local clone, per
 README), which matters independent of ever pushing to the registry.
 
+**Doc-rot found and healed, same decision pass:**
+- The 1.0 definition's point 2 hard-required "npm package public" — directly conflicting
+  with the descope above. **User call: drop the public-registry requirement.** 1.0's
+  install bar is now git-clone → `npm install` → `npm install -g .` (or wired directly
+  into an agent surface) + a correct README, ≤ 10 min cold. Rewritten in
+  PROJECT_SPECIFICATIONS.md.
+- **`README.md` was almost entirely un-swept from the SPMC→Honk rename** despite
+  PROJECT_STATUS.md claiming that rename "COMPLETE" weeks ago: title, every path
+  (`spmc-server/`), bin names (`spmc`/`spmc-start`), credential file (`spmc.env`), skill
+  count (13, missing `brand-setup` + `content-craft` entirely), test counts (37) — all
+  pre-rename. Only the generator-injected tool table (between the `<!-- gen:tools -->`
+  markers) was actually current. Rewritten wholesale this session; `build:check` confirms
+  the generated section still matches. **If another doc claims a sweep/rename is
+  "complete," spot-check it — don't trust the claim.**
+- `PROJECT_SPECIFICATIONS.md`'s H0 goal list had two items sitting unchecked for weeks
+  after they'd shipped: "Store format versioning" (done — INIT-008) and "Live-prove
+  content-craft" (done — INIT-011's AI-security post). Both now marked ✅. **With the
+  README fix and the redefined point 2, every H0 bullet is checked** except the `npm
+  audit` clause (point 5) — checked fresh this session: **5 vulnerabilities (1 high, 3
+  moderate, 1 low)** in transitive deps (`fast-uri`, `hono`, via
+  `@modelcontextprotocol/sdk`), fixable via `npm audit fix` but not yet attempted/tested.
+  Whether/when to cut `v1.0.0` given this is **the user's call, not something to auto-cut.**
+
 ## Session Infrastructure — sandbox-only, retired here but keep for reference
 
 The prior session ran in a sandbox with a mounted drive that misbehaved; **none of this
@@ -94,8 +117,10 @@ sandbox, not a live sandbox problem).
 
 ## NEXT
 
-1. **Content quality — live-prove INIT-003** (H0): one real fact-bearing post through
-   content-craft + persona gates, confirm hook→payoff→CTA + followable source lands better.
+1. **Decide on cutting `v1.0.0`.** Every H0 bullet + "1.0 Means" criterion is now checked
+   except `npm audit` (5 vulnerabilities in transitive deps — see above). Options: run
+   `npm audit fix` + re-test, then cut; cut anyway and track the audit separately; or hold.
+   This is the natural next decision, not a coding task — ask the user.
 2. **BETA-011 UI phase** (stop-line; entry after 1.0 cut per horizons) — read-only first:
    queue/calendar/analytics/assets views rendering the same schemas guided mode uses. The
    account registry's handle cache (INIT-014) is now there for the account switcher.
