@@ -1,3 +1,4 @@
+import { fetchWithTimeout as fetch } from '../lib/http.js';
 import { env } from '../lib/env.js';
 const BASE = 'https://graph.facebook.com/v19.0';
 export async function post(message, imageUrl = null, account = '', opts = {}) {

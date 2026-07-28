@@ -1,6 +1,7 @@
 import { PLATFORM_SPECS } from './specs.js';
 import { env, hasAll, discoverAccounts } from './env.js';
 import * as brand from './brand.js';
+import * as accounts from './accounts.js';
 import type { AccountsOverview, AccountRow } from './types.js';
 
 export const MEDIA_PROVIDERS: Record<string, string[]> = {
@@ -59,11 +60,11 @@ export function report(): ConfigReport {
 }
 
 // Account overview (INDIV-006): join the two account axes — brand profiles
-// (brand.json) and credentials (env __ACCOUNT suffixes) — into one list for
+// (brand.json) and credentials (env ACCOUNT__ prefixes) — into one list for
 // multi-brand management and a future UI. The default account is always present;
 // named accounts are the union of profile keys and fully-credentialed accounts,
 // **lowercase-normalized** so a profile saved under "Brand" and creds under
-// __BRAND don't double-count. A half-credentialed account with no profile is not
+// BRAND__ don't double-count. A half-credentialed account with no profile is not
 // "usable" yet, so it's omitted (config_doctor shows partial creds). Marks which
 // account the active pointer selects. Reads env + the brand store; pure of args.
 export function accountsOverview(): AccountsOverview {
@@ -100,14 +101,31 @@ export function accountsOverview(): AccountsOverview {
       platforms: [...(credPlatforms[name] || [])].sort(),
     });
   }
+
+  // Layer in cached channel handles (INIT-014 account registry) — a row only
+  // gains `handles` when account_info has actually been called for it.
+  for (const row of rows) {
+    const rec = accounts.get(row.account);
+    if (!rec || !Object.keys(rec.handles).length) continue;
+    row.handles = Object.fromEntries(
+      Object.entries(rec.handles).map(([platform, h]) => [platform, { handle: h.handle ?? null, name: h.name ?? null }])
+    );
+  }
+
   return { active, rows };
 }
 
 export function formatAccounts(o: AccountsOverview): string {
   const lines = [`Accounts (active: ${o.active || 'default'}):`, ''];
   for (const r of o.rows) {
+    const handleBits = r.handles
+      // h.handle already carries its own '@' prefix when present (adapters format it
+      // that way — see instagram.ts/facebook.ts getProfile) — do not double it.
+      ? Object.entries(r.handles).map(([platform, h]) => `${platform}=${h.handle || h.name || '?'}`).join(', ')
+      : '';
     lines.push(`${r.active ? '▸' : ' '} ${r.name} — brand kit: ${r.brandProfile ? 'set' : '—'}`
-      + ` · creds: ${r.platforms.length ? r.platforms.join(', ') : '—'}${r.active ? '  (active)' : ''}`);
+      + ` · creds: ${r.platforms.length ? r.platforms.join(', ') : '—'}`
+      + `${handleBits ? ` · handles: ${handleBits}` : ''}${r.active ? '  (active)' : ''}`);
   }
   lines.push('', 'Switch with brand_voice(action:"use", account:"<name>"); copy a profile with action:"clone".');
   return lines.join('\n');

@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readVersioned, writeVersionedAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
 // Lightweight rate-limit tracker. Adapters throw errors shaped like
 // "X API 429: ...", so we detect rate-limit responses from the error message
@@ -9,18 +9,12 @@ function file() {
     return dataFile('ratelimit.json');
 }
 function load() {
-    if (!existsSync(file()))
-        return {};
-    try {
-        return JSON.parse(readFileSync(file(), 'utf8'));
-    }
-    catch {
-        return {};
-    }
+    // Versioned store with legacy bare-shape fallback (INIT-008).
+    return readVersioned(file(), {});
 }
 function save(data) {
     try {
-        writeFileSync(file(), JSON.stringify(data, null, 2));
+        writeVersionedAtomic(file(), data);
     }
     catch { /* never break a publish over a tracking write */ }
 }

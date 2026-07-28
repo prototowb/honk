@@ -139,6 +139,15 @@ un-publish). Credentials are per account via `KEY__ACCOUNT` env vars (see
 `config_doctor`); `list` unions brand kits with credentialed accounts so you see
 the whole picture.
 
+### Asset registry (media reuse + rights)
+
+`asset_list` shows every recorded media output (compose/upload are registered
+automatically): URL, hash, dimensions, tags, rights/expiry, and usage per post.
+Reuse a registered URL instead of re-uploading identical media; filter
+`used:false` for never-published assets, `expired:true` to audit rights.
+`asset_update(id, rights_note, rights_expires_at, add_tags)` records license
+terms — an expired asset WARNS in `content_check`/dispatch but never blocks.
+
 ### Start a brief (optional guided intake)
 
 ```
@@ -212,6 +221,14 @@ Fits the source to each platform's hard limits: a long post auto-splits into an
 in-limit X thread, Bluesky is grapheme-truncated, etc. Returns ready-to-post
 `content` per platform plus warnings. **Deterministic length-fitting only** — you
 still rewrite tone, hashtags, and per-channel voice. Omit `platforms` for all six.
+
+**One-call final review:** `content_check(platform, content, account?, sponsored?,
+scheduled_at?)` runs every deterministic gate at once — platform rules + brand
+policy, the duplicate guard, and schedule sanity — and returns a single
+pass/warn/block verdict plus the agent-judged checklist (structure, followable
+sourcing, right account, brand fit, confirmation). Prefer it as the last step
+before `queue_add` or publishing; the granular tools below remain for targeted
+checks while drafting.
 
 Typical cross-post flow: `content_adapt` → rewrite per channel → `content_validate`
 (or `dry_run`) → `queue_add` / publish.

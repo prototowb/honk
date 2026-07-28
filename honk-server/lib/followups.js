@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readVersioned, writeVersionedAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
 import { SUPPORTED_PLATFORMS, extractPostId, fetchMetrics } from './analytics.js';
 // Deferred analytics follow-ups (ALPHA-008). After a real publish to an
@@ -18,18 +18,12 @@ function delayMs() {
 }
 function file() { return dataFile('followups.json'); }
 function load() {
-    if (!existsSync(file()))
-        return [];
-    try {
-        return JSON.parse(readFileSync(file(), 'utf8'));
-    }
-    catch {
-        return [];
-    }
+    // Versioned store with legacy bare-shape fallback (INIT-008).
+    return readVersioned(file(), []);
 }
 function save(items) {
     try {
-        writeFileSync(file(), JSON.stringify(items, null, 2));
+        writeVersionedAtomic(file(), items);
     }
     catch { /* never break a publish over a tracking write */ }
 }

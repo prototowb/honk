@@ -10,6 +10,9 @@ import { noteFromError }                from './ratelimit.js';
 import { hashContent }                  from './hash.js';
 import { schedule as scheduleFollowup } from './followups.js';
 import { extractPostId }                from './analytics.js';
+import { validateWithPolicy }           from './policy-gate.js';
+import { redactSecrets }                from './http.js';
+import { extractMediaUrls, recordUsage, expiryWarnings } from './assets.js';
 import type { PublishResult, AuditSource } from './types.js';
 
 // Routes to the right adapter and returns a structured result:
@@ -72,8 +75,17 @@ async function postFirstComment(platform: string, postId: string | null, message
 
 // publish() wrapped with audit + rate-limit recording. Every real publish path
 // (direct tools, queue_dispatch, scheduler) goes through here so there is one
-// durable record of what was sent.
-export async function publishAudited(platform: string, content: Record<string, unknown>, account = '', meta: { source?: string } = {}): Promise<PublishResult> {
+// durable record of what was sent — and one place that enforces validation +
+// brand policy before anything leaves. The gate runs here (not only at the
+// direct-publish handler) so a queued or scheduled post is re-validated against
+// policy at DISPATCH time: the scheduler has no live agent to catch a sponsored
+// post missing its required disclosure, so the deterministic gate must live on
+// the send path itself (INIT-005, closing the INDIV-004 dispatch re-validation
+// gap). A validation failure throws before publish() — no network call is made,
+// the catch records a `failed` audit entry, and the caller (queue_dispatch /
+// scheduler) marks the queue item failed rather than silently publishing or
+// silently dropping it.
+export async function publishAudited(platform: string, content: Record<string, unknown>, account = '', meta: { source?: string; sponsored?: boolean } = {}): Promise<PublishResult> {
   const base = {
     platform,
     account: account || null,
@@ -81,6 +93,11 @@ export async function publishAudited(platform: string, content: Record<string, u
     content_hash: hashContent(content),
   };
   try {
+    const gate = validateWithPolicy(platform, content, account, { sponsored: meta.sponsored ?? false });
+    if (!gate.ok) {
+      throw new Error(`Blocked before publish — ${gate.label || platform} failed validation:\n`
+        + gate.errors.map(e => `  - ${e}`).join('\n'));
+    }
     const result = await publish(platform, content, account);
     // Capture the platform post/media ID on the audit entry (when extractable) so
     // a future best-time own-data join can map publish-time → engagement without
@@ -100,10 +117,32 @@ export async function publishAudited(platform: string, content: Record<string, u
     // Queue a deferred analytics fetch for analytics-capable platforms (ALPHA-008).
     try { scheduleFollowup({ platform, raw: result.raw as Record<string, unknown>, account }); }
     catch { /* analytics follow-up is best-effort */ }
+    // Asset registry (INIT-013): usage-per-post from day one — every registered
+    // asset this publish referenced gets a usage record; rights-expired assets
+    // surface a deterministic WARN on the summary (never a block). Best-effort:
+    // the registry must never fail a live post.
+    try {
+      const mediaUrls = extractMediaUrls(content);
+      if (mediaUrls.length) {
+        recordUsage(mediaUrls, {
+          platform,
+          ...(postId ? { post_id: postId } : {}),
+          ...(account ? { account } : {}),
+          at: new Date().toISOString(),
+        });
+        const expired = expiryWarnings(mediaUrls);
+        if (expired.length) result.summary += '\n' + expired.map(w => `⚠ ${w}`).join('\n');
+      }
+    } catch { /* best-effort */ }
     return result;
   } catch (e) {
-    auditRecord({ ...base, status: 'failed', error: (e as Error).message });
-    noteFromError(platform, e);
-    throw e;
+    // Scrub token-shaped material before the message is persisted (audit) or
+    // surfaced to the agent (INIT-006). noteFromError only pattern-matches
+    // rate-limit shapes, so it sees the redacted text unchanged.
+    const err = e as Error;
+    err.message = redactSecrets(err.message);
+    auditRecord({ ...base, status: 'failed', error: err.message });
+    noteFromError(platform, err);
+    throw err;
   }
 }

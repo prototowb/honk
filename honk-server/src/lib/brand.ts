@@ -1,5 +1,6 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readJsonOr, writeJsonAtomic } from './jsonstore.js';
 import { dataFile } from './paths.js';
+import * as accountRegistry from './accounts.js';
 import type { BrandProfile, VoiceDelta, OverrideField, ResolvedVoice } from './types.js';
 
 // Brand voice profile (ALPHA-009): a persistent brand kit that the content
@@ -138,15 +139,15 @@ export function resolveVoice(profile: BrandProfile | null | undefined, opts: { p
 }
 
 function load(): Record<string, BrandProfile> {
-  if (!existsSync(file())) return {};
-  try { return JSON.parse(readFileSync(file(), 'utf8')) as Record<string, BrandProfile>; }
-  catch { return {}; }
+  // Corrupt-file backup via readJsonOr: the brand kit is user-authored data —
+  // never silently treat a torn file as empty (INIT-006).
+  return readJsonOr<Record<string, BrandProfile>>(file(), {});
 }
 
 // A `set`/`clear` is a deliberate user action — let write errors surface rather
 // than silently dropping the change (unlike the background tracking stores).
 function save(data: Record<string, BrandProfile>): void {
-  writeFileSync(file(), JSON.stringify(data, null, 2));
+  writeJsonAtomic(file(), data);
 }
 
 function key(account: string): string { return account || '_default'; }
@@ -186,23 +187,18 @@ export function list(): string[] {
 }
 
 // ── Active account pointer (INDIV-006) ──────────────────────────────────────
-// A single persisted "which account am I working on" selection, kept in its OWN
-// small state file rather than inside brand.json — so the flat brand-profile map
-// stays single-concern and this can grow into a fuller account registry (display
-// names, created_at) when the UI lands, with no migration. '' = the default
-// account. This is selection state the brand-management surface + a future UI
-// read; it deliberately does NOT become a silent default for publishing/compose.
-function activeFile(): string { return dataFile('brand-active.json'); }
-
+// '' = the default account. This is selection state the brand-management
+// surface + a future UI read; it deliberately does NOT become a silent
+// default for publishing/compose. Storage moved to the account registry
+// (INIT-014, lib/accounts.ts — the growth INDIV-006 anticipated); these stay
+// as thin delegators so every existing call site (`brand.getActive()`) is
+// unchanged. See accounts.ts for the brand-active.json migration.
 export function getActive(): string {
-  if (!existsSync(activeFile())) return '';
-  try { return (JSON.parse(readFileSync(activeFile(), 'utf8')) as { active: string }).active || ''; }
-  catch { return ''; }
+  return accountRegistry.getActive();
 }
 
 export function setActive(account = ''): string {
-  writeFileSync(activeFile(), JSON.stringify({ active: account || '' }, null, 2));
-  return account || '';
+  return accountRegistry.setActive(account);
 }
 
 // Copy an account's whole profile to a new account key as a starting point

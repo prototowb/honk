@@ -10,7 +10,8 @@ import * as media     from './media/upload.js';
 import * as compose   from './media/compose.js';
 
 import { publishAudited }                 from './lib/dispatch.js';
-import { validate, checkPolicy, formatValidation } from './lib/validate.js';
+import { formatValidation } from './lib/validate.js';
+import { validateWithPolicy } from './lib/policy-gate.js';
 import { adapt, formatAdaptation }        from './lib/adapt.js';
 import { report as configReport, formatReport, accountsOverview, formatAccounts } from './lib/config.js';
 import { normalizeScheduledAt, isPast, timezoneWarning } from './lib/schedule.js';
@@ -19,10 +20,14 @@ import { hashContent }                    from './lib/hash.js';
 import { status as rateLimitStatus }      from './lib/ratelimit.js';
 import { fetchMetrics, report as analyticsReport, SUPPORTED_PLATFORMS } from './lib/analytics.js';
 import * as brand from './lib/brand.js';
+import * as accounts from './lib/accounts.js';
 import { tagUrl } from './lib/links.js';
 import { bestTimes, formatBestTimes } from './lib/besttime.js';
 import { briefSchema, formatBriefSchema } from './lib/brief.js';
+import { listWorkflows, getWorkflow, formatWorkflow, formatWorkflows } from './lib/workflows.js';
+import { contentCheck, formatContentCheck } from './lib/report.js';
 import { brandSchema, formatBrandSchema } from './lib/brand-schema.js';
+import * as assets from './lib/assets.js';
 import { TOOLS } from './lib/tools.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -128,21 +133,6 @@ function formatResolvedVoice(r: ResolvedVoice, label: string, profile: BrandProf
   return lines.join('\n');
 }
 
-type WithNotes = ValidationResult & { notes?: string[] };
-
-function validateWithPolicy(platform: string, content: Record<string, unknown>, account: string, { sponsored = false } = {}): WithNotes {
-  const v = validate(platform, content);
-  const policy = (brand.getOrEmpty(account) || {}).policy || {} as Partial<PolicyConfig>;
-  const pol = checkPolicy(platform, content, policy, { sponsored });
-  return {
-    ...v,
-    errors:   [...v.errors, ...pol.errors],
-    warnings: [...v.warnings, ...pol.warnings],
-    notes:    pol.notes,
-    ok:       v.ok && pol.errors.length === 0,
-  };
-}
-
 async function doPublish(platform: string, content: Record<string, unknown>, account: string, dryRun: boolean, { sponsored = false } = {}): Promise<string> {
   const v = validateWithPolicy(platform, content, account, { sponsored });
   if (!v.ok) {
@@ -163,7 +153,7 @@ async function doPublish(platform: string, content: Record<string, unknown>, acc
     return `DRY RUN — ${v.label} payload is valid; nothing was published.${extraNote}${warn}${notes}`;
   }
 
-  const { summary } = await publishAudited(platform, content, account, { source: 'direct' });
+  const { summary } = await publishAudited(platform, content, account, { source: 'direct', sponsored });
   return summary + warn;
 }
 
@@ -218,6 +208,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // ── Content intelligence ──────────────────────────────────────────────
       case 'content_validate':
         return ok(formatValidation(validateWithPolicy(String(a.platform), a.content as Record<string, unknown>, String(a.account ?? ''), { sponsored: Boolean(a.sponsored) })));
+      case 'content_check': {
+        const r = contentCheck(String(a.platform), a.content as Record<string, unknown>, String(a.account ?? ''), {
+          sponsored: Boolean(a.sponsored),
+          scheduled_at: a.scheduled_at != null ? String(a.scheduled_at) : null,
+          duplicateWindowHours: (a.within_hours as number) ?? 168,
+        });
+        return ok(formatContentCheck(r));
+      }
       case 'content_adapt':
         return ok(formatAdaptation(adapt(String(a.text), a.platforms as string[])));
       case 'config_doctor':
@@ -227,11 +225,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!mod) throw new Error(`account_info not available for "${a.platform}". Supported: instagram, facebook.`);
         const p = await mod.getProfile(String(a.account ?? ''));
         let seedNote = '';
+        let permanentIconUrl: string | null = p.icon_url ?? null;
         if (a.seed_brand_kit && (p.handle || p.icon_url)) {
           const brandAccount = (a.account as string | undefined) ?? brand.getActive();
           const patch: Record<string, unknown> = { visual: {} };
           if (p.handle) (patch.visual as Record<string, unknown>).handle = p.handle;
-          let permanentIconUrl: string | null = p.icon_url ?? null;
           if (p.icon_url) {
             try {
               const imgRes = await fetch(p.icon_url);
@@ -251,6 +249,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           ].filter(Boolean);
           seedNote = `\n\nBrand kit updated (account '${label}'): ${updated.join(', ')}.`;
         }
+        // Account registry (INIT-014): cache the fetched identity so a UI
+        // account switcher / brand_voice list don't need a live API round
+        // trip. Best-effort — a registry hiccup must never fail this read.
+        try {
+          accounts.recordHandle(String(a.account ?? ''), p.platform, {
+            id: p.id, handle: p.handle, name: p.name, icon_url: permanentIconUrl,
+          });
+        } catch { /* cache is best-effort */ }
         return ok(
           `${p.platform}${a.account ? `/${a.account}` : ''} profile:\n`
           + `  name:   ${p.name ?? '(none)'}\n`
@@ -335,6 +341,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const result = bestTimes({ platform: String(a.platform), count: a.count as number | undefined, account: String(a.account ?? '') });
         return ok(formatBestTimes(result));
       }
+      case 'workflow_list': {
+        if (a.name != null) {
+          const w = getWorkflow(String(a.name));
+          if (!w) return ok(`No workflow named '${String(a.name)}'. Available: ${listWorkflows().map(x => x.name).join(', ')}.`);
+          return ok(formatWorkflow(w));
+        }
+        return ok(formatWorkflows(listWorkflows()));
+      }
       case 'brief_schema': {
         const profile = brand.get(String(a.account ?? ''));
         return ok(formatBriefSchema(briefSchema(profile)));
@@ -392,8 +406,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // ── Queue ────────────────────────────────────────────────────────────
       case 'queue_add': {
         const scheduledAt = normalizeScheduledAt((a.scheduled_at as string | null) ?? null);
-        const v = validateWithPolicy(String(a.platform), a.content as Record<string, unknown>, String(a.account ?? ''));
-        const item = queue.add(String(a.platform), a.content as Record<string, unknown>, scheduledAt, String(a.account ?? ''), a.draft ? 'draft' : 'pending');
+        const sponsored = Boolean(a.sponsored);
+        const v = validateWithPolicy(String(a.platform), a.content as Record<string, unknown>, String(a.account ?? ''), { sponsored });
+        const item = queue.add(String(a.platform), a.content as Record<string, unknown>, scheduledAt, String(a.account ?? ''), a.draft ? 'draft' : 'pending', sponsored);
         const note = v.notes && v.notes.length ? `\n${v.notes.map(n => `  - ${n}`).join('\n')}` : '';
         const warn = (v.ok
           ? (v.warnings.length ? `\n⚠ ${v.warnings.join('; ')}` : '')
@@ -422,20 +437,48 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'queue_dispatch': {
         const item = queue.get(String(a.id));
         if (a.dry_run) {
-          const v = validateWithPolicy(item.platform, item.content, item.account ?? '');
+          const v = validateWithPolicy(item.platform, item.content, item.account ?? '', { sponsored: item.sponsored ?? false });
           auditRecord({ platform: item.platform, account: item.account || null, source: 'queue', status: 'dry_run', content_hash: hashContent(item.content) });
           const note = v.notes && v.notes.length ? `\nPolicy:\n` + v.notes.map(n => `  - ${n}`).join('\n') : '';
           return ok(`DRY RUN — ${item.id} (${item.platform}) ${v.ok ? 'is valid; not published.' : 'has errors:\n' + v.errors.map(e => `  - ${e}`).join('\n')}${note}`);
         }
         queue.update(String(a.id), { status: 'dispatched' });
         try {
-          const { summary } = await publishAudited(item.platform, item.content, item.account ?? '', { source: 'queue' });
+          const { summary } = await publishAudited(item.platform, item.content, item.account ?? '', { source: 'queue', sponsored: item.sponsored ?? false });
           queue.update(String(a.id), { status: 'published', published_at: new Date().toISOString(), result: summary });
           return ok(`Dispatched!\n${summary}`);
         } catch (e) {
           queue.update(String(a.id), { status: 'failed', error: (e as Error).message });
           throw e;
         }
+      }
+
+      // ── Asset registry (DAM seed, INIT-013) ───────────────────────────────
+      case 'asset_list': {
+        if (a.query != null) {
+          const found = assets.find(String(a.query));
+          if (!found) return ok(`No asset matches '${String(a.query)}' (id, hash, or URL).`);
+          return ok(assets.formatAsset(found));
+        }
+        const filter: Parameters<typeof assets.list>[0] = {};
+        if (a.source   != null) filter.source   = String(a.source) as import('./lib/assets.js').Asset['source'];
+        if (a.tag      != null) filter.tag      = String(a.tag);
+        if (a.account  != null) filter.account  = String(a.account);
+        if (a.template != null) filter.template = String(a.template);
+        if (typeof a.expired === 'boolean') filter.expired = a.expired;
+        if (typeof a.used === 'boolean')    filter.used    = a.used;
+        let items = assets.list(filter);
+        if (a.limit != null) items = items.slice(0, Number(a.limit));
+        return ok(assets.formatAssets(items));
+      }
+      case 'asset_update': {
+        const updated = assets.update(String(a.id), {
+          ...(a.rights_note       != null ? { rights_note: String(a.rights_note) } : {}),
+          ...(a.rights_expires_at != null ? { rights_expires_at: String(a.rights_expires_at) } : {}),
+          ...(Array.isArray(a.add_tags)    ? { add_tags: a.add_tags as string[] } : {}),
+          ...(Array.isArray(a.remove_tags) ? { remove_tags: a.remove_tags as string[] } : {}),
+        });
+        return ok(`Asset updated.\n${assets.formatAsset(updated)}`);
       }
 
       // ── Media ──────────────────────────────────────────────────────────────
@@ -445,6 +488,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const { template, variables, appliedFromKit } = compose.resolveVisualVars(a as Parameters<typeof compose.resolveVisualVars>[0], visual as Parameters<typeof compose.resolveVisualVars>[1]);
         if (!template) throw new Error('media_compose needs a `template` (or set visual.default_template in the brand kit via brand_voice).');
         const result = await compose.compose(template, variables, { provider: (a.provider as string) ?? undefined, account: String(a.account ?? '') });
+        // Asset registry (INIT-013): the brand kit's identity media are assets
+        // too — register the kit's logo/icon URLs (dedupe by URL) best-effort.
+        const v = visual as { logo_url?: string; icon_url?: string };
+        for (const [kind, u] of [['logo', v.logo_url], ['icon', v.icon_url]] as const) {
+          if (typeof u === 'string' && u) {
+            try { assets.register({ url: u, source: 'brand-kit', tags: ['brand-kit', kind], ...(brandAccount ? { account: brandAccount } : {}) }); }
+            catch { /* best-effort */ }
+          }
+        }
         const activeNote = brandAccount && !a.account
           ? `\n(brand kit from active account '${brandAccount}')` : '';
         return ok(

@@ -167,6 +167,18 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   const sOk = await client.callTool({ name: 'content_validate', arguments: { platform: 'x', content: { text: 'buy now Ad #ad' }, sponsored: true } });
   check('content_validate passes a sponsored post with the disclosure present', !sOk.isError && /Valid/i.test(text(sOk)));
 
+  // Dispatch-time policy gate (INIT-005): a sponsored post queued without its
+  // disclosure is blocked when dispatched, not only at the direct tools. The gate
+  // fires before any network call, so this is deterministic without credentials.
+  const q = await client.callTool({ name: 'queue_add', arguments: { platform: 'bluesky', content: { text: 'buy now' }, sponsored: true } });
+  const qid = (text(q).match(/ID:\s*(\S+)/) || [])[1];
+  const disp = await client.callTool({ name: 'queue_dispatch', arguments: { id: qid } });
+  check('queue_dispatch blocks a sponsored post missing its disclosure',
+    disp.isError && /Blocked before publish/i.test(text(disp)) && /disclosure "#ad"/i.test(text(disp)));
+  const dispDry = await client.callTool({ name: 'queue_dispatch', arguments: { id: qid, dry_run: true } });
+  check('queue_dispatch dry_run reports the sponsored policy error',
+    !dispDry.isError && /has errors/i.test(text(dispDry)) && /disclosure "#ad"/i.test(text(dispDry)));
+
   // Restore a policy-free default profile so later checks (queue, drafts) are unaffected.
   await client.callTool({ name: 'brand_voice', arguments: { action: 'set', profile: { policy: { disclosures: { always: [], sponsored: [] }, banned_topics: [] } } } });
 }
@@ -207,6 +219,26 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('best_time rejects an unknown platform', bad.isError && /unknown platform/i.test(text(bad)));
 }
 
+// content_check — the aggregated pre-publish report (INIT-009), no credentials.
+{
+  const r = await client.callTool({ name: 'content_check', arguments: { platform: 'bluesky', content: { text: 'smoke check' } } });
+  check('content_check passes clean content with the agent checklist', !r.isError && /PASS/.test(text(r)) && /Agent-judged gates/.test(text(r)));
+}
+{
+  const r = await client.callTool({ name: 'content_check', arguments: { platform: 'bluesky', content: { text: 'x'.repeat(400) } } });
+  check('content_check blocks an over-limit payload', !r.isError && /BLOCK/.test(text(r)));
+}
+
+// workflow_list — the workflow library (INIT-008), no credentials.
+{
+  const r = await client.callTool({ name: 'workflow_list', arguments: {} });
+  check('workflow_list lists the seed entries', !r.isError && /weekly-insight/.test(text(r)) && /product-update/.test(text(r)) && /engagement-spark/.test(text(r)));
+}
+{
+  const r = await client.callTool({ name: 'workflow_list', arguments: { name: 'weekly-insight' } });
+  check('workflow_list name: shows one entry with required inputs', !r.isError && /required inputs/.test(text(r)) && /`angle`/.test(text(r)));
+}
+
 // brief_schema — the guided-mode / web-UI field spec, no credentials.
 {
   const r = await client.callTool({ name: 'brief_schema', arguments: {} });
@@ -243,6 +275,14 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   const list = await client.callTool({ name: 'queue_list', arguments: { status: 'draft' } });
   check('queue_list status:draft shows the draft', !!id && text(list).includes(id));
   if (id) await client.callTool({ name: 'queue_remove', arguments: { id } });
+}
+
+// asset registry — credential-free surface (INIT-013).
+{
+  const r = await client.callTool({ name: 'asset_list', arguments: {} });
+  check('asset_list reports an empty registry', !r.isError && /no assets registered/i.test(text(r)));
+  const u = await client.callTool({ name: 'asset_update', arguments: { id: 'ast_missing', rights_note: 'x' } });
+  check('asset_update errors on an unknown asset', /no asset matches/i.test(text(u)));
 }
 
 await client.close();

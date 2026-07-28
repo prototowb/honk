@@ -3,6 +3,7 @@ import { readFileSync, existsSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { upload } from './upload.js';
+import * as assets from '../lib/assets.js';
 const TEMPLATES_DIR = join(dirname(fileURLToPath(import.meta.url)), 'templates');
 export function getTemplate(id) {
     const dir = join(TEMPLATES_DIR, id);
@@ -189,5 +190,19 @@ export async function compose(templateId, variables = {}, uploadOpts = {}) {
     const { pngBuf, width, height } = await render(templateId, variables);
     const filename = `${templateId}-${Date.now()}.png`;
     const result = await upload(null, uploadOpts.provider ?? null, uploadOpts.account ?? '', pngBuf, filename);
+    // Asset registry (INIT-013): record the composed output — best-effort.
+    try {
+        assets.register({
+            url: result.url,
+            hash: assets.hashBuffer(pngBuf),
+            provider: result.provider,
+            source: 'compose',
+            template: templateId,
+            width, height,
+            format: 'png',
+            ...(uploadOpts.account ? { account: uploadOpts.account } : {}),
+        });
+    }
+    catch { /* best-effort */ }
     return { ...result, template: templateId, dimensions: { width, height } };
 }

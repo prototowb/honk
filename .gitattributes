@@ -18,3 +18,12 @@ agent/SKILLS.md              text eol=lf
 # Pre-commit hook is a POSIX shell script — must stay LF or a CRLF shebang
 # breaks it ("bad interpreter") on Linux/macOS clones.
 .githooks/pre-commit         text eol=lf
+# honk-server sources and tsc-emitted build artifacts: tsc emits LF, so pin LF
+# in the repo regardless of a contributor's core.autocrlf. Without this, blobs
+# committed with CRLF show as perpetually "modified" under autocrlf=true even
+# when the working-tree bytes are identical (clean filter normalizes to LF, the
+# CRLF blob doesn't match). Same generated-artifact rationale as the rules above.
+honk-server/**/*.js          text eol=lf
+honk-server/**/*.ts          text eol=lf
+honk-server/**/*.mjs         text eol=lf
+honk-server/**/*.json        text eol=lf

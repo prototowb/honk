@@ -1,7 +1,9 @@
+import { fetchWithTimeout as fetch } from '../lib/http.js';
 import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
 import { basename, extname } from 'path';
 import type { UploadResult } from '../lib/types.js';
+import * as assets from '../lib/assets.js';
 
 const VIDEO_EXTS = new Set(['.mp4', '.mov', '.webm', '.avi', '.mkv', '.m4v']);
 
@@ -22,12 +24,12 @@ interface CloudinaryResponse { secure_url: string; public_id: string; format: st
 interface ImgbbResponse { success: boolean; data: { url: string }; error?: { message: string } }
 
 export function cloudinaryCreds(account = ''): CloudinaryCreds | null {
-  const sfx = account ? `__${account.toUpperCase()}` : '';
-  let cloudName = process.env[`CLOUDINARY_CLOUD_NAME${sfx}`];
-  let apiKey    = process.env[`CLOUDINARY_API_KEY${sfx}`];
-  let apiSecret = process.env[`CLOUDINARY_API_SECRET${sfx}`];
+  const pfx = account ? `${account.toUpperCase()}__` : '';
+  let cloudName = process.env[`${pfx}CLOUDINARY_CLOUD_NAME`];
+  let apiKey    = process.env[`${pfx}CLOUDINARY_API_KEY`];
+  let apiSecret = process.env[`${pfx}CLOUDINARY_API_SECRET`];
 
-  const url = process.env[`CLOUDINARY_URL${sfx}`];
+  const url = process.env[`${pfx}CLOUDINARY_URL`];
   if (url && (!cloudName || !apiKey || !apiSecret)) {
     const m = url.trim().match(/^cloudinary:\/\/([^:]+):([^@]+)@(.+)$/);
     if (m) {
@@ -69,8 +71,8 @@ export async function uploadCloudinary(filePathOrBuffer: string | Buffer, accoun
 }
 
 export async function uploadImgbb(filePathOrBuffer: string | Buffer, account = '', filename?: string): Promise<UploadResult> {
-  const sfx    = account ? `__${account.toUpperCase()}` : '';
-  const apiKey = process.env[`IMGBB_API_KEY${sfx}`];
+  const pfx    = account ? `${account.toUpperCase()}__` : '';
+  const apiKey = process.env[`${pfx}IMGBB_API_KEY`];
 
   if (!apiKey)
     throw new Error(`imgbb credentials missing${account ? ` for account "${account}"` : ''}. Set IMGBB_API_KEY.`);
@@ -100,9 +102,9 @@ export async function upload(filePathOrBuffer: string | Buffer | null, provider:
   const fname = _filename ?? (typeof filePathOrBuffer === 'string' ? basename(filePathOrBuffer) : undefined);
   const name  = fname ?? 'upload';
 
-  const sfx = account ? `__${account.toUpperCase()}` : '';
+  const pfx = account ? `${account.toUpperCase()}__` : '';
   const hasCloudinary = !!cloudinaryCreds(account);
-  const hasImgbb      = !!process.env[`IMGBB_API_KEY${sfx}`];
+  const hasImgbb      = !!process.env[`${pfx}IMGBB_API_KEY`];
 
   let order: string[];
   if (provider) {
@@ -118,9 +120,29 @@ export async function upload(filePathOrBuffer: string | Buffer | null, provider:
   let lastErr: unknown;
   for (const p of order) {
     try {
-      if (p === 'cloudinary') return await uploadCloudinary(input, account, fname);
-      if (p === 'imgbb')      return await uploadImgbb(input, account, fname);
-      throw new Error(`Unknown provider: ${p}. Supported: cloudinary, imgbb`);
+      let result: UploadResult;
+      if (p === 'cloudinary')  result = await uploadCloudinary(input, account, fname);
+      else if (p === 'imgbb')  result = await uploadImgbb(input, account, fname);
+      else throw new Error(`Unknown provider: ${p}. Supported: cloudinary, imgbb`);
+      // Asset registry (INIT-013): record the output — best-effort, a registry
+      // failure must never fail the upload. Compose-internal calls (buffer via
+      // _buf, filePathOrBuffer === null) are skipped: compose() registers its
+      // own output with template/dimension metadata (source: 'compose').
+      if (filePathOrBuffer !== null) {
+        try {
+          const { buf } = resolveInput(input, name);
+          assets.register({
+            url: result.url,
+            hash: assets.hashBuffer(buf),
+            provider: result.provider,
+            source: 'upload',
+            ...(typeof result.bytes === 'number' ? { bytes: result.bytes } : {}),
+            ...(typeof result.format === 'string' ? { format: result.format } : {}),
+            ...(account ? { account } : {}),
+          });
+        } catch { /* best-effort */ }
+      }
+      return result;
     } catch (e) {
       lastErr = e;
     }

@@ -13,14 +13,39 @@
    deferred metrics fetch (~24h) that the **scheduler** drains. This runbook
    collapses the 24h to seconds with `SPMC_ANALYTICS_DELAY_MS=0`.
 
-## Status (2026-06-25)
+## Status (2026-07-05 — Part A re-verified live, INIT-010)
 
 | Platform | Metric set (`adapters/*.js`) | Metric names | Live fetch |
 |----------|------------------------------|--------------|------------|
-| Instagram | `reach,likes,comments,saved,shares` | ✅ current | ✅ verified 2026-06-17 (BETA-010) |
-| Facebook  | `post_engagements,post_clicks,post_reactions_like_total,post_reactions_by_type_total` | ✅ current — June-2026 cull is reach/impression-only; these are unaffected | ◻ names validated; full fetch re-confirm pending |
-| Threads   | `views,likes,replies,reposts,quotes` | ✅ current | ◻ no creds yet |
-| X · TikTok · Bluesky | — | no `getMetrics` (tier/exposure) | n/a |
+| Instagram | `reach,likes,comments,saved,shares` | ✅ current | ✅ re-verified 2026-07-05 (profile + insights on media `17874248277652862`; default AND `protocode` account creds both resolve) |
+| Facebook  | `post_engagements,post_clicks,post_reactions_like_total,post_reactions_by_type_total` | ✅ current — no invalid-metric error live 2026-07-05 | ✅ verified 2026-07-05 on `105275157663337_1411992160954659` — call succeeds; **empty object** (Graph omits zero-value engagement metrics on a low-engagement post; the documented empty/partial case, not drift) |
+| Threads   | `views,likes,replies,reposts,quotes` | ✅ current | ⛔ **descoped indefinitely** (2026-07-06, INIT-012) — creds never provided; revisit only on explicit user request |
+| X · TikTok · Bluesky | — | no `getMetrics` (tier/exposure) | ⛔ **descoped indefinitely** (2026-07-06, INIT-012) — TikTok/Bluesky tokens never provided; X 402 credit-blocked |
+
+Profile reads (`account_info` path) also verified live 2026-07-05: IG `@protocode_`
+(id `17841446925507898`) + FB page `protocode` (id `105275157663337`).
+
+**Token (2026-07-05):** all four Meta slots in `~/.claude/honk.env` now hold a
+**non-expiring PAGE token** (minted via fb_exchange_token → `/me/accounts`;
+`debug_token`: `type=PAGE expires=NEVER`). Scopes include `pages_manage_posts`,
+`instagram_content_publish`, `pages_manage_engagement` (FB first-comment — previously
+missing), `instagram_manage_comments`, `read_insights`, `instagram_manage_insights`.
+⚠️ `data_access_expires` = 2026-10-03 (Meta's 90-day user-data window) — publishing
+is unaffected; if user-data *reads* ever 400 after that date, re-run the mint once.
+Backup of the previous env: `honk.env.bak-2026-07-05223322`.
+**Part B — VERIFIED end-to-end 2026-07-05 (INIT-011).** A user-approved AI-security
+post (prompt injection / OWASP LLM01) published live to IG (`18123902104674983`) + FB
+(`105275157663337_1420845453402663`) through `publishAudited` with
+`SPMC_ANALYTICS_DELAY_MS=0`; `followups.runDue()` drained **8/8** jobs (the 2 new + 6
+backlogged) and snapshots landed in `analytics_report` — the IG one already counting
+its own first comment. Also verified live: **FB first_comment ✅** (the
+`pages_manage_engagement` scope on the new PAGE token — previously the blocker),
+**IG first_comment ✅** (re-confirmed), FB metrics now return keyed values
+(`post_clicks`, `post_reactions_*`), and both posts carried `alt_text` (FB read-back
+still unchecked — the API accepted it without error). The full agent flow held:
+brand voice → workflow entry (`weekly-insight`) → content-craft copy → `media_compose`
+(kit identity) → `content_check` PASS → explicit user approval → publish → audit →
+follow-up → snapshot.
 
 The **auto-follow-up loop has never run end-to-end live** — that's the main thing
 to confirm here. The scheduler (`scheduler/index.js`) loads its own creds, so it

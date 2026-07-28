@@ -1,7 +1,10 @@
-// Credential resolution. A named account suffixes the env key with __ACCOUNT
-// (e.g. X_API_KEY__BRAND); omitting the account uses the bare key.
+// Credential resolution. A named account PREFIXES the env key with ACCOUNT__
+// (e.g. PROTOCODE__X_API_KEY); omitting the account uses the bare key. Prefix
+// (not suffix) so every credential for one account shares a single ACCOUNT__
+// prefix — a future UI can enumerate an account's creds with one scan, and they
+// sort together in the environment. Default creds are the bare, unprefixed keys.
 export function env(key, account = '') {
-    return account ? process.env[`${key}__${account.toUpperCase()}`] : process.env[key];
+    return account ? process.env[`${account.toUpperCase()}__${key}`] : process.env[key];
 }
 // True only when every key in `keys` resolves to a non-empty value.
 export function hasAll(keys, account = '') {
@@ -10,13 +13,15 @@ export function hasAll(keys, account = '') {
         return v !== undefined && v !== null && v !== '';
     });
 }
-// Discover named-account suffixes present in the environment for a credential
-// key. Given X_API_KEY and env X_API_KEY__BRAND, X_API_KEY__PERSONAL, returns
-// ['brand', 'personal'] (lowercased).
+// Discover named-account prefixes present in the environment for a credential
+// key. Given X_API_KEY and env PROTOCODE__X_API_KEY, PERSONAL__X_API_KEY,
+// returns ['personal', 'protocode'] (lowercased). Anchors on the known key as
+// the suffix, so an account name is whatever precedes __<key> — the bare
+// default key (no prefix) never matches.
 export function discoverAccounts(key) {
-    const prefix = `${key}__`;
+    const suffix = `__${key}`;
     return Object.keys(process.env)
-        .filter(k => k.startsWith(prefix) && process.env[k])
-        .map(k => k.slice(prefix.length).toLowerCase())
+        .filter(k => k.endsWith(suffix) && k.length > suffix.length && process.env[k])
+        .map(k => k.slice(0, -suffix.length).toLowerCase())
         .sort();
 }

@@ -1,10 +1,14 @@
 const DRY_RUN_PROP = { type: 'boolean', description: 'If true, validate and preview the post without publishing. Records a dry_run audit entry.' };
+// 1.0 definition §1 (PROJECT_SPECIFICATIONS): channels without live verification are honestly
+// flagged in the tool description itself. Threads/TikTok/Bluesky creds + X publish (402) are
+// descoped indefinitely (INIT-012) — flag stays until a real publish is verified.
+const LIVE_UNVERIFIED = ' [Experimental: never verified against the live API — no credentials available. Adapter is unit/smoke-tested only.]';
 const SPONSORED_PROP = { type: 'boolean', description: 'Mark this as a sponsored/paid post. Enforces the brand kit\'s required sponsored disclosures (policy.disclosures.sponsored) — a missing one blocks publishing.' };
 export const TOOLS = [
     // ── X (Twitter) ──────────────────────────────────────────────────────────
     {
         name: 'x_post_tweet',
-        description: 'Post a single tweet to X (Twitter). Max 280 characters.',
+        description: 'Post a single tweet to X (Twitter). Max 280 characters.' + LIVE_UNVERIFIED,
         inputSchema: {
             type: 'object',
             properties: {
@@ -18,7 +22,7 @@ export const TOOLS = [
     },
     {
         name: 'x_post_thread',
-        description: 'Post a thread of tweets to X. Each array item is one tweet, chained as replies.',
+        description: 'Post a thread of tweets to X. Each array item is one tweet, chained as replies.' + LIVE_UNVERIFIED,
         inputSchema: {
             type: 'object',
             properties: {
@@ -53,7 +57,7 @@ export const TOOLS = [
     // ── TikTok ────────────────────────────────────────────────────────────────
     {
         name: 'tiktok_post_video',
-        description: 'Post a video to TikTok (PULL_FROM_URL). Until your app passes audit, posts land as private/self-only regardless of privacy_level.',
+        description: 'Post a video to TikTok (PULL_FROM_URL). Until your app passes audit, posts land as private/self-only regardless of privacy_level.' + LIVE_UNVERIFIED,
         inputSchema: {
             type: 'object',
             properties: {
@@ -73,7 +77,7 @@ export const TOOLS = [
     },
     {
         name: 'tiktok_check_publish_status',
-        description: 'Check the async publish status of a TikTok video post.',
+        description: 'Check the async publish status of a TikTok video post.' + LIVE_UNVERIFIED,
         inputSchema: {
             type: 'object',
             properties: {
@@ -104,7 +108,7 @@ export const TOOLS = [
     // ── Threads ───────────────────────────────────────────────────────────────
     {
         name: 'threads_post',
-        description: 'Post text (optionally with an image) to Threads.',
+        description: 'Post text (optionally with an image) to Threads.' + LIVE_UNVERIFIED,
         inputSchema: {
             type: 'object',
             properties: {
@@ -121,7 +125,7 @@ export const TOOLS = [
     // ── Bluesky ───────────────────────────────────────────────────────────────
     {
         name: 'bluesky_post',
-        description: 'Post text to Bluesky via the AT Protocol. No OAuth — just an app password.',
+        description: 'Post text to Bluesky via the AT Protocol. No OAuth — just an app password.' + LIVE_UNVERIFIED,
         inputSchema: {
             type: 'object',
             properties: {
@@ -144,6 +148,22 @@ export const TOOLS = [
                 content: { type: 'object', description: 'Platform-specific content fields (same shape as the posting tools)' },
                 account: { type: 'string', description: "Named account whose brand-kit policy to check against (e.g. 'brand'). Omit for the default account." },
                 sponsored: SPONSORED_PROP,
+            },
+            required: ['platform', 'content'],
+        },
+    },
+    {
+        name: 'content_check',
+        description: 'One-call pre-publish report — runs every deterministic gate at once (platform rules + brand policy/disclosures, duplicate guard vs recent publishes, schedule sanity if scheduled_at is given) and returns a single pass/warn/block verdict, followed by the agent-judged checklist (structure, followable sourcing, right account, brand fit, user confirmation) the server cannot verify. Use it as the final review before queue_add or publishing instead of calling content_validate + duplicate_check + schedule_check separately. A block here WILL be enforced by the dispatch gate; warnings are yours to resolve or accept deliberately.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                platform: { type: 'string', description: 'Target platform', enum: ['x', 'instagram', 'tiktok', 'facebook', 'threads', 'bluesky'] },
+                content: { type: 'object', description: 'Platform-specific content fields (same shape as the posting tools)' },
+                account: { type: 'string', description: "Named account whose brand-kit policy to check against. Omit to fall back to the ACTIVE brand account (policy only — publishing stays explicit)." },
+                sponsored: SPONSORED_PROP,
+                scheduled_at: { type: 'string', description: 'Optional intended publish time (ISO 8601) — adds timezone/past-time sanity warnings.' },
+                within_hours: { type: 'number', description: 'Duplicate-guard window in hours (default 168 = 7 days).' },
             },
             required: ['platform', 'content'],
         },
@@ -245,6 +265,16 @@ export const TOOLS = [
         },
     },
     {
+        name: 'workflow_list',
+        description: 'List the workflow library — named, reusable workflow starters (weekly-insight, product-update, engagement-spark) that replace hand-written per-session prompts. Each entry declares its required inputs (brief_schema field keys the user supplies in guided mode, each delegable with "you pick"), the defaults it assumes when un-guided, per-platform format suggestions, and which skills/tools it activates. Pass name to see one entry in full. Use it to offer the user a pick-list at session start (guided mode) or to select an entry yourself from context (un-guided) — say which entry and which defaults you chose. Supervised vs autonomous comes from the brand policy auto_publish at call time, never from the entry.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                name: { type: 'string', description: 'Show a single workflow entry in full (e.g. "weekly-insight"). Omit to list all.' },
+            },
+        },
+    },
+    {
         name: 'brand_schema',
         description: 'Return the brand-kit field schema with the current values for an account — the single source for guided brand setup (the brand-setup skill) and the future web-UI settings form. Lists the persistent fields a brand kit holds (voice tone/audience, visual identity: accent/bg/surface/heading/body colors + logo/icon/handle/default-template, hashtags, CTAs, notes) grouped, with type/options/help, which are recommended, and what is already set. Call it to drive guided setup (collect the empty recommended fields one at a time) or to show a brand-settings overview. Writes go through brand_voice(action:"set"). The companion to brief_schema (per-run) — this is the persistent layer.',
         inputSchema: {
@@ -312,7 +342,7 @@ export const TOOLS = [
     // ── Queue ─────────────────────────────────────────────────────────────────
     {
         name: 'queue_add',
-        description: 'Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing.',
+        description: 'Add a post to the content queue. Optionally schedule it with scheduled_at (ISO 8601; include a timezone offset to be unambiguous — a naive time is read as server-local and warned). Content is validated; warnings are returned but do not block queuing. A sponsored post stores its flag and is re-checked against the brand policy at dispatch — a missing sponsored disclosure blocks the dispatch (queue_dispatch and the scheduler), not just the direct tools.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -320,6 +350,7 @@ export const TOOLS = [
                 content: { type: 'object', description: 'Platform-specific content fields (same as the direct posting tools)' },
                 scheduled_at: { type: 'string', description: 'Optional ISO 8601 datetime to schedule publishing. Prefer an explicit timezone (e.g. ...Z or -04:00); a naive time is interpreted as server-local.' },
                 account: { type: 'string', description: "Named account to post from (e.g. 'brand'). Omit to use the default account." },
+                sponsored: SPONSORED_PROP,
                 draft: { type: 'boolean', description: 'Save as a draft (status "draft") — held for review and never auto-dispatched by the scheduler. Promote later with queue_update(status:"pending") or publish directly with queue_dispatch.' },
             },
             required: ['platform', 'content'],
@@ -403,9 +434,42 @@ export const TOOLS = [
             properties: {
                 file_path: { type: 'string', description: 'Absolute local path to the image or video file' },
                 provider: { type: 'string', description: 'CDN provider to use. Omit to auto-select from configured credentials.', enum: ['cloudinary', 'imgbb'] },
-                account: { type: 'string', description: "Named account (e.g. 'brand'). Resolves CLOUDINARY_*__BRAND or IMGBB_API_KEY__BRAND." },
+                account: { type: 'string', description: "Named account (e.g. 'brand'). Resolves BRAND__CLOUDINARY_* or BRAND__IMGBB_API_KEY." },
             },
             required: ['file_path'],
+        },
+    },
+    // ── Asset registry (DAM seed, INIT-013) ───────────────────────────────────
+    {
+        name: 'asset_list',
+        description: 'List/inspect the asset registry — every media_compose / media_upload output is recorded automatically (URL, content hash, dimensions, rights/expiry, usage per post). Filter by source/tag/account/template/expired/used, or pass query (id, hash, or URL) for one asset\'s full record. Reuse a registered URL in drafts instead of re-uploading identical media.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                query: { type: 'string', description: 'Exact id (ast_…), content hash, or URL — returns the single matching asset.' },
+                source: { type: 'string', description: 'Only assets from this origin', enum: ['upload', 'compose', 'brand-kit', 'manual'] },
+                tag: { type: 'string', description: 'Only assets carrying this tag' },
+                account: { type: 'string', description: 'Only assets registered under this brand account' },
+                template: { type: 'string', description: 'Only media_compose outputs of this template' },
+                expired: { type: 'boolean', description: 'true → only assets past their rights expiry; false → only unexpired' },
+                used: { type: 'boolean', description: 'true → only assets with recorded publishes; false → never-published' },
+                limit: { type: 'number', description: 'Max entries returned (newest first). Default: all' },
+            },
+        },
+    },
+    {
+        name: 'asset_update',
+        description: 'Set rights/expiry and tags on a registered asset (addressed by id, hash, or URL). A past rights expiry produces a deterministic WARNING in content_check and on the dispatch summary — publishing is never blocked; the judgment stays with you.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                id: { type: 'string', description: 'Asset id (ast_…), content hash, or any of its URLs' },
+                rights_note: { type: 'string', description: 'Human note on usage rights / license terms' },
+                rights_expires_at: { type: 'string', description: 'ISO date/timestamp after which publishing this asset warns' },
+                add_tags: { type: 'array', items: { type: 'string' }, description: 'Tags to add' },
+                remove_tags: { type: 'array', items: { type: 'string' }, description: 'Tags to remove' },
+            },
+            required: ['id'],
         },
     },
 ];
