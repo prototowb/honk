@@ -4,126 +4,116 @@
 
 ## Where We Are
 
-**`v0.3.0-alpha`** · `development` is default/integration (green) and **pushed —
-`origin/development` is caught up** (was ~28 commits behind at session start; see
-below). `main` still at v0.3.0-alpha via PR only.
+**`v1.0.0` is cut and live.** Tagged (`v1.0.0`, this project's **first real git tag** —
+see below), gates green, merged to `main` via PR #4 (2026-07-28). `development` and
+`main` are both in sync with `origin` at `0d8d929` / `658d2a8` respectively.
 
 **State:** **34 tools** · 15 skills · 5 templates · 2 runtime deps · **183 unit +
-49-check smoke + build:check + pack:smoke** green at every commit.
+49-check smoke + build:check + pack:smoke** green at every commit. npm registry
+publish is **descoped indefinitely** (user decision) — install is git-clone +
+`npm install -g .`, no `npx honk`.
 
-## This Session (2026-07-27/28) — repo repair + push + INIT-014 + INIT-015
+## This Session (2026-07-27/28) — repo repair, INIT-014, INIT-015, cut v1.0.0
 
-**Repo repair (first thing, before any other work):** this was the first session on the
-real host since the prior sandboxed session (2026-07-06/07). `.git/index` was **entirely
-missing** — the sandbox's off-mount-index workaround (see the retired Session
-Infrastructure section below) never got written back — so `git status` showed all 250
-tracked files as deleted, though the working tree content was intact. Fixed with `git
-read-tree HEAD` (rebuilds the index from a commit; touches no files) after confirming via
-`git write-tree` / tree-hash comparison that the working tree was byte-identical to
-`development`'s tip. A stale 3-week-old `.git/HEAD.lock` (from the same sandbox session
-half-failing a git operation — see old point 2 below) also had to be removed before `git
-symbolic-ref HEAD refs/heads/development` would take. **If `git status` ever again shows
-mass deletions with content still present on disk, suspect a missing/stale index before
-anything else** — do NOT `git add -A`/commit over it without first diffing working-tree
-content against the branch tip it should match.
+**0. Repo repair (first thing, before any other work).** First session on the real
+host since the prior sandboxed session (2026-07-06/07). `.git/index` was **entirely
+missing** — the sandbox's off-mount-index workaround never got written back — so
+`git status` showed all 250 tracked files as deleted, though the working tree content
+was intact. Fixed with `git read-tree HEAD` (rebuilds the index from a commit, touches
+no files) after confirming via `git write-tree` / tree-hash comparison that the
+working tree was byte-identical to `development`'s tip. A stale 3-week-old
+`.git/HEAD.lock` also had to be removed before `git symbolic-ref` would take. **If
+`git status` ever again shows mass deletions with content still present on disk,
+suspect a missing/stale index before anything else** — do not `git add -A`/commit
+over it without first diffing working-tree content against the branch tip it should
+match. Pushed `development` → `origin/development` (27 commits, including INIT-012 +
+INIT-013 that never left the sandbox).
 
-**Pushed `development` → `origin/development`** (27 commits, including the INIT-012 +
-INIT-013 work from the prior session that never left the sandbox).
+**1. INIT-014 — Account registry v1.** `brand-active.json`'s active-account pointer
+grew into a versioned `accounts.json` registry (`lib/accounts.ts`, INIT-008 contract —
+machine-written cache, unlike the deliberately-flat `brand.json`/`brand-active.json`).
+Still owns the active pointer (`brand.getActive`/`setActive` delegate to it, read-only
+seeded from the legacy file on first read, no migration step); now also caches each
+account's channel handle (id/handle/name/icon_url) from `account_info`, so
+`brand_voice list` shows it without a live API round trip. Scope held to exactly the
+H1 line — credential presence and brand-profile existence stay live-computed in
+`config.ts`, not duplicated. Registry keys lowercase-normalized (matches
+`accountsOverview()`'s existing join); the active pointer itself stays raw-case
+(`brand.get()`/`env()` key off it). No new tool, no `display_name`/`notes`/`upsert`
+(would be designing for the not-yet-started BETA-011 UI). Cut `list()` in a same-day
+follow-up too — exported but nothing called it.
 
-**INIT-014 Account registry v1** (`feature/INIT-014-account-registry`, merged) — the H1
-item ("grow `brand-active.json` into `accounts.json`"):
-- `src/lib/accounts.ts` — new versioned store (`accounts.json`, INIT-008 contract: this
-  file is machine-written-only, unlike the deliberately-flat `brand.json`/
-  `brand-active.json`, so format drift should be detectable). Still owns the **active
-  account pointer** — `brand.getActive`/`setActive` now delegate to it, with `getActive()`
-  read-only-seeding from the legacy `brand-active.json` on first read (no explicit
-  migration step; the first `setActive()` call creates `accounts.json` going forward).
-  Now also **caches each account's channel handle** (id/handle/name/icon_url) fetched via
-  `account_info`, recorded best-effort so a registry hiccup can never fail the profile
-  read. `config.ts`'s `accountsOverview()` layers the cache onto `brand_voice list` output
-  — no live API round trip needed to see it.
-- **Scope held to exactly the H1 line** — credential identity (env) × brand identity
-  (`brand.json`) × channel handles, nothing more. Credential presence and brand-profile
-  existence stay live-computed (unchanged) in `config.ts`; the registry only owns what
-  neither of those already own. No `display_name`/`notes`/new tool — those would be
-  designing for the not-yet-started BETA-011 UI, not what H1 asked for.
-- **Case handling (the part worth re-reading if you touch this later):** registry keys are
-  lowercase-normalized (matches `accountsOverview()`'s existing join, which already
-  lowercases both credential and brand-profile account names). The **active pointer stays
-  raw-case** — `brand.get()`/`env(key, account)` key off the exact case the user set, so
-  lowercasing `getActive()`'s return would desync the pointer from the accounts it
-  resolves against (a live policy-fallback regression). Covered by a dedicated test.
-- Tools stay **34** — no new tool; `brand_voice list` and `account_info` are unchanged
-  call shapes with richer output. 180 unit (+9) + 49 smoke (unchanged — the handle-cache
-  path needs live `account_info` creds smoke can't exercise; covered by the 9 unit tests
-  instead, plus the full unchanged 49-check smoke suite passing as a regression check on
-  the `brand.ts`/`config.ts` refactor).
-- **Follow-up cleanup same session:** cut `accounts.ts`'s `list()` — exported but nothing
-  in `src/` called it (no `account_list` tool; same designing-for-hypotheticals rule that
-  kept `display_name`/`upsert` out). The two tests that used it were rewritten against
-  `get()`; a real-upgrade-path test was added (`accounts.json` created while a stale
-  populated `brand-active.json` still exists on disk — confirms the legacy file is only
-  read before `accounts.json` exists, never after).
+**2. npm publish descoped indefinitely** (user decision) — no plan to distribute
+`honk` via the npm registry. Moved to PROJECT_STATUS *Descoped*. This directly
+conflicted with the 1.0 release definition's point 2 ("npm package public") —
+**user call: drop the public-registry requirement.** 1.0's install bar became
+git-clone → `npm install` → `npm install -g .` + a correct README, ≤10 min cold.
 
-**npm publish descoped indefinitely (user decision):** there is no plan to distribute
-`honk` via the npm registry. Moved to PROJECT_STATUS *Descoped* (backlog-hygiene rule —
-AGENTS.md) and dropped from the H0 goal list in PROJECT_SPECIFICATIONS.md. `RELEASING.md`
-and the `package.json` publish metadata (LICENSE, repository/bugs/homepage) stay as
-harmless reference, not an active target. `prepublishOnly`/`pack:smoke` keep running —
-they validate the tarball installs cleanly (`npm install -g .` from a local clone, per
-README), which matters independent of ever pushing to the registry.
+**3. Doc rot found and healed, resolving that conflict.** `README.md` was almost
+entirely un-swept from the SPMC→Honk rename despite PROJECT_STATUS claiming that
+rename "complete" weeks ago — title, every path, bin names, credential file, skill
+list/count, test counts were all pre-rename; only the generator-injected tool table
+was current. Rewritten wholesale. Two H0 goals in PROJECT_SPECIFICATIONS.md
+("store format versioning," "live-prove content-craft") had shipped weeks earlier
+(INIT-008, INIT-011) but sat unchecked. **If another doc claims a sweep/rename is
+"complete," spot-check it before trusting it** — this was the second time this session
+a "complete" claim didn't hold up.
 
-**Doc-rot found and healed, same decision pass:**
-- The 1.0 definition's point 2 hard-required "npm package public" — directly conflicting
-  with the descope above. **User call: drop the public-registry requirement.** 1.0's
-  install bar is now git-clone → `npm install` → `npm install -g .` (or wired directly
-  into an agent surface) + a correct README, ≤ 10 min cold. Rewritten in
-  PROJECT_SPECIFICATIONS.md.
-- **`README.md` was almost entirely un-swept from the SPMC→Honk rename** despite
-  PROJECT_STATUS.md claiming that rename "COMPLETE" weeks ago: title, every path
-  (`spmc-server/`), bin names (`spmc`/`spmc-start`), credential file (`spmc.env`), skill
-  count (13, missing `brand-setup` + `content-craft` entirely), test counts (37) — all
-  pre-rename. Only the generator-injected tool table (between the `<!-- gen:tools -->`
-  markers) was actually current. Rewritten wholesale this session; `build:check` confirms
-  the generated section still matches. **If another doc claims a sweep/rename is
-  "complete," spot-check it — don't trust the claim.**
-- `PROJECT_SPECIFICATIONS.md`'s H0 goal list had two items sitting unchecked for weeks
-  after they'd shipped: "Store format versioning" (done — INIT-008) and "Live-prove
-  content-craft" (done — INIT-011's AI-security post). Both now marked ✅.
-- **`npm audit` clause (point 5) — found AND fixed same session.** 5 vulnerabilities
-  (1 high, 3 moderate, 1 low) in transitive deps (`fast-uri` via `ajv`, `hono` via
-  `@modelcontextprotocol/sdk`); `npm audit fix` bumped the (root, npm-workspace-hoisted)
-  lockfile only — `@modelcontextprotocol/sdk` moved to 1.30.0, still inside its existing
-  `^1.12.0` range in `package.json`, which is untouched. `npm audit` now reports **0
-  vulnerabilities**; type-check + 180 unit + 49 smoke + build:check + pack:smoke all
-  reverified green after the bump.
+**4. `npm audit` — found and fixed.** 5 vulnerabilities (1 high, 3 moderate, 1 low) in
+transitive deps (`fast-uri` via `ajv`, `hono` via `@modelcontextprotocol/sdk`).
+`npm audit fix` bumped the (root, workspace-hoisted) lockfile only —
+`@modelcontextprotocol/sdk` moved to 1.30.0, staying inside its existing `^1.12.0`
+range in `package.json`. `npm audit` → 0 vulnerabilities; full gate suite reverified.
 
-**INIT-015 — live re-verification, and it immediately found a real bug.** With every
-H0/1.0 criterion checked, prepped a live pipeline re-run to confirm the SDK bump +
-INIT-014 didn't break anything real:
-- Wrote a throwaway MCP client script (`run.js` as the entry point — NOT `index.js`
-  directly, which skips credential loading entirely; that mistake produced a false
-  "everything's unconfigured" reading on the first pass, worth remembering) and called
-  `config_doctor` + `account_info` against real IG/FB creds on the `protocode` account.
-  Both tokens are genuinely live-valid, not just present.
-- **That `account_info` call was the first live exercise of INIT-014's
-  `account_info`→`recordHandle` path — and it broke immediately.** `brand_voice list`
-  rendered `instagram=@@protocode_` (double `@`). Root cause: `instagram.ts`/`facebook.ts`
-  `getProfile()` already prefix `@` onto the handle before it reaches the registry;
-  `formatAccounts()` in `config.ts` prepended a second one. No unit or smoke test could
-  have caught this — the whole point of that code path is that it only runs with a real
-  credential in hand. Fixed (`config.ts` renders `h.handle` verbatim), 3 new unit tests
-  (`config.test.mjs` — enrichment, the `@@` regression, and the name-fallback case),
-  reconfirmed against the live server. **183 unit total now.**
-- Drafted a build-in-public post about exactly this (content-craft hook→payoff→CTA
-  structure, on-brand for `protocode`'s dev/AI-tools niche) — `media_compose` (square-tall,
-  kit identity) → `content_check` **PASS** both platforms → explicit user approval →
-  published live: **IG `17891013474664651`**, **FB `105275157663337_1439990154821526`**.
-  Confirms the whole chain — SDK bump, account registry, the handle fix — holds up under
-  a real publish.
+**5. INIT-015 — live re-verification, and it immediately found a real bug.** Prepped a
+live pipeline re-run to confirm the SDK bump + INIT-014 didn't break anything real.
+Wrote a throwaway MCP client script — **used `run.js` as the entry point, not
+`index.js` directly**, since the latter skips credential loading entirely (a mistake
+on the first pass produced a false "everything's unconfigured" reading — worth
+remembering). Called `config_doctor` + `account_info` against real IG/FB creds on
+`protocode`: both live-valid. That `account_info` call was the **first live exercise
+of INIT-014's `account_info`→`recordHandle` path**, and it broke immediately —
+`brand_voice list` rendered `instagram=@@protocode_` (double `@`). Root cause: the
+adapters (`instagram.ts`/`facebook.ts` `getProfile()`) already prefix `@` onto the
+handle before it reaches the registry; `formatAccounts()` prepended a second one. No
+unit or smoke test could have caught this — the path only executes with a real
+credential in hand. Fixed, 3 new unit tests, reconfirmed live. Then drafted and
+published a real build-in-public post about exactly this (content-craft
+hook→payoff→CTA, on-brand for `protocode`'s dev/AI-tools niche) —
+`media_compose` → `content_check` **PASS** both platforms → explicit user approval →
+published live: **IG `17891013474664651`**, **FB `105275157663337_1439990154821526`**.
 
-**Every H0 bullet and every "1.0 Means" criterion now checks out — nothing in the
-definition is blocking `v1.0.0` anymore. Whether/when to cut it is the user's call.**
+**6. Cut `v1.0.0`.** With every H0 goal and every "1.0 Means" criterion checked, user
+confirmed the cut. Prep (separate commit, before the version bump): fixed
+`RELEASING.md`'s stale `cd spmc-server` path, `CHANGELOG.md`'s `prototowb/spmc`
+compare-link domain, and the now-false "pre-1.0, `-alpha`" premise sentence; moved
+`[Unreleased]` into a dated `[1.0.0]` section (via markdown header nesting — `##
+[1.0.0]` between `## [Unreleased]` and the next `##`, not physically relocating ~140
+lines) and added the three entries from this session that hadn't been logged yet
+(the audit fix, the `@@` bugfix, the npm-publish descope). **Discovered while writing
+the compare links: no git tags exist anywhere in this repo** — `CHANGELOG.md`
+referenced `v0.1.0-alpha`/`v0.2.0-alpha`/`v0.3.0-alpha` as if tagged, but those were
+hand-edited version-string commits, never run through `npm version`. Not lost data —
+confirmed by finding the 0.2.0-alpha bump commit and checking it wasn't the auto-tag
+shape. **`v1.0.0` is genuinely this project's first real tag.**
+
+Then the bump itself: `npm run build` once on the clean tree first (confirmed zero
+diff, including `agent/mcp-config.json`, before letting the version lifecycle run the
+same build automatically). `npm version major` from `honk-server` → `1.0.0`
+(verified via a throwaway `npm version major --no-git-tag-version` in a scratch dir
+that `0.3.0-alpha` bumps to exactly `1.0.0`, not `1.0.0-alpha`).
+
+⚠️ **npm workspaces gotcha, now documented in RELEASING.md:** `npm version` run
+inside a workspace member (`honk-server`) does **not** auto-commit or auto-tag — that's
+documented npm behavior for workspaces, not a bug. It bumps `package.json`, runs the
+`version` script (build + `git add -u`), and stops. Had to finish the commit (`git
+commit -m "1.0.0"`) and tag (`git tag -a v1.0.0 -m "v1.0.0"`) by hand — including
+staging the root `package-lock.json`'s workspace version entry, which `git -C .. add
+-u` ran too early to catch. Full gate suite green on the tagged commit (`pack:smoke`
+installed `honk-1.0.0.tgz` and booted it). Pushed + `--follow-tags`. Opened
+`development` → `main` PR #4 (53 commits — `main` hadn't been touched since PR #1,
+2026-06-17), reviewed, merged (standard merge, not squash — keeps ticket-level
+history).
 
 ## Session Infrastructure — sandbox-only, retired here but keep for reference
 
@@ -138,25 +128,29 @@ sandbox, not a live sandbox problem).
 3. Off-mount index (`GIT_INDEX_FILE=/sessions/<sandbox>/honk.index`) was in force; this
    session's repair (above) was the cleanup this note anticipated.
 4. No GitHub creds in the sandbox → the user pushed. Not needed here — this session pushed
-   directly.
+   and merged directly (`gh` authenticated).
 5. `pack:smoke`'s tgz cleanup hit EPERM on the mount (tarball is gitignored regardless).
 6. HEAD could point at a stale feature branch after a failed switch — trust `git log
-   <branch>` over `git branch --show-current`. (This is in fact what happened — see repair
+   <branch>` over `git branch --show-current`. (This happened this session — see repair
    note above.)
 
 ## NEXT
 
-1. **Decide on cutting `v1.0.0`.** Every H0 bullet + every "1.0 Means" criterion now
-   checks out (see above — the `npm audit` item is also resolved). This is a decision for
-   the user, not a coding task: if yes, follow `RELEASING.md`'s changelog-move +
-   version-bump flow, tag, PR `development` → `main`.
-2. **BETA-011 UI phase** (stop-line; entry after 1.0 cut per horizons) — read-only first:
-   queue/calendar/analytics/assets views rendering the same schemas guided mode uses. The
-   account registry's handle cache (INIT-014) is now there for the account switcher.
-3. **INBOX-001** Phase 0 vs 1 decision (plan in INBOX_FEATURE_PLAN.md).
-4. **INDIV-007 learned/adaptive** — data-gated on accrued analytics.
-5. Deferred: ALPHA-016 delete (destructive, scope-paused) · ALPHA-017 Mastodon /
+**H1 (delegation + first UI) is now open** — its entry criterion was the 1.0 cut,
+which just happened. Nothing here is urgent; pick based on what you want next.
+
+1. **BETA-011 UI phase** (stop-line — deliberately not started; crossing it is a real
+   scope decision, not a default) — read-only first: queue/calendar/analytics/assets
+   views rendering the same schemas guided mode uses. The account registry's handle
+   cache (INIT-014) is there for the account switcher.
+2. **INBOX-001** Phase 0 vs 1 decision (plan in INBOX_FEATURE_PLAN.md).
+3. **INDIV-007 learned/adaptive** — data-gated on accrued analytics (now has one more
+   live post's worth of history from INIT-015).
+4. Deferred: ALPHA-016 delete (destructive, scope-paused) · ALPHA-017 Mastodon /
    ALPHA-018 LinkedIn (need creds/decisions). Descoped items live ONLY in PROJECT_STATUS.
+5. **Consider a GitHub Release object** for `v1.0.0` (`gh release create v1.0.0`) —
+   the tag exists and is pushed, but no Release page was created; that's an optional,
+   separate, more-visible step nobody's asked for yet.
 
 ## Conventions In Force
 
@@ -176,12 +170,19 @@ sandbox, not a live sandbox problem).
   with the local absolute path — check `git diff agent/mcp-config.json` after, don't assume.
 - **Gates green at every commit:** `npm test` · `npm run build:check` · `test:smoke` ·
   `pack:smoke`. CI gates `main`/`development`/`feature/**` + PRs.
+- **Releasing:** see `RELEASING.md` — now includes the npm-workspaces auto-tag gotcha
+  found cutting v1.0.0. `main` via PR only (`gh pr create` + `gh pr merge --merge`).
 - **Narrative history → PROJECT_HISTORY.md** (newest first); PROJECT_STATUS stays a lean
   snapshot; **descoped items live only in the STATUS Descoped table** (AGENTS.md rule).
 - **Bins:** `honk` = run.js (MCP only) · `honk-start` = start.js (MCP + scheduler).
 - **Credentials** in `~/.claude/honk.env` (`ACCOUNT__KEY` prefix; default = bare keys, not a
   fallback). Meta slots hold a **non-expiring PAGE token** (minted 2026-07-05, INIT-010b).
-  **Always confirm post content with the user before publishing.**
+  **Always confirm post content with the user before publishing** — every live publish
+  this project has ever done went through an explicit approval step; keep it that way.
+- **Testing credentials live: use `run.js`, not `index.js`, as the client entry point** —
+  `index.js` is the bare MCP server with no `.env` loading. A throwaway MCP-client script
+  pointed at `index.js` will report every platform as unconfigured even when
+  `~/.claude/honk.env` is fully populated (learned the hard way this session).
 - **Git flow:** branch off `development`, merge `--no-ff`, push; `main` via PR only. Commit
   via `git commit -F <msgfile>`. Ticket IDs: confirm next free INIT-xxx against git history
   (INIT-015 was this session's last; `pg`'s counter drifts).
