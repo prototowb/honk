@@ -38,9 +38,11 @@ Branch: `feature/ALPHA-009-content-foundations`.
 
 ## Active Tickets
 
-**None in progress.** Latest session (2026-07-27) pushed `development` (27
+**None in progress.** Latest session (2026-07-27/28) pushed `development` (27
 commits, previously stranded in a creds-less sandbox), shipped **INIT-014**
-(account registry v1 — `accounts.json`, H1) — see *Completed* — descoped the
+(account registry v1 — `accounts.json`, H1) and **INIT-015** (live
+re-verification — real IG+FB publish, caught + fixed a live bug in the
+account registry along the way) — see *Completed* — descoped the
 npm publish plan indefinitely (see *Descoped*), and healed doc rot found in
 the process: `README.md` had never actually been swept for the SPMC→Honk
 rename (title/paths/bins/credential-file/skill-count/test-count all stale)
@@ -114,6 +116,7 @@ open question** — see `SESSION_HANDOFF.md` → NEXT.
 | INIT-012 | **SDLC streamline + descope** — (1) BETA-013 (Threads/TikTok/Bluesky creds, X 402) **descoped indefinitely** by user decision → new *Descoped* table (this file), pruned from specs/verification docs, dropped from handoff NEXT lists (backlog-hygiene rule in AGENTS.md); the six affected publish tools carry an explicit **live-unverified/experimental** note in their descriptions (the 1.0 definition's "honestly flagged" arm). (2) AGENTS.md template fiction (4+2 agent system, `{{placeholder}}` sprint/git-flow blocks) replaced with the real **Session Model** loop; root ARCHITECTURE.md (never-filled `pg` template) reduced to a pointer at PROJECT_ARCHITECTURE.md. Net −780 lines. Gates green | ✅ Done |
 | INIT-013 | **Asset registry v1 — the DAM seed** (H2 item pulled forward; first Brand OS platform brick). `lib/assets.ts` versioned store (`assets.json`, INIT-008 contract): id, content **hash** (dedupe at register — identical bytes under a new URL extend one asset), provider URL(s), dimensions, **rights/expiry**, tags, **usage per post from day one** (R2 takeaway). Auto-registration: `media_upload` (external calls) + `media_compose` (template+dims; kit logo/icon registered as `brand-kit` assets). `publishAudited` chokepoint records usage (post_id join) + appends a deterministic **expiry WARN** to the summary; `content_check` folds the same warn into the report (never a block — judgment stays with the user). Tools **32→34**: `asset_list` (filters: source/tag/account/template/expired/used; query by id/hash/URL), `asset_update` (rights_note, rights_expires_at, tags). All registry hooks best-effort — a registry failure can never fail an upload or a live post. 171 unit (+11) + 49-check smoke (+2) + build:check + pack:smoke green | ✅ Done |
 | INIT-014 | **Account registry v1** (H1 — `brand-active.json` "grows into `accounts.json`", credential × brand × handles). New `lib/accounts.ts`: versioned store (INIT-008 contract) still owning the active pointer (`brand.getActive`/`setActive` now delegate to it; legacy `brand-active.json` read-only-seeded on first read, no migration step) and now caching each account's channel handle from `account_info` (id/handle/name/icon_url) so `brand_voice list` shows it without a live API call. Scope held to exactly the H1 line — credential presence (env) and brand-profile existence (`brand.json`) stay live-computed in `config.ts`, not duplicated. Registry keys lowercase-normalized (matches `accountsOverview()`'s existing join); the active pointer itself stays raw-case (brand.json/env() key off it). Tools stay 34 — no new tool, richer `brand_voice list` + `account_info` output on unchanged call shapes. 180 unit (+9) + 49-check smoke (unchanged, regression-verified) + build:check + pack:smoke green | ✅ Done |
+| INIT-015 | **Live re-verification + a live-caught bug** — prep for a real publish surfaced that `config_doctor`/credentials were genuinely live-valid (not just present) via a real `account_info` call against IG+FB (`protocode`), which was also the **first live exercise of INIT-014's `account_info`→registry cache path** — and it immediately found a real bug: `formatAccounts` rendered `instagram=@@protocode_` (double `@`) because the adapters (`instagram.ts`/`facebook.ts` `getProfile`) already prefix `@` onto the handle before it reaches the registry. Fixed + 3 new unit tests (183 unit total) + reconfirmed live. Then a full build-in-public post (about exactly this: live-testing catching what mocks can't) went through content-craft → `media_compose` (square-tall) → `content_check` **PASS** (both platforms) → explicit user approval → published live: **IG** `17891013474664651`, **FB** `105275157663337_1439990154821526`. Confirms the `@modelcontextprotocol/sdk` 1.30.0 bump (INIT-audit-fix, same session) didn't break the publish path. Tools stay 34; 183 unit + 49-check smoke + build:check + pack:smoke green | ✅ Done |
 
 ## Next Up
 
@@ -175,7 +178,7 @@ Full phase tables in `PROJECT_HISTORY.md`.
 | Platforms supported | 6 (X, Instagram, TikTok, Facebook, Threads, Bluesky) |
 | MCP tools | 34 (7 publishing + 1 tiktok-status + 9 content-intelligence + 1 workflow_list + 1 brand_voice + 1 brand_schema + 1 link_tag + 5 queue + 3 observability + 1 account_info + 2 media + 2 assets) |
 | Claude Code skills | 15 (9 publishing: 6 platform + manage-queue + upload-media + content-intelligence · 5 pipeline: idea-input + research-trends + pipeline-orchestrator + output-manager + brand-setup · 1 craft: content-craft) |
-| Tests | 180 unit (`node:test`) + 49-check MCP smoke test |
+| Tests | 183 unit (`node:test`) + 49-check MCP smoke test |
 | npm package | `honk` v0.3.0-alpha (unpublished) |
 | Dependencies | 2 (`@modelcontextprotocol/sdk`, `sharp`) — unchanged |
 | Agent surfaces | 5 (Claude Code, Claude Desktop, Hermes, OpenClaw/generic, CLI/npm) |
