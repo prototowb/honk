@@ -76,13 +76,23 @@ export async function fetchMetrics(platform: string, postId: string, account = '
   return metrics;
 }
 
+// Every stored snapshot matching the filter, unsliced, chronological — the
+// join point for lib/performance.ts (INIT-016), which needs the full history
+// per post rather than the tool-facing report()'s default-50 window.
+export function allSnapshots({ platform, post_id }: {
+  platform?: string;
+  post_id?: string;
+} = {}): AnalyticsSnapshot[] {
+  let items = load();
+  if (platform) items = items.filter(i => i.platform === platform);
+  if (post_id)  items = items.filter(i => i.post_id === post_id);
+  return items;
+}
+
 export function report({ platform, post_id, limit = 50 }: {
   platform?: string;
   post_id?: string;
   limit?: number;
 } = {}): AnalyticsSnapshot[] {
-  let items = load();
-  if (platform) items = items.filter(i => i.platform === platform);
-  if (post_id)  items = items.filter(i => i.post_id === post_id);
-  return items.slice(-limit).reverse();
+  return allSnapshots({ platform, post_id }).slice(-limit).reverse();
 }

@@ -254,7 +254,7 @@ The scheduler logs to `~/.claude/honk-scheduler.log` (that directory must exist)
 ## MCP Tools
 
 <!-- gen:tools:start -->
-_34 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit between these markers; run `npm run build`._
+_35 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit between these markers; run `npm run build`._
 
 ### Publishing & status
 
@@ -297,6 +297,7 @@ _34 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 | `rate_limits` | — | — | — | Show rate-limit responses (HTTP 429) observed per platform, tallied from publish errors. Observational only — does not yet gate sending. |
 | `analytics_fetch` | `platform` (string), `post_id` (string) | `account` (string) | — | Fetch engagement metrics for a published post and store a timestamped snapshot. Supported: instagram, facebook, threads (Graph insights). Requires the platform post/media ID. NOTE: unverified against live APIs pending credential testing. |
 | `analytics_report` | — | `platform` (string), `post_id` (string), `limit` (number) | — | Read stored engagement snapshots, most recent first. Filter by platform or post_id. |
+| `analytics_performance` | — | `platform` (string), `account` (string), `limit` (number) | — | Aggregate stored analytics snapshots into a performance rollup: ranks posts by an engagement score (sum of non-exposure metrics — reach/views/impressions excluded since they measure exposure, not response) and joins each post to its media_compose template via the asset registry (post_id), so you can see which template tends to perform better. Answers "which post/template converts" without hand-cross-referencing analytics_report and asset_list. Directional only while sample size is small — treat as a signal, not a verdict. Filter by platform/account. |
 
 ### Queue
 

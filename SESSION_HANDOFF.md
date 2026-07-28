@@ -4,16 +4,85 @@
 
 ## Where We Are
 
-**`v1.0.0` is cut and live.** Tagged (`v1.0.0`, this project's **first real git tag** —
-see below), gates green, merged to `main` via PR #4 (2026-07-28). `development` and
-`main` are both in sync with `origin` at `0d8d929` / `658d2a8` respectively.
+**`v1.0.0` is cut, live, and now has a GitHub Release.** Tagged (`v1.0.0`, this
+project's **first real git tag**), gates green, merged to `main` via PR #4
+(2026-07-28); Release object published 2026-07-29 (`gh release create v1.0.0` —
+the tag existed but no Release page had ever been created).
 
-**State:** **34 tools** · 15 skills · 5 templates · 2 runtime deps · **183 unit +
-49-check smoke + build:check + pack:smoke** green at every commit. npm registry
+**State:** **35 tools** · 15 skills · 5 templates · 2 runtime deps · **199 unit +
+51-check smoke + build:check + pack:smoke** green at every commit. npm registry
 publish is **descoped indefinitely** (user decision) — install is git-clone +
 `npm install -g .`, no `npx honk`.
 
-## This Session (2026-07-27/28) — repo repair, INIT-014, INIT-015, cut v1.0.0
+## This Session (2026-07-29) — v1.0.0 GitHub Release, INIT-016 output-performance foundations
+
+Picked up post-1.0 with H1 (delegation + first UI) open but every concrete H1
+item gated on a scope call the user needed to make (BETA-011 UI is an explicit
+stop-line; INDIV-007/INBOX-001/ALPHA-016-018 all need a user decision or creds).
+Asked; user chose (1) publish the missing GitHub Release for v1.0.0, then (2)
+research what closes the gap between "v1.0.0 shipped" and "the output actually
+converts."
+
+**1. GitHub Release.** `gh release create v1.0.0` with notes drawn from
+CHANGELOG's `[1.0.0]` section. https://github.com/prototowb/honk/releases/tag/v1.0.0
+
+**2. Research, before writing any code.** Surveyed CTA mechanics, UTM tagging,
+`best_time`'s `observedWindows` seam, analytics ingestion, `content_check`, and
+media/template tracking. Finding: every adaptive/learning mechanism the roadmap
+already imagines (INDIV-007, A/B captions, content recycling) is correctly
+gated on accrued analytics history — but the deeper issue is that **even the
+live posts already published couldn't answer "what's working"**, because
+nothing joined the stores that already existed: `analytics.ts` snapshots and
+`assets.ts` template-usage records share a `platform+post_id` key (the asset
+registry has recorded it since INIT-013) but no code had ever read both. That's
+buildable now, independent of the data-gate — user agreed, scoped as INIT-016.
+
+**3. INIT-016 — output performance foundations.** (1) `lib/performance.ts`
+(new, read-only join, no new store): `postPerformance`/`templatePerformance`
+rank posts/templates by an engagement score (numeric metrics only, **excluding
+exposure metrics** — reach/views/impressions measure exposure, not response).
+**Grouped by platform+template, never averaged across platforms** — caught in
+review before merge: Facebook and Instagram's metric sets are different shapes
+(`post_engagements` already double-counts clicks+reactions; IG has no
+equivalent field at all), so an early draft that grouped by template name alone
+would have silently averaged incomparable units the moment one template got
+used on two platforms (confirmed via a real fixture — see
+`test/performance.test.mjs`, "templates are grouped by platform+template").
+A carousel whose images disagree on template is flagged `ambiguousTemplates`
+rather than picking one arbitrarily. New tool `analytics_performance`
+(**tools 34→35**). (2) `lib/cta-check.ts` (new) — a regex CTA/link-presence
+heuristic, wired into `content_check` as a **note**, deliberately never a
+warning: a regex can't judge whether a CTA is any good, only flag likely
+absence, and treating it as a warning would have flipped the verdict on every
+existing "clean pass" test in the suite for the wrong reason (a proxy signal
+overriding a real one). Reused `validate.ts`'s existing (now exported)
+`contentText()` for platform field routing instead of re-deriving it.
+(3) **Verified against real data, not just fixtures** (the INIT-015 lesson —
+a formatter bug that only shows up against real store contents): ran the new
+join read-only against the live `~/.honk` store. Result: `templatePerformance`
+returns empty today — the asset registry only started recording template usage
+2026-07-07 (INIT-013), while stored analytics snapshots are all from before
+2026-07-06, so there's currently zero overlap. Expected, not a bug; the
+formatter's "no template comparison yet" diagnostic path is what actually
+fires, confirmed live rather than assumed. content-intelligence skill doc also
+corrected in passing: its observability section was still labeled "UNVERIFIED
+— pending live credential testing" for all of `analytics_*`, though IG/FB were
+live-verified back in INIT-010/011 — only Threads is genuinely unresolved, and
+it's descoped (no creds), not "pending." 199 unit (+16) + 51-check smoke (+2)
++ build:check + pack:smoke green.
+
+**Found, not fixed — worth knowing:** `~/.honk/followups.json` currently holds
+**10 undrained auto-analytics jobs**, `attempts: 0` on all of them, several
+weeks overdue — including both of INIT-015's 2026-07-28 live posts (due
+2026-07-29). This is *why* the performance join is empty for the one post that
+does have a template: the scheduler (`start.js`) needs to be running
+continuously to drain the ~24h-deferred fetch queue, and it evidently hasn't
+been since around 2026-07-06. Diagnosed read-only — did not call
+`analytics_fetch`/drain the queue myself, since that's a live Graph API call
+outside this session's scope. Next session: ask the user whether to run
+`start.js` (or manually drain) to backfill real data into the now-working join.
+
+## Previous Session (2026-07-27/28) — repo repair, INIT-014, INIT-015, cut v1.0.0
 
 **0. Repo repair (first thing, before any other work).** First session on the real
 host since the prior sandboxed session (2026-07-06/07). `.git/index` was **entirely
@@ -136,21 +205,26 @@ sandbox, not a live sandbox problem).
 
 ## NEXT
 
-**H1 (delegation + first UI) is now open** — its entry criterion was the 1.0 cut,
-which just happened. Nothing here is urgent; pick based on what you want next.
+**H1 (delegation + first UI) is still open** — INIT-016 was plumbing pulled forward
+from underneath it, not an H1 item itself. Nothing here is urgent; pick based on
+what you want next.
 
+0. **Drain the follow-up backlog** (cheap, makes INIT-016 actually show data) —
+   `~/.honk/followups.json` has 10 undrained jobs back to 2026-07-06, including
+   both INIT-015 live posts. Ask the user whether to start `start.js` (scheduler)
+   or manually drain; then re-run `analytics_performance` against real data — it's
+   never been observed with an actual template↔analytics match yet.
 1. **BETA-011 UI phase** (stop-line — deliberately not started; crossing it is a real
    scope decision, not a default) — read-only first: queue/calendar/analytics/assets
    views rendering the same schemas guided mode uses. The account registry's handle
    cache (INIT-014) is there for the account switcher.
 2. **INBOX-001** Phase 0 vs 1 decision (plan in INBOX_FEATURE_PLAN.md).
-3. **INDIV-007 learned/adaptive** — data-gated on accrued analytics (now has one more
-   live post's worth of history from INIT-015).
+3. **INDIV-007 learned/adaptive** — data-gated on accrued analytics. INIT-016 built
+   the join this needs (`lib/performance.ts`) but did not wire it into `best_time`'s
+   `observedWindows` seam — that wiring is still the actual INDIV-007 work, still
+   blocked on real history (item 0 above unblocks that history).
 4. Deferred: ALPHA-016 delete (destructive, scope-paused) · ALPHA-017 Mastodon /
    ALPHA-018 LinkedIn (need creds/decisions). Descoped items live ONLY in PROJECT_STATUS.
-5. **Consider a GitHub Release object** for `v1.0.0` (`gh release create v1.0.0`) —
-   the tag exists and is pushed, but no Release page was created; that's an optional,
-   separate, more-visible step nobody's asked for yet.
 
 ## Conventions In Force
 

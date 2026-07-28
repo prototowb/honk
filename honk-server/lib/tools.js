@@ -339,6 +339,18 @@ export const TOOLS = [
             },
         },
     },
+    {
+        name: 'analytics_performance',
+        description: 'Aggregate stored analytics snapshots into a performance rollup: ranks posts by an engagement score (sum of non-exposure metrics — reach/views/impressions excluded since they measure exposure, not response) and joins each post to its media_compose template via the asset registry (post_id), so you can see which template tends to perform better. Answers "which post/template converts" without hand-cross-referencing analytics_report and asset_list. Directional only while sample size is small — treat as a signal, not a verdict. Filter by platform/account.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                platform: { type: 'string', description: 'Filter by platform' },
+                account: { type: 'string', description: "Named account. Omit for all." },
+                limit: { type: 'number', description: 'Max posts to list in the by-post ranking. Default 20.' },
+            },
+        },
+    },
     // ── Queue ─────────────────────────────────────────────────────────────────
     {
         name: 'queue_add',

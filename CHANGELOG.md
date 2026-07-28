@@ -10,6 +10,27 @@ fixes, major = breaking changes). The version lives once in
 
 ## [Unreleased]
 
+### Added
+- **Output performance rollup** (INIT-016, tools 34→35) — `analytics_performance`
+  joins stored analytics snapshots to the asset registry's template usage
+  (shared platform+post_id key) so you can see which post — and which
+  `media_compose` template — actually converts, ranked by an engagement score
+  (numeric non-exposure metrics only; reach/views/impressions excluded).
+  Grouped by platform+template, never averaged across platforms (their metric
+  sets aren't the same shape). A carousel whose images disagree on template is
+  flagged ambiguous rather than guessed at. Pure read-only join — no new store.
+- **CTA-presence note on `content_check`** — a deterministic heuristic
+  (CTA-shaped phrasing or a URL in the text) surfaced as an informational note,
+  never a warning: it can't judge CTA quality, only flag likely absence, so it
+  never changes the pass/warn/block verdict.
+
+### Fixed
+- **`content-intelligence` skill doc corrected** — the observability section
+  was still labeled "UNVERIFIED — pending live credential testing" for all of
+  `analytics_*`, even though IG/FB were live-verified back in INIT-010/011.
+  Only Threads remains genuinely unresolved, and it's descoped indefinitely
+  (no credentials), not "pending."
+
 ## [1.0.0] — 2026-07-28
 
 ### Security

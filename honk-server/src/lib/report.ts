@@ -16,6 +16,7 @@ import { hashContent } from './hash.js';
 import { recentDuplicate } from './audit.js';
 import { normalizeScheduledAt, timezoneWarning, isPast } from './schedule.js';
 import { extractMediaUrls, expiryWarnings } from './assets.js';
+import { ctaNote } from './cta-check.js';
 
 export type Verdict = 'pass' | 'warn' | 'block';
 
@@ -47,7 +48,7 @@ export function contentCheck(
 ): ContentCheckResult {
   const gate = validateWithPolicy(platform, content, account, { sponsored });
   const warnings = [...gate.warnings];
-  const notes = [...(gate.notes || [])];
+  const notes = [...(gate.notes || []), ctaNote(platform, content)];
 
   // Duplicate guard (same check duplicate_check runs, folded into the report).
   const dup = recentDuplicate({ platform, content_hash: hashContent(content), withinMs: duplicateWindowHours * 3600 * 1000 });

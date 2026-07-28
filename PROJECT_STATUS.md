@@ -38,25 +38,35 @@ Branch: `feature/ALPHA-009-content-foundations`.
 
 ## Active Tickets
 
-**None in progress. `v1.0.0` is cut** — tagged, gates green, merged to `main`
-(PR #4, 2026-07-28). Session (2026-07-27/28) pushed `development` (27 commits,
-previously stranded in a creds-less sandbox), shipped **INIT-014** (account
-registry v1 — `accounts.json`, H1) and **INIT-015** (live re-verification —
-real IG+FB publish, caught + fixed a live bug in the account registry along
-the way) — see *Completed* — descoped the npm publish plan indefinitely (see
-*Descoped*), and healed doc rot found in the process: `README.md` had never
-actually been swept for the SPMC→Honk rename (title/paths/bins/
-credential-file/skill-count/test-count all stale) despite this file claiming
-that rename complete; two H0 goals in PROJECT_SPECIFICATIONS.md had shipped
-(INIT-008, INIT-011) but sat unchecked; the 1.0 definition's "npm package
-public" clause was rewritten to drop the public-registry requirement (user
-decision); `npm audit` (5 vulnerabilities found) was resolved via
-`npm audit fix`. With every H0/1.0 criterion checked, the user confirmed the
-cut: `npm version major` (0.3.0-alpha → 1.0.0), tag `v1.0.0`, `development` →
-`main` PR, merged. **This is the project's first real git tag** — 0.1.0/0.2.0/
-0.3.0-alpha were hand-edited version bumps that never went through the actual
-release flow, so no tags exist for them. Next: H1 (delegation + first UI) is
-now open per its entry criteria — see `SESSION_HANDOFF.md` → NEXT.
+**None in progress.** `v1.0.0` is cut — tagged, gates green, merged to `main`
+(PR #4, 2026-07-28) — and now has a **GitHub Release** published
+(2026-07-29, `gh release create v1.0.0`; the tag existed but no Release object
+had ever been created). Session (2026-07-27/28) pushed `development` (27
+commits, previously stranded in a creds-less sandbox), shipped **INIT-014**
+(account registry v1 — `accounts.json`, H1) and **INIT-015** (live
+re-verification — real IG+FB publish, caught + fixed a live bug in the
+account registry along the way) — see *Completed* — descoped the npm publish
+plan indefinitely (see *Descoped*), and healed doc rot found in the process:
+`README.md` had never actually been swept for the SPMC→Honk rename
+(title/paths/bins/credential-file/skill-count/test-count all stale) despite
+this file claiming that rename complete; two H0 goals in
+PROJECT_SPECIFICATIONS.md had shipped (INIT-008, INIT-011) but sat unchecked;
+the 1.0 definition's "npm package public" clause was rewritten to drop the
+public-registry requirement (user decision); `npm audit` (5 vulnerabilities
+found) was resolved via `npm audit fix`. With every H0/1.0 criterion checked,
+the user confirmed the cut: `npm version major` (0.3.0-alpha → 1.0.0), tag
+`v1.0.0`, `development` → `main` PR, merged. **This is the project's first
+real git tag** — 0.1.0/0.2.0/0.3.0-alpha were hand-edited version bumps that
+never went through the actual release flow, so no tags exist for them.
+
+**2026-07-29 session:** researched what closes the H1 gap between "v1.0.0 is
+cut" and "output actually converts" — found the bottleneck wasn't accrued
+analytics history (the documented data-gate on INDIV-007/A-B-variants/content
+recycling), it was that no code joined the stores that already existed. Shipped
+**INIT-016** (see *Completed*) to close that: a real analytics performance
+rollup, template↔post attribution via the asset registry, and a CTA-presence
+note on `content_check`. H1 (delegation + first UI) remains open past this —
+see `SESSION_HANDOFF.md` → NEXT.
 
 ## Completed Tickets
 
@@ -120,6 +130,7 @@ now open per its entry criteria — see `SESSION_HANDOFF.md` → NEXT.
 | INIT-013 | **Asset registry v1 — the DAM seed** (H2 item pulled forward; first Brand OS platform brick). `lib/assets.ts` versioned store (`assets.json`, INIT-008 contract): id, content **hash** (dedupe at register — identical bytes under a new URL extend one asset), provider URL(s), dimensions, **rights/expiry**, tags, **usage per post from day one** (R2 takeaway). Auto-registration: `media_upload` (external calls) + `media_compose` (template+dims; kit logo/icon registered as `brand-kit` assets). `publishAudited` chokepoint records usage (post_id join) + appends a deterministic **expiry WARN** to the summary; `content_check` folds the same warn into the report (never a block — judgment stays with the user). Tools **32→34**: `asset_list` (filters: source/tag/account/template/expired/used; query by id/hash/URL), `asset_update` (rights_note, rights_expires_at, tags). All registry hooks best-effort — a registry failure can never fail an upload or a live post. 171 unit (+11) + 49-check smoke (+2) + build:check + pack:smoke green | ✅ Done |
 | INIT-014 | **Account registry v1** (H1 — `brand-active.json` "grows into `accounts.json`", credential × brand × handles). New `lib/accounts.ts`: versioned store (INIT-008 contract) still owning the active pointer (`brand.getActive`/`setActive` now delegate to it; legacy `brand-active.json` read-only-seeded on first read, no migration step) and now caching each account's channel handle from `account_info` (id/handle/name/icon_url) so `brand_voice list` shows it without a live API call. Scope held to exactly the H1 line — credential presence (env) and brand-profile existence (`brand.json`) stay live-computed in `config.ts`, not duplicated. Registry keys lowercase-normalized (matches `accountsOverview()`'s existing join); the active pointer itself stays raw-case (brand.json/env() key off it). Tools stay 34 — no new tool, richer `brand_voice list` + `account_info` output on unchanged call shapes. 180 unit (+9) + 49-check smoke (unchanged, regression-verified) + build:check + pack:smoke green | ✅ Done |
 | INIT-015 | **Live re-verification + a live-caught bug** — prep for a real publish surfaced that `config_doctor`/credentials were genuinely live-valid (not just present) via a real `account_info` call against IG+FB (`protocode`), which was also the **first live exercise of INIT-014's `account_info`→registry cache path** — and it immediately found a real bug: `formatAccounts` rendered `instagram=@@protocode_` (double `@`) because the adapters (`instagram.ts`/`facebook.ts` `getProfile`) already prefix `@` onto the handle before it reaches the registry. Fixed + 3 new unit tests (183 unit total) + reconfirmed live. Then a full build-in-public post (about exactly this: live-testing catching what mocks can't) went through content-craft → `media_compose` (square-tall) → `content_check` **PASS** (both platforms) → explicit user approval → published live: **IG** `17891013474664651`, **FB** `105275157663337_1439990154821526`. Confirms the `@modelcontextprotocol/sdk` 1.30.0 bump (INIT-audit-fix, same session) didn't break the publish path. Tools stay 34; 183 unit + 49-check smoke + build:check + pack:smoke green | ✅ Done |
+| INIT-016 | **Output performance foundations** — closes the gap found researching "what would improve conversion efficiency and output UX": the plumbing to ever answer "which post/template converts" didn't exist, independent of the analytics-history data-gate blocking INDIV-007/A-B-variants/content-recycling. (1) `lib/performance.ts` — read-only join of `analytics.ts` snapshots to `assets.ts` template usage (shared platform+post_id key, INIT-013); `postPerformance`/`templatePerformance` rank by an engagement score (numeric non-exposure metrics only — reach/views/impressions excluded); **grouped by platform+template, never averaged across platforms** (different metric shapes); a carousel whose images disagree on template is flagged ambiguous rather than guessed. New tool `analytics_performance` (**tools 34→35**), diagnostic "not enough data yet" messaging verified against the real `~/.honk` store (near-zero overlap today — the asset registry postdates most stored analytics; expected, not a bug). (2) `lib/cta-check.ts` — deterministic CTA/link-presence heuristic folded into `content_check` as a **note, informational only** (never flips the pass/warn/block verdict — a regex is a proxy, not ground truth, same reasoning as the existing banned_topics note). content-intelligence skill doc corrected: IG/FB analytics were stale-labeled "unverified" despite INIT-010/011 live-verifying them; only Threads is genuinely unresolved (descoped, not pending). 199 unit (+16) + 51-check smoke (+2) + build:check + pack:smoke green | ✅ Done |
 
 ## Next Up
 
@@ -179,9 +190,9 @@ Full phase tables in `PROJECT_HISTORY.md`.
 | Metric | Value |
 |--------|-------|
 | Platforms supported | 6 (X, Instagram, TikTok, Facebook, Threads, Bluesky) |
-| MCP tools | 34 (7 publishing + 1 tiktok-status + 9 content-intelligence + 1 workflow_list + 1 brand_voice + 1 brand_schema + 1 link_tag + 5 queue + 3 observability + 1 account_info + 2 media + 2 assets) |
+| MCP tools | 35 (7 publishing + 1 tiktok-status + 9 content-intelligence + 1 workflow_list + 1 brand_voice + 1 brand_schema + 1 link_tag + 5 queue + 4 observability + 1 account_info + 2 media + 2 assets) |
 | Claude Code skills | 15 (9 publishing: 6 platform + manage-queue + upload-media + content-intelligence · 5 pipeline: idea-input + research-trends + pipeline-orchestrator + output-manager + brand-setup · 1 craft: content-craft) |
-| Tests | 183 unit (`node:test`) + 49-check MCP smoke test |
+| Tests | 199 unit (`node:test`) + 51-check MCP smoke test |
 | npm package | `honk` v1.0.0 (registry publish descoped indefinitely — install via git clone) |
 | Dependencies | 2 (`@modelcontextprotocol/sdk`, `sharp`) — unchanged |
 | Agent surfaces | 5 (Claude Code, Claude Desktop, Hermes, OpenClaw/generic, CLI/npm) |

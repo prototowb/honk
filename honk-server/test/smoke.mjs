@@ -103,6 +103,8 @@ const text = (r) => r.content.map(c => c.text).join('\n');
   check('rate_limits responds', !rl.isError);
   const ar = await client.callTool({ name: 'analytics_report', arguments: {} });
   check('analytics_report responds', !ar.isError);
+  const ap = await client.callTool({ name: 'analytics_performance', arguments: {} });
+  check('analytics_performance responds with the no-data message on an empty store', !ap.isError && /no analytics snapshots yet/i.test(text(ap)));
 }
 
 // brand_voice get/set round-trip — pure, no credentials.
@@ -223,6 +225,7 @@ const text = (r) => r.content.map(c => c.text).join('\n');
 {
   const r = await client.callTool({ name: 'content_check', arguments: { platform: 'bluesky', content: { text: 'smoke check' } } });
   check('content_check passes clean content with the agent checklist', !r.isError && /PASS/.test(text(r)) && /Agent-judged gates/.test(text(r)));
+  check('content_check still PASSes with the CTA note attached, informational only (INIT-016)', /No call-to-action or link detected/.test(text(r)));
 }
 {
   const r = await client.callTool({ name: 'content_check', arguments: { platform: 'bluesky', content: { text: 'x'.repeat(400) } } });
