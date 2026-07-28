@@ -3,12 +3,38 @@
 All notable changes to Honk are recorded here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); the
-project uses [Semantic Versioning](https://semver.org/) (pre-1.0, `-alpha` while
-the surface stabilizes: minor = features, patch = fixes). The version lives once
-in `honk-server/package.json` and flows into every generated artifact via
+project uses [Semantic Versioning](https://semver.org/) (minor = features, patch =
+fixes, major = breaking changes). The version lives once in
+`honk-server/package.json` and flows into every generated artifact via
 `npm run build` — see [RELEASING.md](RELEASING.md).
 
 ## [Unreleased]
+
+## [1.0.0] — 2026-07-28
+
+### Security
+- **`npm audit` clean** — 5 vulnerabilities (1 high, 3 moderate, 1 low) in transitive
+  deps (`fast-uri` via `ajv`, `hono` via `@modelcontextprotocol/sdk`) resolved via
+  `npm audit fix` (lockfile-only bump; `@modelcontextprotocol/sdk` stays within its
+  existing `^1.12.0` range in `package.json`).
+
+### Fixed
+- **Account registry cached handles rendered with a double `@`** (`instagram=@@handle`,
+  INIT-015) — found via a live `account_info` call, the first live exercise of the
+  registry's `recordHandle` path added in INIT-014. The adapters already prefix `@`
+  onto the handle before it reaches the registry; `formatAccounts()` was prepending a
+  second one. Renders verbatim now. Reconfirmed against a real live publish. 3 new
+  unit tests.
+
+### Changed
+- **npm publish descoped indefinitely** (user decision) — no plan to distribute `honk`
+  via the npm registry. The 1.0 release definition's "npm package public" criterion is
+  rewritten: the install bar is git-clone → `npm install` → `npm install -g .` (or
+  wired directly into an agent surface) + a correct README, ≤ 10 minutes cold.
+- **`README.md` corrected for the SPMC→Honk rename**, which had never actually been
+  swept despite prior claims otherwise — title, every path, bin names, credential
+  file, skill list/count, and test counts were all still pre-rename. Only the
+  generator-injected tool table was current.
 
 ### Added
 - **Account registry v1** (INIT-014) — `brand-active.json`'s active-account
@@ -176,7 +202,9 @@ in `honk-server/package.json` and flows into every generated artifact via
 - Packaging across surfaces: npm package, Claude Code plugin, Claude Desktop
   config, and the agent (then "Hermes") briefing pack.
 
-[Unreleased]: https://github.com/prototowb/spmc/compare/v0.3.0-alpha...HEAD
-[0.3.0-alpha]: https://github.com/prototowb/spmc/releases/tag/v0.3.0-alpha
-[0.2.0-alpha]: https://github.com/prototowb/spmc/releases/tag/v0.2.0-alpha
-[0.1.0-alpha]: https://github.com/prototowb/spmc/releases/tag/v0.1.0-alpha
+[Unreleased]: https://github.com/prototowb/honk/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/prototowb/honk/releases/tag/v1.0.0
+
+<!-- 0.1.0-alpha/0.2.0-alpha/0.3.0-alpha were never actually tagged (hand-edited
+     version bumps, not the npm-version release flow) -- v1.0.0 is this project's
+     first real git tag, so there are no working release links before it. -->

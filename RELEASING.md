@@ -15,14 +15,14 @@ version in a generated file** — `build:check` will reject it.
 On a clean working tree (`development` or `main`):
 
 1. **Update the changelog.** Move the `## [Unreleased]` entries into a new
-   `## [x.y.z-alpha] — YYYY-MM-DD` section, leave a fresh empty `[Unreleased]`,
+   `## [x.y.z] — YYYY-MM-DD` section, leave a fresh empty `[Unreleased]`,
    and update the compare links at the bottom of `CHANGELOG.md`.
 
 2. **Bump the version** from the server package — the `version` lifecycle hook
    regenerates and stages the version-stamped artifacts for you:
    ```bash
-   cd spmc-server
-   npm version patch          # 0.3.0-alpha → 0.3.1-alpha   (or minor / major)
+   cd honk-server
+   npm version patch          # 1.0.0 → 1.0.1   (or minor / major)
    # prerelease bumps:
    npm version prerelease --preid alpha
    ```
@@ -36,13 +36,13 @@ On a clean working tree (`development` or `main`):
    CI runs the full gate on the push (`build:check` + unit + MCP smoke +
    pack-smoke).
 
-## Publishing to npm (deferred)
+## Publishing to npm (descoped indefinitely)
 
-The `spmc` name is unclaimed and the npm / `npx` surface is advertised but not yet
-live — see `PIPELINE_REVIEW.md` #4. When you decide to publish:
+See the note at the top of this file — there is no current plan to publish `honk` to
+the npm registry. If that decision ever changes:
 
 - `prepublishOnly` already gates it: `test` + `build:check` + `pack:smoke` must
   pass, so a broken or stale tarball can't go out.
-- Settle the name first — publish `spmc`, or a scoped `@<owner>/spmc` to remove the
-  unclaimed-name squat risk — then `cd spmc-server && npm publish`.
+- Check the `honk` name is still unclaimed (or use a scoped `@<owner>/honk`) — then
+  `cd honk-server && npm publish`.
 - Consider a tag-triggered GitHub Actions publish job once the name is settled.
