@@ -8,10 +8,10 @@
 `origin/development` is caught up** (was ~28 commits behind at session start; see
 below). `main` still at v0.3.0-alpha via PR only.
 
-**State:** **34 tools** · 15 skills · 5 templates · 2 runtime deps · **180 unit +
+**State:** **34 tools** · 15 skills · 5 templates · 2 runtime deps · **183 unit +
 49-check smoke + build:check + pack:smoke** green at every commit.
 
-## This Session (2026-07-27) — repo repair + push + INIT-014
+## This Session (2026-07-27/28) — repo repair + push + INIT-014 + INIT-015
 
 **Repo repair (first thing, before any other work):** this was the first session on the
 real host since the prior sandboxed session (2026-07-06/07). `.git/index` was **entirely
@@ -98,6 +98,30 @@ README), which matters independent of ever pushing to the registry.
   vulnerabilities**; type-check + 180 unit + 49 smoke + build:check + pack:smoke all
   reverified green after the bump.
 
+**INIT-015 — live re-verification, and it immediately found a real bug.** With every
+H0/1.0 criterion checked, prepped a live pipeline re-run to confirm the SDK bump +
+INIT-014 didn't break anything real:
+- Wrote a throwaway MCP client script (`run.js` as the entry point — NOT `index.js`
+  directly, which skips credential loading entirely; that mistake produced a false
+  "everything's unconfigured" reading on the first pass, worth remembering) and called
+  `config_doctor` + `account_info` against real IG/FB creds on the `protocode` account.
+  Both tokens are genuinely live-valid, not just present.
+- **That `account_info` call was the first live exercise of INIT-014's
+  `account_info`→`recordHandle` path — and it broke immediately.** `brand_voice list`
+  rendered `instagram=@@protocode_` (double `@`). Root cause: `instagram.ts`/`facebook.ts`
+  `getProfile()` already prefix `@` onto the handle before it reaches the registry;
+  `formatAccounts()` in `config.ts` prepended a second one. No unit or smoke test could
+  have caught this — the whole point of that code path is that it only runs with a real
+  credential in hand. Fixed (`config.ts` renders `h.handle` verbatim), 3 new unit tests
+  (`config.test.mjs` — enrichment, the `@@` regression, and the name-fallback case),
+  reconfirmed against the live server. **183 unit total now.**
+- Drafted a build-in-public post about exactly this (content-craft hook→payoff→CTA
+  structure, on-brand for `protocode`'s dev/AI-tools niche) — `media_compose` (square-tall,
+  kit identity) → `content_check` **PASS** both platforms → explicit user approval →
+  published live: **IG `17891013474664651`**, **FB `105275157663337_1439990154821526`**.
+  Confirms the whole chain — SDK bump, account registry, the handle fix — holds up under
+  a real publish.
+
 **Every H0 bullet and every "1.0 Means" criterion now checks out — nothing in the
 definition is blocking `v1.0.0` anymore. Whether/when to cut it is the user's call.**
 
@@ -160,5 +184,5 @@ sandbox, not a live sandbox problem).
   **Always confirm post content with the user before publishing.**
 - **Git flow:** branch off `development`, merge `--no-ff`, push; `main` via PR only. Commit
   via `git commit -F <msgfile>`. Ticket IDs: confirm next free INIT-xxx against git history
-  (INIT-014 was this session's last; `pg`'s counter drifts).
+  (INIT-015 was this session's last; `pg`'s counter drifts).
 - **Document permission scopes** for platform-touching features (`.env.example` + skill).
