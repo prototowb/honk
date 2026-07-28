@@ -51,6 +51,18 @@ test('a past scheduled_at warns; a future one with offset does not', () => {
   assert.equal(future.verdict, 'pass');
 });
 
+test('CTA note is informational only — absent CTA does not downgrade a clean pass (INIT-016)', () => {
+  const r = contentCheck('bluesky', { text: 'hello world' }, 'acme');
+  assert.equal(r.verdict, 'pass');
+  assert.match(r.notes.join(), /No call-to-action or link detected/);
+});
+
+test('CTA note reflects a detected call-to-action', () => {
+  const r = contentCheck('bluesky', { text: 'Reply with your favorite tool.' }, 'acme');
+  assert.equal(r.verdict, 'pass');
+  assert.match(r.notes.join(), /Call-to-action or link detected/);
+});
+
 test('policy falls back to the ACTIVE account when none is given (INIT-006 parity)', () => {
   brand.setActive('acme');
   try {

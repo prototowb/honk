@@ -228,9 +228,12 @@ still rewrite tone, hashtags, and per-channel voice. Omit `platforms` for all si
 scheduled_at?)` runs every deterministic gate at once — platform rules + brand
 policy, the duplicate guard, and schedule sanity — and returns a single
 pass/warn/block verdict plus the agent-judged checklist (structure, followable
-sourcing, right account, brand fit, confirmation). Prefer it as the last step
-before `queue_add` or publishing; the granular tools below remain for targeted
-checks while drafting.
+sourcing, right account, brand fit, confirmation). Its notes also include a
+heuristic CTA/link-presence check (regex, not judgment) — informational only,
+it never changes the verdict; if it says no CTA was detected, that's a prompt
+to double-check the post has its one intended next step, not a rule that every
+post needs one. Prefer `content_check` as the last step before `queue_add` or
+publishing; the granular tools below remain for targeted checks while drafting.
 
 Typical cross-post flow: `content_adapt` → rewrite per channel → `content_validate`
 (or `dry_run`) → `queue_add` / publish.
@@ -278,19 +281,32 @@ not gospel. To act on a suggestion, schedule it with `queue_add(scheduled_at:
 ...)` using an **explicit timezone offset** (then `schedule_check` to confirm the
 instant).
 
-### Observability (UNVERIFIED — pending live credential testing)
+### Observability
 
 ```
 rate_limits()                                   // HTTP 429s observed per platform
 analytics_fetch(platform: "instagram" | "facebook" | "threads", post_id: "...")
-analytics_report(platform?, post_id?, limit?)   // stored engagement snapshots
+analytics_report(platform?, post_id?, limit?)   // stored engagement snapshots, most recent first
+analytics_performance(platform?, account?, limit?)  // ranked rollup + template comparison
 ```
 
-`analytics_*` and `rate_limits` depend on live API behavior not yet exercised
-against real credentials — the store and tools are real, live confirmation is
-pending. X/TikTok/Bluesky analytics are not supported yet.
+Instagram and Facebook analytics are **live-verified** (INIT-010/011: real
+`account_info` + insights calls, a full publish→follow-up→snapshot loop drained
+end-to-end). Threads analytics are shipped but **descoped indefinitely** — no
+credentials, revisit only on explicit user request. X/TikTok/Bluesky analytics
+are not supported by their APIs at the current access tier. `rate_limits` is
+observational only — it does not yet gate sending.
 
 **Auto-follow-up:** after any real publish to IG/FB/Threads, the server queues a
 metrics fetch ~24h later (so a post has time to accumulate engagement). The
 **scheduler** must be running (`start.js`) to drain it — `run.js` alone schedules
 the job but won't fetch. Read the results later with `analytics_report`.
+
+**Performance rollup:** `analytics_performance` joins the stored snapshots to the
+asset registry's template usage (by post_id) so you can see which post — and
+which `media_compose` template — is actually converting, ranked by an engagement
+score (non-exposure metrics only; reach/views/impressions are excluded because
+they measure exposure, not response). Comparisons never cross platforms (their
+metric sets aren't the same shape), and stay directional until enough posts
+accrue. Use it when the user asks "what's working" instead of hand-reading
+`analytics_report` + `asset_list` separately.

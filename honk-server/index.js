@@ -17,6 +17,7 @@ import { read as auditRead, record as auditRecord, recentDuplicate } from './lib
 import { hashContent } from './lib/hash.js';
 import { status as rateLimitStatus } from './lib/ratelimit.js';
 import { fetchMetrics, report as analyticsReport, SUPPORTED_PLATFORMS } from './lib/analytics.js';
+import { postPerformance, templatePerformance, formatPerformance } from './lib/performance.js';
 import * as brand from './lib/brand.js';
 import * as accounts from './lib/accounts.js';
 import { tagUrl } from './lib/links.js';
@@ -389,6 +390,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     return ok(`No analytics snapshots yet. Supported platforms: ${SUPPORTED_PLATFORMS.join(', ')}.`);
                 const lines = snaps.map(s => `${s.ts} | ${s.platform}${s.account ? `/${s.account}` : ''} | ${s.post_id} | ${JSON.stringify(s.metrics)}`);
                 return ok(`${snaps.length} snapshot(s):\n${lines.join('\n')}`);
+            }
+            case 'analytics_performance': {
+                const filter = { platform: a.platform, account: a.account };
+                const posts = postPerformance(filter);
+                const templates = templatePerformance(filter);
+                return ok(formatPerformance(posts, templates, { limit: a.limit ?? 20 }));
             }
             // ── Queue ────────────────────────────────────────────────────────────
             case 'queue_add': {

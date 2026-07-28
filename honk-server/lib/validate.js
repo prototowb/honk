@@ -111,9 +111,10 @@ export function validate(platform, content) {
     return { ok: errors.length === 0, platform, label: spec.label, errors, warnings };
 }
 // The human-visible text of a payload for a platform — the single text field, or
-// a thread's tweets joined — used by the policy disclosure check. Mirrors how
-// validate() locates the text field via the platform spec.
-function contentText(platform, content) {
+// a thread's tweets joined — used by the policy disclosure check (and the
+// cta-check gate, INIT-016). Mirrors how validate() locates the text field via
+// the platform spec — the one place platform->field routing lives.
+export function contentText(platform, content) {
     const spec = PLATFORM_SPECS[platform];
     const c = content || {};
     if (spec?.thread && Array.isArray(c[spec.thread.field])) {
