@@ -1,7 +1,7 @@
 {
   "name": "honk",
-  "version": "0.3.0-alpha",
-  "description": "Honk \u2014 AI-native MCP server for X, Instagram, TikTok, Facebook, Threads, and Bluesky",
+  "version": "1.0.0",
+  "description": "Honk — AI-native MCP server for X, Instagram, TikTok, Facebook, Threads, and Bluesky",
   "author": "towb",
   "type": "module",
   "main": "index.js",

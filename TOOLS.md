@@ -4,7 +4,7 @@
 
 # Honk Tool Reference
 
-**34 tools** · generated from `honk-server/lib/tools.js` + `lib/specs.js` · server v0.3.0-alpha
+**34 tools** · generated from `honk-server/lib/tools.js` + `lib/specs.js` · server v1.0.0
 
 ## Publishing & status
 
