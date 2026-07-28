@@ -26,15 +26,34 @@ On a clean working tree (`development` or `main`):
    # prerelease bumps:
    npm version prerelease --preid alpha
    ```
-   This bumps `package.json`, runs `npm run build`, `git add -u`'s the regenerated
-   artifacts, commits, and tags `v<version>` — one consistent commit.
+   This bumps `package.json` and runs the `version` script (`npm run build` +
+   `git add -u`, staging the regenerated artifacts).
+
+   ⚠️ **npm workspaces gotcha (found cutting v1.0.0):** because `honk-server` is an
+   npm workspace member (declared in the root `package.json`), `npm version` run from
+   inside it does **not** auto-commit or auto-tag — that's documented npm behavior for
+   workspace packages, not a bug. It stops after staging. Finish it yourself:
+   ```bash
+   cd ..                       # repo root
+   git add package-lock.json   # the root lockfile's workspace version entry too
+   git commit -m "1.0.0"       # match the bumped version
+   git tag -a v1.0.0 -m "v1.0.0"
+   ```
+   Verify before tagging: `git diff --cached agent/mcp-config.json` should be empty
+   (it holds a machine-local path and is excluded from `build:check`, so a stray
+   change here wouldn't be caught automatically).
 
 3. **Push** the branch and tag:
    ```bash
    git push && git push --follow-tags
    ```
    CI runs the full gate on the push (`build:check` + unit + MCP smoke +
-   pack-smoke).
+   pack-smoke). Re-run the gate suite locally on the tagged commit before pushing —
+   `npm test && npm run test:smoke && npm --prefix .. run build:check && npm run pack:smoke`.
+
+4. **`main` via PR only** (repo convention — see AGENTS.md). Open
+   `development` → `main` with `gh pr create`, confirm it's mergeable, then
+   `gh pr merge --merge` (standard merge, not squash — keeps ticket-level history).
 
 ## Publishing to npm (descoped indefinitely)
 

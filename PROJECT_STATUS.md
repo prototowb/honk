@@ -5,13 +5,13 @@
 ## Current State
 
 ```yaml
-project_phase: "Beta-Prep"
+project_phase: "Post-1.0 (H1 entry criteria met — see PROJECT_SPECIFICATIONS Horizon Roadmap)"
 project_name: "Honk"
 framework: "MCP server + Claude skills"
 project_type: "AI-native social publishing plugin"
 initialization_date: "2026-06-10"
-current_sprint: "Beta-Prep"
-version: "0.3.0-alpha"
+current_sprint: "None active"
+version: "1.0.0"
 ```
 
 ## Sprint Beta-Prep — Complete (non-UI capabilities)
@@ -38,22 +38,25 @@ Branch: `feature/ALPHA-009-content-foundations`.
 
 ## Active Tickets
 
-**None in progress.** Latest session (2026-07-27/28) pushed `development` (27
-commits, previously stranded in a creds-less sandbox), shipped **INIT-014**
-(account registry v1 — `accounts.json`, H1) and **INIT-015** (live
-re-verification — real IG+FB publish, caught + fixed a live bug in the
-account registry along the way) — see *Completed* — descoped the
-npm publish plan indefinitely (see *Descoped*), and healed doc rot found in
-the process: `README.md` had never actually been swept for the SPMC→Honk
-rename (title/paths/bins/credential-file/skill-count/test-count all stale)
-despite this file claiming that rename complete; two H0 goals in
-PROJECT_SPECIFICATIONS.md had shipped (INIT-008, INIT-011) but sat unchecked;
-the 1.0 definition's "npm package public" clause was rewritten to drop the
-public-registry requirement (user decision); the last open item, `npm audit`
-(5 vulnerabilities found), was resolved same-day via `npm audit fix`
-(lockfile-only bump, gates reverified green — see SESSION_HANDOFF). **Every
-H0/1.0 criterion now checks out. Deciding whether/when to cut `v1.0.0` is the live
-open question** — see `SESSION_HANDOFF.md` → NEXT.
+**None in progress. `v1.0.0` is cut** — tagged, gates green, merged to `main`
+(PR #4, 2026-07-28). Session (2026-07-27/28) pushed `development` (27 commits,
+previously stranded in a creds-less sandbox), shipped **INIT-014** (account
+registry v1 — `accounts.json`, H1) and **INIT-015** (live re-verification —
+real IG+FB publish, caught + fixed a live bug in the account registry along
+the way) — see *Completed* — descoped the npm publish plan indefinitely (see
+*Descoped*), and healed doc rot found in the process: `README.md` had never
+actually been swept for the SPMC→Honk rename (title/paths/bins/
+credential-file/skill-count/test-count all stale) despite this file claiming
+that rename complete; two H0 goals in PROJECT_SPECIFICATIONS.md had shipped
+(INIT-008, INIT-011) but sat unchecked; the 1.0 definition's "npm package
+public" clause was rewritten to drop the public-registry requirement (user
+decision); `npm audit` (5 vulnerabilities found) was resolved via
+`npm audit fix`. With every H0/1.0 criterion checked, the user confirmed the
+cut: `npm version major` (0.3.0-alpha → 1.0.0), tag `v1.0.0`, `development` →
+`main` PR, merged. **This is the project's first real git tag** — 0.1.0/0.2.0/
+0.3.0-alpha were hand-edited version bumps that never went through the actual
+release flow, so no tags exist for them. Next: H1 (delegation + first UI) is
+now open per its entry criteria — see `SESSION_HANDOFF.md` → NEXT.
 
 ## Completed Tickets
 
@@ -179,7 +182,7 @@ Full phase tables in `PROJECT_HISTORY.md`.
 | MCP tools | 34 (7 publishing + 1 tiktok-status + 9 content-intelligence + 1 workflow_list + 1 brand_voice + 1 brand_schema + 1 link_tag + 5 queue + 3 observability + 1 account_info + 2 media + 2 assets) |
 | Claude Code skills | 15 (9 publishing: 6 platform + manage-queue + upload-media + content-intelligence · 5 pipeline: idea-input + research-trends + pipeline-orchestrator + output-manager + brand-setup · 1 craft: content-craft) |
 | Tests | 183 unit (`node:test`) + 49-check MCP smoke test |
-| npm package | `honk` v0.3.0-alpha (unpublished) |
+| npm package | `honk` v1.0.0 (registry publish descoped indefinitely — install via git clone) |
 | Dependencies | 2 (`@modelcontextprotocol/sdk`, `sharp`) — unchanged |
 | Agent surfaces | 5 (Claude Code, Claude Desktop, Hermes, OpenClaw/generic, CLI/npm) |
 
