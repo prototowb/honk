@@ -24,6 +24,22 @@ fixes, major = breaking changes). The version lives once in
   never a warning: it can't judge CTA quality, only flag likely absence, so it
   never changes the pass/warn/block verdict.
 
+- **`swipe-file` skill** (skills 15→16) — technique research from other
+  accounts/channels: extracts reusable craft patterns (hook mechanism,
+  structure, format) for a brief or draft, explicitly pattern-only, never
+  content. The technique-research counterpart to `research-trends`'s topic
+  research. Cross-referenced from `research-trends`, `idea-input`,
+  `pipeline-orchestrator`, and `content-craft`.
+- **"What the algorithm rewards" sections** in all 6 `post-to-*` platform
+  skills — platform-marketing mechanics (what drives reach/distribution)
+  distinct from the existing copywriting-craft guidance, each carrying its own
+  dated hedge since these files are read standalone at draft time.
+- **Image-text coherence guidance** — new `content-craft` §6 plus an
+  `output-manager` Step-1 coherence bullet and example, and a matching
+  agent-judged gate in `content_check`'s checklist. Text-card copy coherence
+  only for now — matching generated/curated imagery to the concept is
+  explicitly deferred to a later phase (user's scope call).
+
 ### Fixed
 - **`content-intelligence` skill doc corrected** — the observability section
   was still labeled "UNVERIFIED — pending live credential testing" for all of

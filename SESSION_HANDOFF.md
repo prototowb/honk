@@ -9,12 +9,12 @@ project's **first real git tag**), gates green, merged to `main` via PR #4
 (2026-07-28); Release object published 2026-07-29 (`gh release create v1.0.0` —
 the tag existed but no Release page had ever been created).
 
-**State:** **35 tools** · 15 skills · 5 templates · 2 runtime deps · **199 unit +
+**State:** **35 tools** · 16 skills · 5 templates · 2 runtime deps · **199 unit +
 51-check smoke + build:check + pack:smoke** green at every commit. npm registry
 publish is **descoped indefinitely** (user decision) — install is git-clone +
 `npm install -g .`, no `npx honk`.
 
-## This Session (2026-07-29) — v1.0.0 GitHub Release, INIT-016 output-performance foundations
+## This Session (2026-07-29) — v1.0.0 GitHub Release, INIT-016 + INIT-017 (output performance + craft-technique skills)
 
 Picked up post-1.0 with H1 (delegation + first UI) open but every concrete H1
 item gated on a scope call the user needed to make (BETA-011 UI is an explicit
@@ -71,16 +71,73 @@ live-verified back in INIT-010/011 — only Threads is genuinely unresolved, and
 it's descoped (no creds), not "pending." 199 unit (+16) + 51-check smoke (+2)
 + build:check + pack:smoke green.
 
-**Found, not fixed — worth knowing:** `~/.honk/followups.json` currently holds
-**10 undrained auto-analytics jobs**, `attempts: 0` on all of them, several
-weeks overdue — including both of INIT-015's 2026-07-28 live posts (due
-2026-07-29). This is *why* the performance join is empty for the one post that
-does have a template: the scheduler (`start.js`) needs to be running
-continuously to drain the ~24h-deferred fetch queue, and it evidently hasn't
-been since around 2026-07-06. Diagnosed read-only — did not call
-`analytics_fetch`/drain the queue myself, since that's a live Graph API call
-outside this session's scope. Next session: ask the user whether to run
-`start.js` (or manually drain) to backfill real data into the now-working join.
+**Found, then fixed (user asked for both):** `~/.honk/followups.json` held
+**11 undrained auto-analytics jobs** (not 10 — corrected count), `attempts: 0`
+on all of them, several weeks overdue — including both of INIT-015's
+2026-07-28 live posts. This was *why* the performance join was empty for the
+one post that did have a template: the scheduler (`start.js`) needs to be
+running continuously to drain the ~24h-deferred fetch queue, and it evidently
+hadn't been since around 2026-07-06. User asked for a one-time manual drain
+now **and** an ongoing schedule. Ran a throwaway script (mirroring
+`scheduler/index.ts`'s own env-loading) to call `followups.runDue()` once
+against real `~/.claude/honk.env` creds: **9 due, 7 succeeded, 2 failed**
+(two stale 2026-07-06 Instagram jobs — backed off automatically, will retry
+up to 3 attempts, no action needed). Re-ran `analytics_performance` after:
+the join now shows real data — `instagram/square-tall`, `facebook/square-dark`,
+`instagram/square-news`, one post each. For "on a schedule": started
+`node scheduler/index.js` as a detached background process (PID visible via
+`Get-CimInstance Win32_Process -Filter "Name='node.exe'"`), logging to
+`~/.claude/honk-scheduler.log` — covers the rest of this machine session.
+**Registering it to survive reboot hit a real wall:** `schtasks /Create`
+returned `Access is denied` even with the tool sandbox explicitly disabled —
+a policy/session restriction on this account, not something bypassable from
+here. Left `C:\Users\tobia\.claude\honk-scheduler-launch.cmd` (a launcher) and
+the exact command for the user to run themselves in their own interactive
+session:
+```
+schtasks /Create /TN "HonkScheduler" /TR "C:\Users\tobia\.claude\honk-scheduler-launch.cmd" /SC ONLOGON /RL LIMITED /F
+```
+
+**Then INIT-017 — craft-technique skills.** User reframed "conversion
+efficiency and output UX" with a second angle after INIT-016 shipped: not just
+analytics plumbing, but known platform-marketing technique, copy/image
+quality, and a process to learn technique from other channels. Scoped up
+front: text-card copy coherence now, actual generated/curated imagery matching
+the concept deferred to a later phase (user's explicit call) — `media_compose`
+renders branded text cards, not illustrative photography, so "coherence" here
+means the card's on-image text vs. the caption, not a new image-generation
+integration.
+
+1. **New `swipe-file` skill** (skills 15→16) — technique research from other
+   accounts/channels, explicitly **pattern-only, never content** (borrow hook
+   mechanism/structure/format, never phrasing or data). Mirrors
+   `research-trends`'s shape (agent-driven, no new tool, no new storage) but is
+   craft research, not topic research — cross-referenced both ways.
+2. **Platform-mechanics sections, revised after advisor review caught two real
+   problems before merge, not after:** first draft asserted specific numbers
+   ("first 30–60 minutes" for IG, "first hour" for Threads, FB reach
+   percentages) with no citation — this repo has a hard convention against
+   exactly that (`best_time`'s "guidance, not gospel," the six
+   `[Experimental: never verified]` publish tools, `ANALYTICS_VERIFICATION.md`
+   dates). Cut every unverifiable specific, kept only durable directional
+   mechanics (IG saves/shares > likes, TikTok watch-completion dominance, FB
+   comments > reactions, Bluesky's non-algorithmic graph), and routed
+   timing/cadence to `best_time` instead of asserting numbers that would drift
+   from it. Each of the 6 `post-to-*` files got its own dated hedge — not only
+   a central one in `content-craft.md` — since each is read standalone at
+   draft time.
+3. **Image-text coherence** — new `content-craft` §6 + an `output-manager`
+   Step-1 bullet+example, wired into `content_check`'s `AGENT_GATES` (one line,
+   agent-judged — not machine-verifiable) plus the matching `tools.ts`/
+   `content-intelligence.md` description text.
+
+Checked for other gate-enumeration call sites before editing (per advisor
+prompt): `PROJECT_PRINCIPLES.md`'s "self-direction checklist" mentions
+"persona checklist gates" but was already abbreviated/non-exhaustive
+pre-existing — left alone rather than made falsely complete.
+
+199 unit + 51-check smoke (unchanged — this ticket is prose + one static array
+line, no new test surface needed) + build:check + pack:smoke green.
 
 ## Previous Session (2026-07-27/28) — repo repair, INIT-014, INIT-015, cut v1.0.0
 
@@ -205,26 +262,36 @@ sandbox, not a live sandbox problem).
 
 ## NEXT
 
-**H1 (delegation + first UI) is still open** — INIT-016 was plumbing pulled forward
-from underneath it, not an H1 item itself. Nothing here is urgent; pick based on
-what you want next.
+**H1 (delegation + first UI) is still open** — INIT-016/017 were plumbing and
+craft depth pulled forward from underneath it, not H1 items themselves. Nothing
+here is urgent; pick based on what you want next.
 
-0. **Drain the follow-up backlog** (cheap, makes INIT-016 actually show data) —
-   `~/.honk/followups.json` has 10 undrained jobs back to 2026-07-06, including
-   both INIT-015 live posts. Ask the user whether to start `start.js` (scheduler)
-   or manually drain; then re-run `analytics_performance` against real data — it's
-   never been observed with an actual template↔analytics match yet.
+0. **Register the permanent scheduler task** — `schtasks /Create` hit `Access
+   is denied` from this session/account; the launcher script
+   (`~/.claude/honk-scheduler-launch.cmd`) and exact command are ready (see
+   "This Session" above) but need the user to run it themselves. Without it,
+   the background scheduler process only lasts this machine session/until
+   reboot — the 2 backed-off follow-up jobs and any future ones stop draining
+   again once that process dies.
 1. **BETA-011 UI phase** (stop-line — deliberately not started; crossing it is a real
    scope decision, not a default) — read-only first: queue/calendar/analytics/assets
    views rendering the same schemas guided mode uses. The account registry's handle
    cache (INIT-014) is there for the account switcher.
 2. **INBOX-001** Phase 0 vs 1 decision (plan in INBOX_FEATURE_PLAN.md).
-3. **INDIV-007 learned/adaptive** — data-gated on accrued analytics. INIT-016 built
-   the join this needs (`lib/performance.ts`) but did not wire it into `best_time`'s
-   `observedWindows` seam — that wiring is still the actual INDIV-007 work, still
-   blocked on real history (item 0 above unblocks that history).
+3. **INDIV-007 learned/adaptive** — data-gated on accrued analytics, now
+   accruing for real (INIT-016's join has live data as of this session). INIT-016
+   built the join this needs (`lib/performance.ts`) but did not wire it into
+   `best_time`'s `observedWindows` seam — that wiring is still the actual
+   INDIV-007 work, still thin on history (3 template groups, 1 post each).
 4. Deferred: ALPHA-016 delete (destructive, scope-paused) · ALPHA-017 Mastodon /
    ALPHA-018 LinkedIn (need creds/decisions). Descoped items live ONLY in PROJECT_STATUS.
+5. **`agent/SKILLS.md` / `capabilities/agent/SKILLS.md` is stale** (found in
+   passing while adding swipe-file, not fixed — out of scope for INIT-017): it's
+   a hand-maintained tool-trigger index, missing `analytics_performance` and
+   ~14 other tools shipped since it was last touched, and still says
+   "Observability (UNVERIFIED — pending live credential testing)" — the same
+   stale claim INIT-016 already corrected in `content-intelligence.md`. Worth
+   a dedicated pass, not a drive-by edit.
 
 ## Conventions In Force
 

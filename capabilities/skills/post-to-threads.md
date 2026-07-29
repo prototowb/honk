@@ -23,6 +23,20 @@ Use `{{tool:threads_post}}` from the `honk` MCP server.
 
 Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (on Threads, drop any source link inline or in a reply). Then pull the brand kit with `brand_voice(action:"get", platform:"threads")` — the voice resolved for Threads, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
+### What the algorithm rewards
+
+*(Platform mechanics as of 2026-07, not copy — durable, widely-observed
+patterns, not live-verified against Threads' current ranking system. Treat as
+a strong prior, not a guarantee; revisit if Threads publicly changes course.)*
+
+- **Reply-sparking posts get pushed into non-follower recommendation surfaces
+  more aggressively than on X or IG** — a small account can reach well past
+  its follower count here if the post genuinely invites conversation.
+- **Casual, unpolished copy outperforms anything that reads like a press
+  release** (see above) — lean into the platform's conversational culture
+  rather than importing brand-feed polish.
+- **Attach an image when it adds** — image posts tend to earn more dwell time.
+
 ### Requirements
 
 - `THREADS_USER_ID` and `THREADS_ACCESS_TOKEN` with `threads_basic` + `threads_content_publish` scopes.

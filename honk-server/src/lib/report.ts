@@ -34,6 +34,7 @@ export interface ContentCheckResult {
 // one place an agent (or a future UI) sees the whole gate — machine + judgment.
 export const AGENT_GATES: string[] = [
   'Structure: real hook → payoff (→ CTA) — not flat facts (content-craft)',
+  "Image-text coherence: an attached image reinforces the caption's specific hook/claim — not decorative or generic, not a mismatched angle (content-craft §6 / output-manager)",
   'Sourcing: every fact-bearing claim has a FOLLOWABLE source (caption link / first_comment / on-image)',
   'Right account: brand confirmed, account: passed explicitly on publish',
   'Brand fit: no banned topics; voice matches the (platform/audience-resolved) kit',

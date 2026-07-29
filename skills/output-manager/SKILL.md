@@ -34,8 +34,17 @@ compressed to what fits a single frame.
 - **No clichés.** Never "Unlock", "Revolutionize", "Elevate", "Delve", "Discover", "Transform", "Tapestry", "Game-changer", or anything template-shaped — they signal low effort and kill engagement.
 - **Concrete beats vague.** A specific number, claim, or outcome out-pulls a mood.
 - **Body (optional) is one supporting line**, not a paragraph — let the caption carry detail.
+- **Match the caption's specific claim — don't restate it, don't drift from it.**
+  The headline is the visual anchor; pull it from the *same* specific claim the
+  caption's hook uses, compressed to fewer words — not a generic rewording, and
+  not an unrelated angle. Two ideas fighting each other (or one idea said twice)
+  wastes the card's one focal point. See `content-craft` §6.
 
 > Weak: "Transforming the way you build software" → Strong: "Ship 3× faster. Here's the data."
+> Weak (mismatched): caption hook "We deleted 40% of our standups and output went
+> up" + card headline "Boosting Productivity" (generic — could sit next to any
+> caption) → Strong (coherent): card headline "40% fewer meetings" (the same
+> specific claim, compressed).
 
 Pull tone, banned words, and visual identity from the brand kit first —
 `brand_voice(action:"get")`. **If the kit has no visual identity**, offer the

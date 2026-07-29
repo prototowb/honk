@@ -14,6 +14,11 @@ Find what's worth posting about now and convert it into a brief. Honk has no
 trends API — you do the research with the tools you have (web search, the user's
 sources) and bring back a *brief*, not raw links.
 
+This is **topic** research (what's worth posting about). For **craft/technique**
+research (how top-performing posts in the niche are actually built — hook style,
+format, structure), see the `swipe-file` skill instead — the two are
+complementary, not overlapping.
+
 ## Process
 
 1. **Scan** 3–5 candidate trends in the brand's space — news, releases, discourse the audience actually follows. Region / category / platform / timeframe are optional; default to the brand's niche.

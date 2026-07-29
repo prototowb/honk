@@ -139,11 +139,34 @@ Render slides with the `output-manager` skill (one `media_compose` template per 
 `image_urls[]` to publish), and keep one visual system across slides (same bg/accent/handle,
 all from the brand kit).
 
+### 6. Image-text coherence (when a visual is attached)
+
+A composed card (or any attached image) and the caption are read together, not
+separately — they should reinforce one idea, not compete or duplicate:
+
+- **Same claim, not a generic label.** The card's headline should be the same
+  specific hook/claim the caption opens with, compressed — not a vague label
+  that could sit next to any caption ("Big Update", "New Milestone").
+- **Don't just repeat the caption verbatim on the card.** The card compresses
+  to the *one* idea; the caption carries the full payoff. Redundant duplication
+  wastes the visual's one focal point.
+- **Don't let the image argue a different point than the copy.** A stat-driven
+  caption paired with an unrelated decorative graphic reads as disconnected —
+  the visual should be evidence of the same claim, not decoration.
+
+See the `output-manager` skill for how this plays out when writing card copy.
+(Scoped to text-card copy for now — matching generated or curated imagery to
+the concept is a separate, larger capability, not covered here.)
+
 ### Where this fits
 
 Read the brand kit (`brand_voice`) for *who* the brand is, then draft against these
-fundamentals for *how the post earns attention*. The platform skills add channel specifics;
-the **persona checklist enforces the non-negotiables** (real structure + followable sourcing)
-before publish. For anything beyond a quick one-off, **offer the guided brief**
-(`brief_schema`, via the `idea-input` / `research-trends` skills) up front rather than
+fundamentals for *how the post earns attention*. The platform skills add channel specifics
+— including, per platform, a **"what the algorithm rewards" section**: durable, widely-observed
+mechanics as of 2026-07, not live-verified against any platform's current ranking system, so
+hold them as strong priors and revisit if a platform publicly changes course. For technique/format
+inspiration from other accounts (not topic research — that's `research-trends`), see the
+`swipe-file` skill. The **persona checklist enforces the non-negotiables** (real structure +
+followable sourcing) before publish. For anything beyond a quick one-off, **offer the guided
+brief** (`brief_schema`, via the `idea-input` / `research-trends` skills) up front rather than
 jumping straight to a single draft.

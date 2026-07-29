@@ -52,4 +52,5 @@ works) — but make the offer first rather than defaulting to a bare draft.
 
 A compact brief — angle, goal, audience, platforms, references (with sources),
 constraints. Confirm it with the user, then hand to the `pipeline-orchestrator`
-skill. For trend-sourced ideas instead, use the `research-trends` skill.
+skill. For trend-sourced ideas instead, use the `research-trends` skill; for
+technique/format inspiration (not topic), use `swipe-file`.

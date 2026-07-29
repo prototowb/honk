@@ -154,7 +154,7 @@ export const TOOLS = [
     },
     {
         name: 'content_check',
-        description: 'One-call pre-publish report — runs every deterministic gate at once (platform rules + brand policy/disclosures, duplicate guard vs recent publishes, schedule sanity if scheduled_at is given) and returns a single pass/warn/block verdict, followed by the agent-judged checklist (structure, followable sourcing, right account, brand fit, user confirmation) the server cannot verify. Use it as the final review before queue_add or publishing instead of calling content_validate + duplicate_check + schedule_check separately. A block here WILL be enforced by the dispatch gate; warnings are yours to resolve or accept deliberately.',
+        description: 'One-call pre-publish report — runs every deterministic gate at once (platform rules + brand policy/disclosures, duplicate guard vs recent publishes, schedule sanity if scheduled_at is given) and returns a single pass/warn/block verdict, followed by the agent-judged checklist (structure, image-text coherence, followable sourcing, right account, brand fit, user confirmation) the server cannot verify. Use it as the final review before queue_add or publishing instead of calling content_validate + duplicate_check + schedule_check separately. A block here WILL be enforced by the dispatch gate; warnings are yours to resolve or accept deliberately.',
         inputSchema: {
             type: 'object',
             properties: {

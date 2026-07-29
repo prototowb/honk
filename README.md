@@ -24,7 +24,7 @@ Copy `.env.example` to that path and fill in your keys. This file survives reins
 
 The project ships as a Claude Code plugin. When active, Claude Code:
 - Loads the MCP server automatically via `.mcp.json`
-- Discovers and activates the 15 skills in `skills/`
+- Discovers and activates the 16 skills in `skills/`
 
 **Setup:**
 
@@ -62,11 +62,12 @@ The project ships as a Claude Code plugin. When active, Claude Code:
 | `output-manager` | "make the visuals for this post", "add the logo overlay" |
 | `brand-setup` | "set up my brand kit", "configure my voice/visual identity" |
 
-*Craft — a cross-cutting skill consulted by the platform + pipeline skills, not a pipeline stage of its own:*
+*Craft — cross-cutting skills consulted by the platform + pipeline skills, not pipeline stages of their own:*
 
 | Skill | Purpose |
 |-------|---------|
-| `content-craft` | Platform-native engagement structure (hook → context → payoff → CTA), accessible source attribution, hashtag intent, carousel arc |
+| `content-craft` | Platform-native engagement structure (hook → context → payoff → CTA), accessible source attribution, hashtag intent, carousel arc, image-text coherence |
+| `swipe-file` | Technique research from other accounts/channels — extracts reusable craft patterns (hook style, format, structure), never content |
 
 The pipeline produces platform-native content and hands it to the Honk queue; the publishing-engine skills then schedule and publish it. See **Content Pipeline** below for the end-to-end workflow.
 
@@ -274,7 +275,7 @@ _35 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 | Tool | Required | Optional | Platform limit | Description |
 |------|----------|----------|----------------|-------------|
 | `content_validate` | `platform` (string), `content` (object) | `account` (string), `sponsored` (boolean) | — | Validate a post payload against a platform's rules (length, required fields, media) AND the brand kit's content policy (required disclosures, banned-topic reminders) without publishing. Returns blocking errors, warnings, and policy notes. Use before queuing or posting. |
-| `content_check` | `platform` (string), `content` (object) | `account` (string), `sponsored` (boolean), `scheduled_at` (string), `within_hours` (number) | — | One-call pre-publish report — runs every deterministic gate at once (platform rules + brand policy/disclosures, duplicate guard vs recent publishes, schedule sanity if scheduled_at is given) and returns a single pass/warn/block verdict, followed by the agent-judged checklist (structure, followable sourcing, right account, brand fit, user confirmation) the server cannot verify. Use it as the final review before queue_add or publishing instead of calling content_validate + duplicate_check + schedule_check separately. A block here WILL be enforced by the dispatch gate; warnings are yours to resolve or accept deliberately. |
+| `content_check` | `platform` (string), `content` (object) | `account` (string), `sponsored` (boolean), `scheduled_at` (string), `within_hours` (number) | — | One-call pre-publish report — runs every deterministic gate at once (platform rules + brand policy/disclosures, duplicate guard vs recent publishes, schedule sanity if scheduled_at is given) and returns a single pass/warn/block verdict, followed by the agent-judged checklist (structure, image-text coherence, followable sourcing, right account, brand fit, user confirmation) the server cannot verify. Use it as the final review before queue_add or publishing instead of calling content_validate + duplicate_check + schedule_check separately. A block here WILL be enforced by the dispatch gate; warnings are yours to resolve or accept deliberately. |
 | `content_adapt` | `text` (string) | `platforms` (array) | — | Fit one source text to multiple platforms' hard limits: auto-splits a long post into an X thread, grapheme-truncates for Bluesky, etc. Returns ready-to-post content per platform plus warnings. This handles the deterministic length-fitting only — rewrite tone/hashtags yourself before posting. |
 | `config_doctor` | — | — | — | Report which platforms and named accounts have credentials configured (by env-var presence only — never reveals values), plus media providers. Use to check setup before publishing. |
 | `account_info` | `platform` (string) | `account` (string), `seed_brand_kit` (boolean) | — | Fetch the connected account profile (handle, display name, avatar URL) for a platform. Read-only — confirms which account is wired up and supplies branding assets. Supported: instagram, facebook (Graph API). Pass seed_brand_kit:true to merge the fetched handle + avatar URL into the active brand account's visual block. |
@@ -367,7 +368,7 @@ _35 tools — generated from `lib/tools.js` + `lib/specs.js`. Do not edit betwee
 claude_desktop_config.json  Drop-in Claude Desktop config
 .env.example              All credential keys + multi-account examples
 
-skills/                   Claude Code SKILL.md files (15 total: 9 publishing + 5 pipeline + 1 craft)
+skills/                   Claude Code SKILL.md files (16 total: 9 publishing + 5 pipeline + 2 craft)
 agent/                    Bring-your-own-agent integration pack (Hermes, OpenClaw, …)
   mcp-config.json
   CONTEXT.md

@@ -227,13 +227,14 @@ still rewrite tone, hashtags, and per-channel voice. Omit `platforms` for all si
 **One-call final review:** `content_check(platform, content, account?, sponsored?,
 scheduled_at?)` runs every deterministic gate at once — platform rules + brand
 policy, the duplicate guard, and schedule sanity — and returns a single
-pass/warn/block verdict plus the agent-judged checklist (structure, followable
-sourcing, right account, brand fit, confirmation). Its notes also include a
-heuristic CTA/link-presence check (regex, not judgment) — informational only,
-it never changes the verdict; if it says no CTA was detected, that's a prompt
-to double-check the post has its one intended next step, not a rule that every
-post needs one. Prefer `content_check` as the last step before `queue_add` or
-publishing; the granular tools below remain for targeted checks while drafting.
+pass/warn/block verdict plus the agent-judged checklist (structure, image-text
+coherence, followable sourcing, right account, brand fit, confirmation). Its
+notes also include a heuristic CTA/link-presence check (regex, not judgment) —
+informational only, it never changes the verdict; if it says no CTA was
+detected, that's a prompt to double-check the post has its one intended next
+step, not a rule that every post needs one. Prefer `content_check` as the last
+step before `queue_add` or publishing; the granular tools below remain for
+targeted checks while drafting.
 
 Typical cross-post flow: `content_adapt` → rewrite per channel → `content_validate`
 (or `dry_run`) → `queue_add` / publish.

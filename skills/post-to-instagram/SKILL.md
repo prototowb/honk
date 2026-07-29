@@ -25,6 +25,26 @@ Use `instagram_post` from the `honk` MCP server.
 
 Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (IG captions aren't clickable — put any source link in `first_comment` or credit it on the image). Then pull the brand kit with `brand_voice(action:"get", platform:"instagram")` — the voice resolved for Instagram, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words; draw hashtags from its sets. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
+### What the algorithm rewards
+
+*(Platform mechanics as of 2026-07, not copy — durable, widely-observed
+patterns, not live-verified against Instagram's current ranking system. Treat
+as a strong prior, not a guarantee; revisit if Instagram publicly changes course.)*
+
+- **Saves and shares outweigh likes** in Instagram's ranking signals — a save
+  means "I'll need this again," a share means "this represents me." Design for
+  one of those, not just a reaction.
+- **Carousels tend to earn more reach than a single image** — swipe-through and
+  time-on-post read as strong signals. When an idea supports 3+ beats, prefer a
+  carousel over a single image (see the carousel guidance above).
+- **Timing affects initial distribution** — use `best_time` rather than
+  guessing a posting window.
+- **Genuine engagement invites outperform bait phrasing.** "Comment 'ME'
+  below" reads as bait; a real question tied to the post's specific content
+  reads as genuine and earns real replies.
+- **Consistency compounds** — steady posting in a clear niche builds
+  algorithmic trust faster than sporadic high-effort posts.
+
 ### Requirements
 
 1. A **publicly accessible image URL** — not a local file, not a private URL.
