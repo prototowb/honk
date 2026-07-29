@@ -23,6 +23,23 @@ Use `{{tool:facebook_post}}` from the `honk` MCP server.
 
 Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (on Facebook, put any source link in the caption with a line of context, or in `first_comment`). Then pull the brand kit with `brand_voice(action:"get", platform:"facebook")` — the voice resolved for Facebook, with any per-platform deltas already applied — and match its tone, audience, and emoji policy. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
+### What the algorithm rewards
+
+*(Platform mechanics as of 2026-07, not copy — durable, widely-observed
+patterns, not live-verified against Facebook's current ranking system. Treat
+as a strong prior, not a guarantee; revisit if Facebook publicly changes course.)*
+
+- **Organic Page reach is structurally low** regardless of content quality —
+  that's a platform-wide ceiling, not a signal the post underperformed.
+- **Meaningful interactions outrank reactions.** A comment — especially one
+  that gets a reply — is weighted well above a like; a post that invites a
+  real answer tends to outperform one that just invites a thumbs-up.
+- **Native photo/video continues to outperform link posts** for distribution
+  (see above — Facebook has historically suppressed posts that route traffic
+  off-platform).
+- **Fewer, stronger posts tend to beat high-frequency posting** for organic
+  Page reach.
+
 ### Requirements
 
 - `FACEBOOK_PAGE_ID` and `FACEBOOK_ACCESS_TOKEN` with `pages_manage_posts` scope.

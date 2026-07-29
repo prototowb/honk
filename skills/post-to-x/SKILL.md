@@ -26,6 +26,23 @@ Use tools from the `honk` MCP server.
 
 Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (on X, put any source link in a reply or the last tweet, not the first — first-tweet links suppress reach). Then pull the brand kit with `brand_voice(action:"get", platform:"x")` — the voice resolved for X, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words; draw hashtags from its sets. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
+### What the algorithm rewards
+
+*(Platform mechanics as of 2026-07, not copy — durable, widely-observed
+patterns, not live-verified against X's current ranking system. Treat as a
+strong prior, not a guarantee; revisit if X publicly changes course.)*
+
+- **Replies and quote-tweets extend reach further than likes alone** — a tweet
+  that invites a reply (a real question, a take someone will want to push back
+  on) travels past your own followers more than one that just states a fact.
+- **Threads reward dwell time** — each tweet needs to earn the next tap, not
+  just append more text; a thread that front-loads everything in tweet 1 loses
+  the reason to keep reading.
+- **Native image/video attachments tend to outperform text-only tweets** for
+  initial distribution.
+- **Posting frequency runs higher here than on IG/FB** — several posts a day
+  is normal for an active X account, not spam.
+
 ### Single tweet
 
 Use `x_post_tweet` when content fits one tweet (≤280 chars).

@@ -22,6 +22,22 @@ Use `{{tool:bluesky_post}}` from the `honk` MCP server.
 
 Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (on Bluesky, an inline link renders a rich card — use it to carry the source). Then pull the brand kit with `brand_voice(action:"get", platform:"bluesky")` — the voice resolved for Bluesky, with any per-platform deltas already applied — and match its tone, audience, emoji policy, and banned words. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
+### What the algorithm rewards
+
+*(Platform mechanics as of 2026-07, not copy — durable, widely-observed
+patterns, not live-verified against Bluesky's current ranking approach. Treat
+as a strong prior, not a guarantee; revisit if that changes.)*
+
+- **Mostly follow-graph and roughly chronological** — there's little of the
+  algorithmic "for you" amplification IG/TikTok have, so reach tracks close to
+  your follower count plus whoever reposts you.
+- **Reposts by others (and inclusion in curated custom feeds) drive most reach
+  beyond your own followers** — not an algorithm favoring your post, but people
+  choosing to pass it on. Content worth resharing matters more than optimizing
+  for a ranking system here.
+- **No engagement-bait boost to chase** (see above) — authenticity is the only
+  real lever on this platform.
+
 ### Setup — refreshingly simple
 
 1. Go to https://bsky.app/settings/app-passwords and generate an app password.

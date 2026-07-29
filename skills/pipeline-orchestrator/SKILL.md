@@ -31,7 +31,9 @@ perspectives; keep them on-brand and audience-relevant. Present all 3.
 
 Shape every concept with the `content-craft` fundamentals — one sharp idea, a real
 hook, and a payoff worth the stop (not 1–3 flat facts). That craft layer is
-brand-agnostic and applies before any per-platform tailoring.
+brand-agnostic and applies before any per-platform tailoring. For a brief
+targeting a platform/format the brand hasn't used much, consider the
+`swipe-file` skill first to ground concepts in patterns already working there.
 
 ## Phase 2 — Review (Critical Editor)
 

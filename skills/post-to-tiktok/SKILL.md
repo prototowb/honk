@@ -25,6 +25,23 @@ Use `tiktok_post_video` from the `honk` MCP server. Follow up with `tiktok_check
 
 Draft against the `content-craft` fundamentals first — engagement philosophy, the hook→context→payoff→CTA structure, and accessible sourcing apply to every post (TikTok captions can't carry clickable links — name the source in the caption or on-screen and point to bio). Then pull the brand kit with `brand_voice(action:"get", platform:"tiktok")` — the voice resolved for TikTok, with any per-platform deltas already applied — and match its tone, audience, and hashtag sets. Honor its `policy` too — never write about banned topics, include required disclosures, and publish a paid post with `sponsored: true`. See the `content-intelligence` skill.
 
+### What the algorithm rewards
+
+*(Platform mechanics as of 2026-07, not copy — durable, widely-observed
+patterns, not live-verified against TikTok's current ranking system. Treat as
+a strong prior, not a guarantee; revisit if TikTok publicly changes course.)*
+
+- **The opening 1–3 seconds dominate distribution** — average watch time and
+  completion rate drive reach far more than the caption does. A slow intro
+  loses the video before the caption is ever read.
+- **A rewatch is a strong positive signal** — content that rewards a second
+  look (a twist, a detail easy to miss) tends to outperform content that's
+  fully understood in one pass.
+- **Honk publishes the raw video only.** Trending-sound selection and
+  burned-in on-screen captions happen before upload, outside this tool — if
+  the source video already carries a trending sound, that's preserved as-is,
+  but Honk can't add or change one.
+
 ### Requirements
 
 1. A **public video URL** (mp4/mov/webm, 3–600 seconds, max 4GB, 9:16 recommended).
