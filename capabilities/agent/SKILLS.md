@@ -73,36 +73,66 @@ Post-call: `tiktok_post_video` is async — always follow up with `tiktok_check_
 | Trigger phrase | Tool | Key inputs |
 |---------------|------|------------|
 | "validate this post", "will this pass", "check it fits" | `content_validate` | `platform`, `content` |
+| "final check before I post this", "run the full pre-publish report" | `content_check` | `platform`, `content`, `account?`, `sponsored?`, `scheduled_at?` |
 | "preview without posting", "dry run", "rehearse the post" | any publish tool **or** `queue_dispatch` with `dry_run: true` | + `dry_run: true` |
 | "adapt this for all platforms", "fit this everywhere", "make X/Bluesky versions" | `content_adapt` | `text`, `platforms?` |
 | "is my setup ready", "which platforms are configured", "check credentials" | `config_doctor` | — |
 | "show the audit log", "what did we publish", "what failed" | `audit_log` | `platform?`, `status?`, `source?`, `limit?` |
 | "check this schedule time", "normalize this timestamp" | `schedule_check` | `scheduled_at` |
+| "have we posted this before", "check for a duplicate" | `duplicate_check` | `platform`, `content`, `within_hours?` |
+| "when should I post this", "best time to post" | `best_time` | `platform`, `count?`, `account?` |
+| "tag this link", "add UTM params" | `link_tag` | `url`, `params?`, `platform?`, `account?` |
 
-`content_adapt` returns ready-to-post `content` per platform but does only length-fitting (thread-split, grapheme truncation). Rewrite tone/hashtags yourself, then `content_validate` or `dry_run` before publishing.
+`content_check` is the one-call final gate (folds in `content_validate` + `duplicate_check` +
+`schedule_check` + policy) — prefer it over calling the granular tools separately right
+before publishing. `content_adapt` returns ready-to-post `content` per platform but does
+only length-fitting (thread-split, grapheme truncation). Rewrite tone/hashtags yourself,
+then `content_validate`/`content_check` or `dry_run` before publishing.
 
 ---
 
-## Brand & Visuals (credential-free)
+## Brand, Visuals & Guided Setup (credential-free)
 
 | Trigger phrase | Tool | Key inputs |
 |---------------|------|------------|
 | "set up my brand", "brand setup", "configure my brand kit" | `brand_schema` → `brand_voice` | walk the schema, then `action:"set"` |
 | "show my brand kit", "what's my brand voice/identity" | `brand_voice` | `action:"get"` |
 | "save this as my brand voice/colors" | `brand_voice` | `action:"set"`, `profile:{…}` (dotted paths) |
+| "what fields does a content brief need" | `brief_schema` | `account?` |
+| "what workflows are available", "pick a workflow" | `workflow_list` | `name?` |
+| "who's connected", "show the account profile/handle" | `account_info` | `platform`, `account?`, `seed_brand_kit?` |
 | "make a graphic", "compose an image", "branded image for this" | `media_compose` | `template?`, `headline`, `subtext?`, `kicker?` |
+| "upload this image/file", "get a public URL for this" | `media_upload` | `file_path` (local absolute path), `provider?`, `account?` |
 
-`media_compose` defaults colors/logo/icon/handle/default-template from the brand kit's `visual` block — set them once via `brand_voice`/the `brand-setup` skill instead of per call. If the kit is empty, offer guided setup first (`brand_schema`). Heading/body colors left unset derive from the background for legibility.
+`media_compose` defaults colors/logo/icon/handle/default-template from the brand kit's `visual` block — set them once via `brand_voice`/the `brand-setup` skill instead of per call. If the kit is empty, offer guided setup first (`brand_schema`). Heading/body colors left unset derive from the background for legibility. `brief_schema` is the per-run companion to `brand_schema` (persistent) — see the `idea-input` skill.
 
 ---
 
-## Observability (UNVERIFIED — pending live credential testing)
+## Asset Registry (credential-free)
+
+| Trigger phrase | Tool | Key inputs |
+|---------------|------|------------|
+| "show my assets", "what images have we used", "find that image" | `asset_list` | `source?`, `tag?`, `account?`, `template?`, `expired?`, `used?`, `query?` |
+| "update rights/tags on this asset" | `asset_update` | `id`, `rights_note?`, `rights_expires_at?`, `add_tags?`, `remove_tags?` |
+
+Every `media_compose`/`media_upload` output is auto-registered — these tools are for querying/annotating the registry, not producing new assets.
+
+---
+
+## Observability
 
 | Trigger phrase | Tool | Key inputs |
 |---------------|------|------------|
 | "are we rate limited", "show 429s" | `rate_limits` | — |
 | "fetch analytics", "how did this post do" | `analytics_fetch` | `platform` (ig/fb/threads), `post_id` |
 | "show engagement", "analytics report" | `analytics_report` | `platform?`, `post_id?`, `limit?` |
+| "what's working", "which template converts better", "performance rollup" | `analytics_performance` | `platform?`, `account?`, `limit?` |
+
+IG/FB analytics are **live-verified** (INIT-010/011). Threads analytics are shipped but
+**descoped indefinitely** (no credentials, not "pending" — revisit only on explicit user
+request). X/TikTok/Bluesky have no `getMetrics` adapter at all — their insights need a
+higher API access tier or aren't exposed; X publish is separately credit-blocked (402, a
+billing state, not an access tier) — see PROJECT_STATUS *Descoped*.
 
 ---
 

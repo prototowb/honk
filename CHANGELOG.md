@@ -46,6 +46,19 @@ fixes, major = breaking changes). The version lives once in
   `analytics_*`, even though IG/FB were live-verified back in INIT-010/011.
   Only Threads remains genuinely unresolved, and it's descoped indefinitely
   (no credentials), not "pending."
+- **Docs audit** — `PROJECT_SPECIFICATIONS.md`'s H0 section was still marked
+  "(current)" and closed with a "decision for the user to make" sentence
+  written before the 1.0 cut and never updated afterward; H1 is now marked
+  current instead. Feature Inventory header counts (30→35 tools, 15→16
+  skills) and category listing brought current; `workflow_list`/account
+  registry/store versioning moved from "Proposed" to annotated-shipped.
+  Competitive Positioning's Analytics and Asset-management rows corrected
+  (read "scaffold"/"H2–H3" despite real shipped capability). INDIV-007's gate
+  description fixed — analytics credentials are verified; the actual gate is
+  thin history, not "unverified pending creds." `capabilities/agent/SKILLS.md`
+  (the tool-trigger index) gained 11 missing tool rows — every one of the 35
+  tools now appears — plus the same stale-"UNVERIFIED" fix applied to its
+  Observability section.
 
 ## [1.0.0] — 2026-07-28
 
