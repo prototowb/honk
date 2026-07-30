@@ -89,7 +89,7 @@ Everything else (UI, more channels, DAM depth, hosting) is post-1.0 growth, not 
 > tables). Horizons have **entry criteria** — a horizon opens when its criteria are met, not
 > on a date. Tickets stay the unit of work; `PROJECT_STATUS.md` tracks them.
 
-### H0 — Production floor (current)
+### H0 — Production floor ✅ complete
 **Goal: cut `v1.0.0` per the definition above.**
 - INIT-006 hardening ✅ · merged to `development`. npm publish is **descoped indefinitely**
   (user decision, 2026-07-27) — no plan to distribute via the npm registry; RELEASING.md
@@ -111,20 +111,23 @@ transitive deps `fast-uri`/`hono` via `@modelcontextprotocol/sdk`) were resolved
 via `npm audit fix` (lockfile-only bump, `@modelcontextprotocol/sdk` stays within its
 existing `^1.12.0` range) — `npm audit` now reports **0 vulnerabilities**, verified against
 the full gate suite (type-check, 180 unit, 49-check smoke, build:check, pack:smoke, all
-green). **Whether/when to cut `v1.0.0` is a decision for the user to make explicitly** —
-nothing in this definition is blocking it anymore.
+green at cut time). **`v1.0.0` was cut 2026-07-28** — tagged, merged to `main` via PR #4,
+GitHub Release published 2026-07-29 (this project's first real git tag). H1 is open.
 
-### H1 — Delegation + first UI (entry: 1.0 cut)
+### H1 — Delegation + first UI (current — entry met: 1.0 cut)
 **Goal: initiation stops being hand-written prompts; reading state stops requiring an agent.**
-- **Workflow library v1** — `capabilities/workflows/<name>.md` + `workflow_list` tool +
-  3 seed entries (`weekly-insight`, `product-update`, `engagement-spark`); guided mode picks
-  from it (PRINCIPLES §3 — the concept is ready, build is small)
+- **Workflow library v1 — shipped INIT-008.** `capabilities/workflows/<name>.md` +
+  `workflow_list` tool + 3 seed entries (`weekly-insight`, `product-update`,
+  `engagement-spark`); guided mode picks from it (PRINCIPLES §3)
 - **Account registry — shipped INIT-014.** `brand-active.json` grew into `accounts.json`
   (credential identity × brand identity × channel handles); active pointer + channel-handle
   cache from `account_info`; closes the INIT-005 fallback note (registry-resolved)
 - **BETA-011 UI (read-only first):** analytics dashboard + content calendar + queue view,
   rendering the same schemas guided mode uses (schema symmetry is the wireframe)
-- INDIV-007 learned/adaptive — once analytics history accrues (data-gated)
+- INDIV-007 learned/adaptive — once analytics history accrues (data-gated). The join it
+  will need already exists (`lib/performance.ts`, INIT-016, pulled forward — not itself
+  an H1 deliverable) but history is still thin (3 template groups, 1 post each as of
+  2026-07-29); the feature itself — wiring `best_time`'s `observedWindows` seam to it — is unbuilt
 - Storage: **SQLite via `node:sqlite`** when the UI/analytics joins need queries
   (zero new runtime deps; requires engines ≥ 22 — decision recorded in PROJECT_ARCHITECTURE)
 
@@ -155,22 +158,28 @@ nothing in this definition is blocking it anymore.
 
 ## Feature Inventory (by pillar)
 
-**Existing (30 tools · 15 skills · 5 templates)** — Publish: 7 publish + tiktok-status, 5
+**Existing (35 tools · 16 skills · 5 templates)** — Publish: 7 publish + tiktok-status, 5
 queue (drafts, sponsored persistence), scheduler + dispatch chokepoint (audit, policy gate,
-follow-up scheduling), content_validate/adapt, schedule_check, best_time, duplicate_check,
-link_tag, alt-text + first-comment, dry_run everywhere. Brand OS: brand_voice
-(get/set/list/use/clone + platform/audience resolution), brand_schema + guided brand-setup,
-policy block, visual kit + media_compose/media_upload, account_info (seed_brand_kit).
-Intelligence: analytics_fetch/report + auto-follow-ups, rate_limits, audit_log, config_doctor.
-Delegation: 15 skills incl. content-craft, pipeline-orchestrator, guided mode + brief_schema.
+follow-up scheduling), content_validate/adapt/**check** (aggregated pre-publish report +
+CTA-presence note, INIT-009/016), schedule_check, best_time, duplicate_check, link_tag,
+alt-text + first-comment, dry_run everywhere. Brand OS: brand_voice (get/set/list/use/clone +
+platform/audience resolution), brand_schema + guided brand-setup, policy block, visual kit +
+media_compose/media_upload, account_info (seed_brand_kit), **account registry** (INIT-014) +
+**asset registry / DAM seed** (`asset_list`/`asset_update`, INIT-013). Intelligence:
+analytics_fetch/report + auto-follow-ups, **analytics_performance** (template↔post
+performance rollup, INIT-016), rate_limits, audit_log, config_doctor. Delegation: 16 skills
+incl. content-craft (+image-text coherence, INIT-017), **swipe-file** (technique research,
+INIT-017), pipeline-orchestrator, guided mode + brief_schema + `workflow_list`
+(workflow library v1, INIT-008).
 
 **Planned (ticketed):** INDIV-007 · BETA-011 · ALPHA-016 delete (scope-gated) ·
 ALPHA-017/018 · INBOX-001. (BETA-013 **descoped** 2026-07-06; npm publish **descoped**
 2026-07-27 — see PROJECT_STATUS *Descoped*.)
 
-**Proposed (this revision — newly placed above):** workflow library v1 (H1) · account
-registry (H1) · store versioning (H0) · SQLite-via-node:sqlite decision (H1) · asset
-registry / DAM seed (**shipped INIT-013**) · blog + newsletter channels (H2) · campaigns (H2) · content
+**Proposed (this revision — newly placed above):** workflow library v1 (H1, **shipped
+INIT-008**) · account registry (H1, **shipped INIT-014**) · store versioning (H0, **shipped
+INIT-008**) · SQLite-via-node:sqlite decision (H1, not yet needed) · asset
+registry / DAM seed (**shipped early, INIT-013**) · blog + newsletter channels (H2) · campaigns (H2) · content
 recycling (H2) · remote MCP hosting (H2) · brand-portal export (H3) · approval workflows +
 vault + teams (H3) · A/B variants (H3) · guardian review posture — doctrine in
 PROJECT_ARCHITECTURE security model; its `content_check` report surface **shipped (INIT-009)**.
@@ -195,8 +204,8 @@ Any agent (Claude, Hermes, future) MUST:
 | Brand kit **enforced at dispatch** | ✅ | ❌ | ❌ | ❌ | ❌ (style guide only) |
 | Workflow spec runs supervised OR autonomous | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Open plugin architecture / self-hosted | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Asset/brand management | H2–H3 | ❌ | ❌ | ❌ | ✅ |
-| Analytics | scaffold (live-verify pending) | ✅ | ✅ | ✅ | ❌ |
+| Asset/brand management | Partial (DAM seed shipped, INIT-013; deeper H2–H3 ahead) | ❌ | ❌ | ❌ | ✅ |
+| Analytics | Partial (IG/FB live-verified + template/CTA performance rollup, INIT-016; Threads/X/TikTok/Bluesky not supported) | ✅ | ✅ | ✅ | ❌ |
 | Team workspaces | H3 | ✅ | ✅ | Partial | ✅ |
 
 The moat is the MCP layer + delegation model: a dashboard company can add AI, but becoming an
@@ -396,8 +405,11 @@ with the UI. Update `brand-setup` / a short manage-brands note.
   read the account's `analytics_report` history and blend with the research
   baseline once enough snapshots exist.
 
-**Gate:** both need analytics history that **has not accrued** (live analytics is
-still unverified pending creds). Plan it, but expect to defer until there's data.
+**Gate:** both need analytics history that **has not accrued** — live analytics is
+already verified (IG/FB, INIT-010/011) and the join `observedWindows` would read from
+now exists (`lib/performance.ts`, INIT-016), so the gate is genuinely thin history now
+(3 template groups, 1 post each as of 2026-07-29), not unverified credentials. Plan it,
+but expect to defer until there's meaningfully more data.
 **Open decisions:** example-capture mechanism; the history threshold before
 `best_time` blends observed over baseline.
 

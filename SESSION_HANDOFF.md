@@ -14,7 +14,7 @@ the tag existed but no Release page had ever been created).
 publish is **descoped indefinitely** (user decision) — install is git-clone +
 `npm install -g .`, no `npx honk`.
 
-## This Session (2026-07-29) — v1.0.0 GitHub Release, INIT-016 + INIT-017 (output performance + craft-technique skills)
+## This Session (2026-07-29/30) — v1.0.0 GitHub Release, INIT-016/017/018 (output performance, craft-technique skills, docs audit)
 
 Picked up post-1.0 with H1 (delegation + first UI) open but every concrete H1
 item gated on a scope call the user needed to make (BETA-011 UI is an explicit
@@ -138,6 +138,56 @@ pre-existing — left alone rather than made falsely complete.
 
 199 unit + 51-check smoke (unchanged — this ticket is prose + one static array
 line, no new test surface needed) + build:check + pack:smoke green.
+
+**Then INIT-018 — docs audit.** Closing out INIT-017, flagged two stale docs in
+the wrap-up summary: `agent/SKILLS.md` (tool-trigger index missing rows) and
+`PROJECT_SPECIFICATIONS.md` (stale counts). User asked for a full audit of
+both rather than a quick patch — right call, since a full read of
+`PROJECT_SPECIFICATIONS.md` turned up more than what was flagged:
+
+- **H0 section was still marked "(current)"** and closed with "whether/when
+  to cut `v1.0.0` is a decision for the user to make explicitly" — both
+  written *before* the 1.0 cut and never revisited after it actually happened
+  2026-07-28. Fixed: H0 marked complete, **H1 marked current** (matches
+  `PROJECT_STATUS.md`'s `project_phase` field, which was already correct —
+  only the roadmap doc had drifted).
+- **Feature Inventory** header counts (30→35 tools, 15→16 skills) and the
+  per-pillar paragraph updated to mention what's actually shipped
+  (`content_check`, asset/account registries, `analytics_performance`,
+  `swipe-file`). `workflow_list`/account registry/store versioning moved from
+  "Proposed" to annotated-shipped, matching the exact pattern the doc already
+  used for the asset registry line (`**shipped early (INIT-013)**`) — found
+  that convention already existed and reused it rather than inventing a new one.
+- **Competitive Positioning table** had two rows describing 2026-06-era
+  reality: Analytics "scaffold (live-verify pending)" and Asset/brand
+  management "H2–H3" — both now real, shipped capability (INIT-010/011/013/016).
+- **INDIV-007's gate description** said "live analytics is still unverified
+  pending creds" — false since INIT-010/011; the actual gate is thin history
+  (3 template groups, 1 post each), not credentials. Fixed to say that.
+- **Deliberately left alone:** INDIV-004/005/006's backlog-plan bodies still
+  read forward-looking ("add `brand_voice(action:"list")`...", "Open decision:
+  ...") despite "✅ shipped" headers. Checked whether this was drift or
+  convention before touching anything — it's consistent across all three
+  sections, so it's the doc's own pattern (header carries current status, body
+  stays a frozen record of the original plan) — not a bug to fix. Same
+  reasoning applied to the dated "180 unit, 49-check smoke" figure in the H0
+  paragraph: that's cut-time history, correct as written, not a live number to
+  keep updating.
+
+`capabilities/agent/SKILLS.md` (the hand-maintained tool-trigger index, distinct
+from the skill-discovery mechanism) gained the 11 missing tool rows
+(`content_check`, `account_info`, `link_tag`, `duplicate_check`, `best_time`,
+`brief_schema`, `workflow_list`, `analytics_performance`, `media_upload`,
+`asset_list`, `asset_update` — every one of the 35 tools now appears somewhere),
+a new "Asset Registry" section, and the same stale-"UNVERIFIED" Observability
+fix INIT-016 already made in `content-intelligence.md`. One self-correction
+mid-ticket: first pass wrote "X/TikTok/Bluesky analytics aren't supported... at
+the current access tier" — wrong for X, which is credit-blocked (402, a billing
+state) with no analytics adapter at all, not an access-tier gap; fixed before
+commit.
+
+Docs-only; no code touched. 199 unit + 51-check smoke + build:check +
+pack:smoke green (all four gates rerun to confirm, unaffected as expected).
 
 ## Previous Session (2026-07-27/28) — repo repair, INIT-014, INIT-015, cut v1.0.0
 
@@ -269,10 +319,13 @@ here is urgent; pick based on what you want next.
 0. **Register the permanent scheduler task** — `schtasks /Create` hit `Access
    is denied` from this session/account; the launcher script
    (`~/.claude/honk-scheduler-launch.cmd`) and exact command are ready (see
-   "This Session" above) but need the user to run it themselves. Without it,
-   the background scheduler process only lasts this machine session/until
-   reboot — the 2 backed-off follow-up jobs and any future ones stop draining
-   again once that process dies.
+   "This Session" above) but need the user to run it themselves. Confirmed
+   the background scheduler (PID visible via `Get-CimInstance Win32_Process
+   -Filter "Name='node.exe'"`) kept running unattended through 2026-07-29:
+   drained the 2 backed-off jobs (dropped after max retries — stale media, not
+   an error) and the 2 INIT-015 jobs at their due time; `followups.json` is
+   now empty. It'll keep working until this machine session ends or reboots —
+   the scheduled task is what makes that survive a reboot.
 1. **BETA-011 UI phase** (stop-line — deliberately not started; crossing it is a real
    scope decision, not a default) — read-only first: queue/calendar/analytics/assets
    views rendering the same schemas guided mode uses. The account registry's handle
@@ -285,13 +338,6 @@ here is urgent; pick based on what you want next.
    INDIV-007 work, still thin on history (3 template groups, 1 post each).
 4. Deferred: ALPHA-016 delete (destructive, scope-paused) · ALPHA-017 Mastodon /
    ALPHA-018 LinkedIn (need creds/decisions). Descoped items live ONLY in PROJECT_STATUS.
-5. **`agent/SKILLS.md` / `capabilities/agent/SKILLS.md` is stale** (found in
-   passing while adding swipe-file, not fixed — out of scope for INIT-017): it's
-   a hand-maintained tool-trigger index, missing `analytics_performance` and
-   ~14 other tools shipped since it was last touched, and still says
-   "Observability (UNVERIFIED — pending live credential testing)" — the same
-   stale claim INIT-016 already corrected in `content-intelligence.md`. Worth
-   a dedicated pass, not a drive-by edit.
 
 ## Conventions In Force
 
